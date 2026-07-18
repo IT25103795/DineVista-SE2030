@@ -176,9 +176,78 @@
                 const field = q(`[name="${name}"]`, q('[data-reservation-form]') || document);
                 if (field && value) field.value = value;
             });
+            qa('[data-table-spot]').forEach(spot => spot.classList.toggle('selected', spot === link.closest('[data-table-spot]')));
             updateReservationSummary();
         });
     });
+
+    const reservationStepper = q('[data-reservation-stepper]');
+    if (reservationStepper) {
+        const panels = qa('[data-step-panel]', reservationStepper);
+        const stepButtons = qa('[data-step-target]', reservationStepper);
+        const review = q('[data-step-review]', reservationStepper);
+        let currentStep = 0;
+
+        const validateStep = index => {
+            const fields = qa('input, select, textarea', panels[index]).filter(field => !field.disabled);
+            const invalid = fields.find(field => !field.checkValidity());
+            if (!invalid) return true;
+            invalid.reportValidity();
+            invalid.focus();
+            return false;
+        };
+
+        const updateStepReview = () => {
+            if (!review) return;
+            const value = name => q(`[name="${name}"]`, reservationStepper)?.value || '';
+            const dateValue = value('date');
+            const dateText = dateValue
+                ? new Date(`${dateValue}T00:00:00`).toLocaleDateString('en-LK', { dateStyle: 'full' })
+                : 'Not selected';
+            const area = value('seatingArea').replaceAll('_', ' ').toLowerCase();
+            review.innerHTML = `
+                <div><span>Visit</span><strong>${escapeHtml(dateText)} · ${escapeHtml(formatTime(value('time')) || 'No time')}</strong></div>
+                <div><span>Party</span><strong>${escapeHtml(value('partySize') || '0')} guest(s) · ${escapeHtml(titleCase(area || 'Any area'))}</strong></div>
+                <div><span>Guest</span><strong>${escapeHtml(value('guestName') || 'Not entered')}</strong></div>
+                <div><span>Contact</span><strong>${escapeHtml(value('phone') || value('email') || 'Not entered')}</strong></div>
+            `;
+        };
+
+        const showStep = (index, focusPanel = false) => {
+            const nextIndex = Math.max(0, Math.min(index, panels.length - 1));
+            currentStep = nextIndex;
+            panels.forEach((panel, panelIndex) => {
+                const active = panelIndex === nextIndex;
+                panel.classList.toggle('active', active);
+                panel.setAttribute('aria-hidden', String(!active));
+            });
+            stepButtons.forEach((button, buttonIndex) => {
+                button.classList.toggle('active', buttonIndex === nextIndex);
+                button.classList.toggle('complete', buttonIndex < nextIndex);
+                if (buttonIndex === nextIndex) button.setAttribute('aria-current', 'step');
+                else button.removeAttribute('aria-current');
+            });
+            if (nextIndex === panels.length - 1) updateStepReview();
+            if (focusPanel) q('input, select, textarea, button', panels[nextIndex])?.focus();
+        };
+
+        reservationStepper.classList.add('stepper-ready');
+        showStep(0);
+
+        qa('[data-step-next]', reservationStepper).forEach(button => button.addEventListener('click', () => {
+            if (validateStep(currentStep)) showStep(currentStep + 1, true);
+        }));
+        qa('[data-step-back]', reservationStepper).forEach(button => button.addEventListener('click', () => {
+            showStep(currentStep - 1, true);
+        }));
+        stepButtons.forEach(button => button.addEventListener('click', () => {
+            const target = Number(button.dataset.stepTarget);
+            if (target <= currentStep) showStep(target, true);
+            else if (validateStep(currentStep)) showStep(currentStep + 1, true);
+        }));
+        qa('input, select, textarea', reservationStepper).forEach(field => field.addEventListener('input', updateStepReview));
+        qa('[data-prefill-reservation]').forEach(link => link.addEventListener('click', () => showStep(0)));
+    }
 
     const checkout = q('[data-order-checkout]');
     const orderTypeInputs = qa('input[name="orderType"]', checkout || document);
@@ -195,6 +264,87 @@
     };
     orderTypeInputs.forEach(input => input.addEventListener('change', updateOrderFields));
     updateOrderFields();
+
+    const cartDrawer = q('[data-order-cart-drawer]');
+    if (cartDrawer) {
+        const cartBackdrop = q('[data-cart-backdrop]');
+        let cartReturnFocus = null;
+
+        cartDrawer.setAttribute('role', 'dialog');
+        cartDrawer.setAttribute('aria-modal', 'true');
+        cartDrawer.setAttribute('aria-labelledby', 'order-cart-title');
+        cartDrawer.setAttribute('aria-hidden', 'true');
+        cartDrawer.setAttribute('tabindex', '-1');
+        document.body.classList.add('cart-drawer-enabled');
+
+        const openCart = trigger => {
+            cartReturnFocus = trigger || document.activeElement;
+            document.body.classList.add('cart-drawer-open');
+            cartDrawer.setAttribute('aria-hidden', 'false');
+            cartBackdrop?.setAttribute('aria-hidden', 'false');
+            requestAnimationFrame(() => (q('[data-cart-close]', cartDrawer) || cartDrawer).focus());
+        };
+
+        const closeCart = () => {
+            document.body.classList.remove('cart-drawer-open');
+            cartDrawer.setAttribute('aria-hidden', 'true');
+            cartBackdrop?.setAttribute('aria-hidden', 'true');
+            if (cartReturnFocus instanceof HTMLElement) cartReturnFocus.focus();
+        };
+
+        qa('[data-cart-open]').forEach(trigger => trigger.addEventListener('click', event => {
+            event.preventDefault();
+            openCart(trigger);
+        }));
+        qa('[data-cart-close]', cartDrawer).forEach(button => button.addEventListener('click', closeCart));
+        cartBackdrop?.addEventListener('click', closeCart);
+        document.addEventListener('keydown', event => {
+            if (!document.body.classList.contains('cart-drawer-open')) return;
+            if (event.key === 'Escape') {
+                closeCart();
+                return;
+            }
+            if (event.key !== 'Tab') return;
+            const focusable = qa('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])', cartDrawer)
+                .filter(element => element.offsetParent !== null);
+            if (!focusable.length) return;
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault();
+                last.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault();
+                first.focus();
+            }
+        });
+
+        if (window.location.hash === '#order-cart' || cartDrawer.dataset.cartHasErrors === 'true') openCart();
+    }
+
+    qa('[data-copy-reference]').forEach(button => {
+        button.addEventListener('click', async () => {
+            const reference = button.dataset.copyReference || '';
+            if (!reference) return;
+            try {
+                await navigator.clipboard.writeText(reference);
+            } catch (error) {
+                const helper = document.createElement('textarea');
+                helper.value = reference;
+                helper.setAttribute('readonly', '');
+                helper.style.position = 'fixed';
+                helper.style.opacity = '0';
+                document.body.appendChild(helper);
+                helper.select();
+                document.execCommand('copy');
+                helper.remove();
+            }
+            const original = button.textContent;
+            button.textContent = 'Copied!';
+            window.DineVista.toast(`Reference ${reference} copied.`);
+            setTimeout(() => { button.textContent = original; }, 1800);
+        });
+    });
 
     qa('[data-dialog-open]').forEach(button => {
         button.addEventListener('click', () => {

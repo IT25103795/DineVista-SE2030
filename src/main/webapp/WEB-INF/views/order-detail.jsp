@@ -10,6 +10,16 @@
     FoodOrderRecord order = (FoodOrderRecord) request.getAttribute("foodOrder");
 %>
 <%@ include file="fragments/header.jspf" %>
+<%
+    String[] orderStages = "DINE_IN".equals(order.getOrderType())
+            ? new String[]{"PENDING", "CONFIRMED", "PREPARING", "READY", "SERVED", "COMPLETED"}
+            : new String[]{"PENDING", "CONFIRMED", "PREPARING", "READY", "COMPLETED"};
+    int orderStageIndex = -1;
+    for (int i = 0; i < orderStages.length; i++) {
+        if (orderStages[i].equals(order.getStatus())) orderStageIndex = i;
+    }
+    boolean orderTerminalOutcome = "CANCELLED".equals(order.getStatus()) || "REJECTED".equals(order.getStatus());
+%>
 <section class="page-hero compact-hero">
     <div class="container">
         <div class="breadcrumbs"><a href="<%= ctx %>/orders">Food Orders</a><span>/</span><span><%= HtmlUtil.escape(order.getReference()) %></span></div>
@@ -21,10 +31,40 @@
 <section class="section-sm">
     <div class="container detail-layout">
         <div class="detail-main">
-            <% if (request.getAttribute("successMessage") != null) { %><div class="alert alert-success"><strong><%= HtmlUtil.escape(request.getAttribute("successMessage")) %></strong></div><% } %>
+            <% if (request.getAttribute("successMessage") != null) { %>
+                <div class="success-celebration" role="status" aria-live="polite">
+                    <span class="success-celebration-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m5 12 4 4L19 6"/></svg></span>
+                    <div>
+                        <span class="success-label"><%= "CANCELLED".equals(order.getStatus()) ? "Order cancelled" : "Order received" %></span>
+                        <h2><%= "CANCELLED".equals(order.getStatus()) ? "Cancellation confirmed." : "You're all set." %></h2>
+                        <p><%= HtmlUtil.escape(request.getAttribute("successMessage")) %></p>
+                        <div class="success-actions">
+                            <code><%= HtmlUtil.escape(order.getReference()) %></code>
+                            <button class="btn btn-secondary btn-sm" type="button" data-copy-reference="<%= HtmlUtil.escape(order.getReference()) %>">Copy reference</button>
+                        </div>
+                    </div>
+                </div>
+            <% } %>
             <% if (request.getAttribute("errors") != null) { %><div class="alert alert-danger"><div><strong>Unable to complete the action:</strong><ul><% for (String error : (List<String>) request.getAttribute("errors")) { %><li><%= HtmlUtil.escape(error) %></li><% } %></ul></div></div><% } %>
 
             <article class="detail-card">
+                <div class="status-journey-shell" data-status-track>
+                    <div class="status-journey-heading">
+                        <div><span class="section-kicker">Live order progress</span><h3>From order to table.</h3></div>
+                        <span class="status <%= order.getStatusCss() %>"><%= HtmlUtil.escape(order.getStatus().replace('_', ' ')) %></span>
+                    </div>
+                    <% if (orderTerminalOutcome) { %>
+                        <div class="status-outcome"><strong><%= HtmlUtil.escape(order.getStatus().replace('_', ' ')) %></strong><span>This order has reached a final outcome. See the activity timeline below for the recorded reason.</span></div>
+                    <% } else { %>
+                        <ol class="status-journey" aria-label="Food order progress">
+                            <% for (int i = 0; i < orderStages.length; i++) {
+                                String stageClass = i < orderStageIndex ? "complete" : (i == orderStageIndex ? "active" : "upcoming");
+                            %>
+                                <li class="<%= stageClass %>"><span class="status-node"><%= i < orderStageIndex ? "✓" : (i + 1) %></span><strong><%= HtmlUtil.escape(orderStages[i].replace('_', ' ')) %></strong></li>
+                            <% } %>
+                        </ol>
+                    <% } %>
+                </div>
                 <div class="detail-card-header">
                     <div><span class="record-reference"><%= HtmlUtil.escape(order.getOrderTypeDisplay()) %></span><h2><%= HtmlUtil.escape(order.getCustomerName()) %></h2></div>
                     <span class="status <%= order.getStatusCss() %>"><%= HtmlUtil.escape(order.getStatus()) %></span>

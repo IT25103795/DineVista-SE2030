@@ -19,6 +19,18 @@ The current release includes a complete **Table Reservation and Food Order Manag
 - Track reservation and order status histories
 - Cancel eligible orders before kitchen preparation begins
 
+### Customer experience enhancements
+
+- Theme-aware light and dark appearance across navigation, forms, cards, tables,
+  detail records, and the footer
+- Local illustrated hero backgrounds with readable overlays on all public pages
+- Three-step reservation form with a synchronized review summary
+- Floor-style table availability preview that safely pre-fills the existing form
+- Slide-out food cart backed by the original server-side update/remove/checkout forms
+- Clear confirmation cards, copyable references, and live status-progress tracks
+- Mobile bottom navigation, keyboard-friendly dialogs, focus handling, and
+  reduced-motion support
+
 ### Restaurant-staff functions
 
 - View and filter incoming reservations and orders
@@ -140,6 +152,9 @@ Detailed implementation, business rules, routes, status transitions, testing ste
 ```text
 docs/TABLE_RESERVATION_AND_FOOD_ORDER_MODULE.md
 ```
+
+The latest audit results, including the 88-check CRUD suite and UI interaction
+verification, are recorded in `docs/CRUD_AUDIT_RESULTS.md`.
 
 ## Git Workflow
 

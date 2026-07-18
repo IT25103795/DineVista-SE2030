@@ -73,7 +73,7 @@
                 </span>
                 <span class="sr-only" data-theme-label>Dark mode</span>
             </button>
-            <a class="nav-cart" href="<%= ctx %>/orders#order-cart" aria-label="Open food cart">
+            <a class="nav-cart" href="<%= ctx %>/orders#order-cart" aria-label="Open food cart" data-cart-open>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                     <path d="M3 4h2l2.2 10.1a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 2-1.6L20.5 8H7"/>
                     <circle cx="10" cy="20" r="1.2"/><circle cx="18" cy="20" r="1.2"/>

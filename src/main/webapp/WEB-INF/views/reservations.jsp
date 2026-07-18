@@ -45,7 +45,21 @@
 
 <section class="section-sm section-soft">
     <div class="container">
-        <% if (request.getAttribute("successMessage") != null) { %>
+        <% if (request.getAttribute("successMessage") != null && request.getParameter("created") != null) { %>
+            <div class="success-celebration reservation-created-card" role="status" aria-live="polite">
+                <span class="success-celebration-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m5 12 4 4L19 6"/></svg></span>
+                <div>
+                    <span class="success-label">Reservation requested</span>
+                    <h2>Your table request is in.</h2>
+                    <p><%= HtmlUtil.escape(request.getAttribute("successMessage")) %></p>
+                    <div class="success-actions">
+                        <code><%= HtmlUtil.escape(request.getParameter("created")) %></code>
+                        <button class="btn btn-secondary btn-sm" type="button" data-copy-reference="<%= HtmlUtil.escape(request.getParameter("created")) %>">Copy reference</button>
+                        <a class="btn btn-primary btn-sm" href="<%= ctx %>/reservations/view?reference=<%= HtmlUtil.escape(request.getParameter("created")) %>">Track reservation</a>
+                    </div>
+                </div>
+            </div>
+        <% } else if (request.getAttribute("successMessage") != null) { %>
             <div class="alert alert-success"><strong><%= HtmlUtil.escape(request.getAttribute("successMessage")) %></strong></div>
         <% } %>
         <% if (request.getAttribute("errors") != null) { %>
@@ -122,9 +136,14 @@
                         <p>Try another time, seating area, or smaller party size.</p>
                     </div>
                 <% } else { %>
-                    <div class="table-card-grid">
+                    <div class="floor-plan-legend" aria-label="Table availability legend">
+                        <span><i class="legend-dot available"></i>Available now</span>
+                        <span><i class="legend-dot capacity"></i>Number shows seats</span>
+                        <span><i class="legend-dot staff"></i>Final table confirmed by staff</span>
+                    </div>
+                    <div class="table-card-grid visual-table-map" data-table-map>
                         <% for (RestaurantTableRecord table : availableTables) { %>
-                            <article class="table-card">
+                            <article class="table-card table-map-spot" data-table-spot>
                                 <div class="table-visual">
                                     <span><%= table.getCapacity() %></span>
                                     <small>seats</small>
@@ -156,72 +175,99 @@
             <h2>Plan your DineVista visit.</h2>
             <p>Restaurant staff will assign the best available table and confirm your request.</p>
 
-            <form method="post" action="<%= ctx %>/reservations/create" novalidate data-reservation-form>
-                <div class="form-grid">
-                    <div class="form-group full">
-                        <label for="guestName">Guest name</label>
-                        <input class="form-control" id="guestName" name="guestName" required minlength="2" maxlength="160"
-                               autocomplete="name" value="<%= HtmlUtil.escape(formGuestName) %>"
-                               placeholder="Enter the booking name">
+            <form method="post" action="<%= ctx %>/reservations/create" novalidate data-reservation-form data-reservation-stepper>
+                <ol class="reservation-stepper-nav" aria-label="Reservation progress">
+                    <li><button type="button" data-step-target="0"><span>1</span><small>Visit</small></button></li>
+                    <li><button type="button" data-step-target="1"><span>2</span><small>Guest</small></button></li>
+                    <li><button type="button" data-step-target="2"><span>3</span><small>Review</small></button></li>
+                </ol>
+
+                <div class="reservation-step-panel" data-step-panel="0">
+                    <div class="step-panel-heading"><span>Step 1 of 3</span><h3>When would you like to visit?</h3></div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="date">Reservation date</label>
+                            <input class="form-control" id="date" name="date" type="date"
+                                   min="<%= LocalDate.now() %>" required data-reservation-field
+                                   value="<%= HtmlUtil.escape(formDate) %>">
+                        </div>
+                        <div class="form-group">
+                            <label for="time">Preferred time</label>
+                            <select class="form-control" id="time" name="time" required data-reservation-field>
+                                <option value="">Select time</option>
+                                <option value="11:30" <%= HtmlUtil.selected("11:30", formTime) %>>11:30 AM</option>
+                                <option value="12:30" <%= HtmlUtil.selected("12:30", formTime) %>>12:30 PM</option>
+                                <option value="13:30" <%= HtmlUtil.selected("13:30", formTime) %>>1:30 PM</option>
+                                <option value="18:30" <%= HtmlUtil.selected("18:30", formTime) %>>6:30 PM</option>
+                                <option value="19:30" <%= HtmlUtil.selected("19:30", formTime) %>>7:30 PM</option>
+                                <option value="20:30" <%= HtmlUtil.selected("20:30", formTime) %>>8:30 PM</option>
+                                <option value="21:30" <%= HtmlUtil.selected("21:30", formTime) %>>9:30 PM</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="partySize">Party size</label>
+                            <input class="form-control" id="partySize" name="partySize" type="number"
+                                   min="1" max="20" required data-reservation-field
+                                   value="<%= HtmlUtil.escape(formParty) %>">
+                        </div>
+                        <div class="form-group">
+                            <label for="seatingArea">Seating preference</label>
+                            <select class="form-control" id="seatingArea" name="seatingArea"
+                                    required data-reservation-field>
+                                <option value="ANY" <%= HtmlUtil.selected("ANY", formArea) %>>Any available area</option>
+                                <option value="INDOOR" <%= HtmlUtil.selected("INDOOR", formArea) %>>Indoor dining hall</option>
+                                <option value="GARDEN" <%= HtmlUtil.selected("GARDEN", formArea) %>>Garden terrace</option>
+                                <option value="PRIVATE_DINING" <%= HtmlUtil.selected("PRIVATE_DINING", formArea) %>>Private dining room</option>
+                                <option value="CHEF_COUNTER" <%= HtmlUtil.selected("CHEF_COUNTER", formArea) %>>Chef's counter</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="email">Email address</label>
-                        <input class="form-control" id="email" name="email" type="email" required maxlength="160"
-                               autocomplete="email" value="<%= HtmlUtil.escape(formEmail) %>"
-                               placeholder="name@example.com">
+                    <div class="form-actions step-actions"><button class="btn btn-primary" type="button" data-step-next>Continue to guest details</button></div>
+                </div>
+
+                <div class="reservation-step-panel" data-step-panel="1">
+                    <div class="step-panel-heading"><span>Step 2 of 3</span><h3>Who should we welcome?</h3></div>
+                    <div class="form-grid">
+                        <div class="form-group full">
+                            <label for="guestName">Guest name</label>
+                            <input class="form-control" id="guestName" name="guestName" required minlength="2" maxlength="160"
+                                   autocomplete="name" value="<%= HtmlUtil.escape(formGuestName) %>"
+                                   placeholder="Enter the booking name">
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email address</label>
+                            <input class="form-control" id="email" name="email" type="email" required maxlength="160"
+                                   autocomplete="email" value="<%= HtmlUtil.escape(formEmail) %>"
+                                   placeholder="name@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Mobile number</label>
+                            <input class="form-control" id="phone" name="phone" required
+                                   pattern="(?:\+94|0)7[0-9]{8}" value="<%= HtmlUtil.escape(formPhone) %>"
+                                   placeholder="0771234567">
+                            <span class="form-note">Use 07XXXXXXXX or +947XXXXXXXX.</span>
+                        </div>
+                        <div class="form-group full">
+                            <label for="occasion">Occasion or special request</label>
+                            <textarea class="form-control" id="occasion" name="occasion"
+                                      maxlength="500" placeholder="Birthday, anniversary, dietary note, accessibility request, or other details"><%= HtmlUtil.escape(formOccasion) %></textarea>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="phone">Mobile number</label>
-                        <input class="form-control" id="phone" name="phone" required
-                               pattern="(?:\+94|0)7[0-9]{8}" value="<%= HtmlUtil.escape(formPhone) %>"
-                               placeholder="0771234567">
-                        <span class="form-note">Use 07XXXXXXXX or +947XXXXXXXX.</span>
-                    </div>
-                    <div class="form-group">
-                        <label for="date">Reservation date</label>
-                        <input class="form-control" id="date" name="date" type="date"
-                               min="<%= LocalDate.now() %>" required data-reservation-field
-                               value="<%= HtmlUtil.escape(formDate) %>">
-                    </div>
-                    <div class="form-group">
-                        <label for="time">Preferred time</label>
-                        <select class="form-control" id="time" name="time" required data-reservation-field>
-                            <option value="">Select time</option>
-                            <option value="11:30" <%= HtmlUtil.selected("11:30", formTime) %>>11:30 AM</option>
-                            <option value="12:30" <%= HtmlUtil.selected("12:30", formTime) %>>12:30 PM</option>
-                            <option value="13:30" <%= HtmlUtil.selected("13:30", formTime) %>>1:30 PM</option>
-                            <option value="18:30" <%= HtmlUtil.selected("18:30", formTime) %>>6:30 PM</option>
-                            <option value="19:30" <%= HtmlUtil.selected("19:30", formTime) %>>7:30 PM</option>
-                            <option value="20:30" <%= HtmlUtil.selected("20:30", formTime) %>>8:30 PM</option>
-                            <option value="21:30" <%= HtmlUtil.selected("21:30", formTime) %>>9:30 PM</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="partySize">Party size</label>
-                        <input class="form-control" id="partySize" name="partySize" type="number"
-                               min="1" max="20" required data-reservation-field
-                               value="<%= HtmlUtil.escape(formParty) %>">
-                    </div>
-                    <div class="form-group">
-                        <label for="seatingArea">Seating preference</label>
-                        <select class="form-control" id="seatingArea" name="seatingArea"
-                                required data-reservation-field>
-                            <option value="ANY" <%= HtmlUtil.selected("ANY", formArea) %>>Any available area</option>
-                            <option value="INDOOR" <%= HtmlUtil.selected("INDOOR", formArea) %>>Indoor dining hall</option>
-                            <option value="GARDEN" <%= HtmlUtil.selected("GARDEN", formArea) %>>Garden terrace</option>
-                            <option value="PRIVATE_DINING" <%= HtmlUtil.selected("PRIVATE_DINING", formArea) %>>Private dining room</option>
-                            <option value="CHEF_COUNTER" <%= HtmlUtil.selected("CHEF_COUNTER", formArea) %>>Chef's counter</option>
-                        </select>
-                    </div>
-                    <div class="form-group full">
-                        <label for="occasion">Occasion or special request</label>
-                        <textarea class="form-control" id="occasion" name="occasion"
-                                  maxlength="500" placeholder="Birthday, anniversary, dietary note, accessibility request, or other details"><%= HtmlUtil.escape(formOccasion) %></textarea>
+                    <div class="form-actions step-actions">
+                        <button class="btn btn-secondary" type="button" data-step-back>Back</button>
+                        <button class="btn btn-primary" type="button" data-step-next>Review reservation</button>
                     </div>
                 </div>
-                <div class="form-actions">
-                    <button class="btn btn-primary" type="submit">Submit reservation request</button>
-                    <a class="btn btn-secondary" href="<%= ctx %>/menu">View menu first</a>
+
+                <div class="reservation-step-panel" data-step-panel="2">
+                    <div class="step-panel-heading"><span>Step 3 of 3</span><h3>Review and send your request.</h3></div>
+                    <div class="step-review-card" data-step-review aria-live="polite"></div>
+                    <p class="form-note">Your request remains pending until restaurant staff assign a suitable table and confirm it.</p>
+                    <div class="form-actions step-actions">
+                        <button class="btn btn-secondary" type="button" data-step-back>Back</button>
+                        <button class="btn btn-primary" type="submit">Submit reservation request</button>
+                        <a class="btn btn-ghost" href="<%= ctx %>/menu">View menu first</a>
+                    </div>
                 </div>
             </form>
         </div>

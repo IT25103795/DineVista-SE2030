@@ -61,7 +61,12 @@
                 <h2>Choose your dishes.</h2>
                 <p>Only available items can be added. Each item quantity is validated from 1 to 10.</p>
             </div>
-            <span class="module-badge">Server-side cart</span>
+            <div class="menu-heading-actions">
+                <span class="module-badge">Server-side cart</span>
+                <a class="btn btn-secondary btn-sm" href="#order-cart" data-cart-open>
+                    View cart · <%= cartLines == null ? 0 : cartLines.stream().mapToInt(CartLineRecord::getQuantity).sum() %> item(s)
+                </a>
+            </div>
         </div>
 
         <div class="filter-bar">
@@ -116,11 +121,13 @@
     </div>
 </section>
 
-<section class="section-sm section-soft" id="order-cart">
+<div class="cart-drawer-backdrop" data-cart-backdrop aria-hidden="true"></div>
+<section class="section-sm section-soft cart-drawer" id="order-cart" data-order-cart-drawer data-cart-has-errors="<%= request.getAttribute("checkoutName") == null ? "false" : "true" %>">
+    <button class="icon-btn cart-drawer-close" type="button" data-cart-close aria-label="Close food cart">×</button>
     <div class="container order-workspace">
         <section class="cart-panel cart-panel-static">
             <div class="cart-header">
-                <div><span class="section-kicker">Current cart</span><h2>Your food order.</h2></div>
+                <div><span class="section-kicker">Current cart</span><h2 id="order-cart-title">Your food order.</h2></div>
                 <span class="cart-total-items"><%= cartLines == null ? 0 : cartLines.stream().mapToInt(CartLineRecord::getQuantity).sum() %> item(s)</span>
             </div>
 

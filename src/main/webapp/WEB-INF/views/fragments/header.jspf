@@ -1,0 +1,53 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%
+    String ctx = request.getContextPath();
+    String pageTitle = (String) request.getAttribute("pageTitle");
+    String activeNav = (String) request.getAttribute("activeNav");
+    if (pageTitle == null) pageTitle = "DineVista";
+    if (activeNav == null) activeNav = "";
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="DineVista restaurant and event management system">
+    <title><%= pageTitle %> | DineVista</title>
+    <link rel="icon" type="image/svg+xml" href="<%= ctx %>/assets/images/logo.svg">
+    <link rel="stylesheet" href="<%= ctx %>/assets/css/app.css">
+</head>
+<body>
+<a class="skip-link" href="#main-content">Skip to content</a>
+<header class="site-header">
+    <div class="nav-shell">
+        <a class="brand" href="<%= ctx %>/" aria-label="DineVista home">
+            <img src="<%= ctx %>/assets/images/logo.svg" alt="">
+            <span>Dine<em>Vista</em></span>
+        </a>
+
+        <nav class="main-nav" data-main-nav aria-label="Primary navigation">
+            <a class="<%= "home".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/">Home</a>
+            <a class="<%= "menu".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/menu">Menu</a>
+            <a class="<%= "orders".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/orders">Order Food</a>
+            <a class="<%= "reservations".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/reservations">Reserve a Table</a>
+            <a class="<%= "events".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/events">Events</a>
+            <a class="<%= "about".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/about">About</a>
+        </nav>
+
+        <div class="nav-actions">
+            <a class="nav-cart" href="<%= ctx %>/orders" aria-label="Open food cart">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                    <path d="M3 4h2l2.2 10.1a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 2-1.6L20.5 8H7"/>
+                    <circle cx="10" cy="20" r="1.2"/><circle cx="18" cy="20" r="1.2"/>
+                </svg>
+                <span class="cart-count" data-cart-count>0</span>
+            </a>
+            <a class="btn btn-secondary btn-sm" href="<%= ctx %>/login">Sign in</a>
+            <a class="btn btn-primary btn-sm" href="<%= ctx %>/reservations">Book now</a>
+            <button class="menu-toggle" type="button" data-menu-toggle aria-label="Toggle navigation" aria-expanded="false">
+                <span></span>
+            </button>
+        </div>
+    </div>
+</header>
+<main id="main-content">

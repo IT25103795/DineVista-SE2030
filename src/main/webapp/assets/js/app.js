@@ -4,6 +4,65 @@
     const q = (selector, scope = document) => scope.querySelector(selector);
     const qa = (selector, scope = document) => Array.from(scope.querySelectorAll(selector));
 
+    const THEME_STORAGE_KEY = 'dinevista-theme';
+    const root = document.documentElement;
+    const themeToggle = q('[data-theme-toggle]');
+    const themeLabel = q('[data-theme-label]', themeToggle || document);
+    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+    const storedTheme = () => {
+        try {
+            const value = localStorage.getItem(THEME_STORAGE_KEY);
+            return value === 'dark' || value === 'light' ? value : null;
+        } catch (error) {
+            return null;
+        }
+    };
+
+    const setTheme = (theme, persist = true) => {
+        const nextTheme = theme === 'dark' ? 'dark' : 'light';
+        root.dataset.theme = nextTheme;
+        root.style.colorScheme = nextTheme;
+
+        const switchingTo = nextTheme === 'dark' ? 'light' : 'dark';
+        const accessibleLabel = `Switch to ${switchingTo} mode`;
+        if (themeToggle) {
+            themeToggle.setAttribute('aria-label', accessibleLabel);
+            themeToggle.setAttribute('title', accessibleLabel);
+            themeToggle.setAttribute('aria-pressed', String(nextTheme === 'dark'));
+        }
+        if (themeLabel) themeLabel.textContent = `${titleCase(nextTheme)} mode active`;
+
+        const themeColor = q('meta[name="theme-color"]');
+        if (themeColor) themeColor.setAttribute('content', nextTheme === 'dark' ? '#0b0d10' : '#fffdf9');
+
+        if (persist) {
+            try {
+                localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+            } catch (error) {
+                // Theme still applies for this session when storage is unavailable.
+            }
+        }
+
+        window.dispatchEvent(new CustomEvent('dinevista:themechange', { detail: { theme: nextTheme } }));
+    };
+
+    setTheme(root.dataset.theme || storedTheme() || (systemTheme.matches ? 'dark' : 'light'), false);
+
+    themeToggle?.addEventListener('click', () => {
+        const nextTheme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+        setTheme(nextTheme);
+    });
+
+    const handleSystemThemeChange = event => {
+        if (!storedTheme()) setTheme(event.matches ? 'dark' : 'light', false);
+    };
+    if (typeof systemTheme.addEventListener === 'function') {
+        systemTheme.addEventListener('change', handleSystemThemeChange);
+    } else if (typeof systemTheme.addListener === 'function') {
+        systemTheme.addListener(handleSystemThemeChange);
+    }
+
     const menuToggle = q('[data-menu-toggle]');
     const mainNav = q('[data-main-nav]');
     menuToggle?.addEventListener('click', () => {
@@ -229,7 +288,8 @@
             const data = [42, 58, 51, 74, 69, 88, 96];
             const pad = 30;
             ctx.clearRect(0, 0, width, height);
-            ctx.strokeStyle = '#eadfd5';
+            const themeStyles = getComputedStyle(document.documentElement);
+            ctx.strokeStyle = themeStyles.getPropertyValue('--line').trim() || '#eadfd5';
             ctx.lineWidth = 1;
             for (let i = 0; i < 5; i += 1) {
                 const y = pad + i * ((height - pad * 2) / 4);
@@ -243,8 +303,8 @@
                 y: height - pad - (value / 110) * (height - pad * 2)
             }));
             const gradient = ctx.createLinearGradient(0, pad, 0, height - pad);
-            gradient.addColorStop(0, 'rgba(233,111,61,.28)');
-            gradient.addColorStop(1, 'rgba(233,111,61,0)');
+            gradient.addColorStop(0, themeStyles.getPropertyValue('--chart-fill').trim() || 'rgba(233,111,61,.28)');
+            gradient.addColorStop(1, themeStyles.getPropertyValue('--chart-fill-transparent').trim() || 'rgba(233,111,61,0)');
             ctx.beginPath();
             ctx.moveTo(points[0].x, height - pad);
             points.forEach(point => ctx.lineTo(point.x, point.y));
@@ -254,12 +314,13 @@
             ctx.fill();
             ctx.beginPath();
             points.forEach((point, index) => index ? ctx.lineTo(point.x, point.y) : ctx.moveTo(point.x, point.y));
-            ctx.strokeStyle = '#e96f3d';
+            ctx.strokeStyle = themeStyles.getPropertyValue('--brand').trim() || '#e96f3d';
             ctx.lineWidth = 3;
             ctx.stroke();
         };
         drawChart();
         window.addEventListener('resize', drawChart);
+        window.addEventListener('dinevista:themechange', drawChart);
     }
 
     function closeDialog(dialog) {

@@ -1,7 +1,7 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <% request.setAttribute("pageTitle", "About DineVista"); request.setAttribute("activeNav", "about"); %>
 <%@ include file="fragments/header.jspf" %>
-<section class="page-hero">
+<section class="page-hero about-hero">
     <div class="container">
         <div class="breadcrumbs"><a href="<%= ctx %>/">Home</a><span>/</span><span>About</span></div>
         <span class="eyebrow">About DineVista</span>

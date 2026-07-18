@@ -18,6 +18,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="DineVista restaurant and event management system">
+    <meta name="theme-color" content="#fffdf9">
+    <script>
+        (() => {
+            try {
+                const savedTheme = localStorage.getItem('dinevista-theme');
+                const preferredTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                const theme = savedTheme === 'dark' || savedTheme === 'light' ? savedTheme : preferredTheme;
+                document.documentElement.dataset.theme = theme;
+                document.documentElement.style.colorScheme = theme;
+                document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#0b0d10' : '#fffdf9');
+            } catch (error) {
+                document.documentElement.dataset.theme = 'light';
+            }
+        })();
+    </script>
     <title><%= pageTitle %> | DineVista</title>
     <link rel="icon" type="image/svg+xml" href="<%= ctx %>/assets/images/logo.svg">
     <link rel="stylesheet" href="<%= ctx %>/assets/css/app.css">
@@ -46,6 +61,18 @@
         </nav>
 
         <div class="nav-actions">
+            <button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch to dark mode" title="Switch to dark mode">
+                <span class="theme-toggle-track" aria-hidden="true">
+                    <span class="theme-toggle-icon theme-toggle-sun">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="3.7"/><path d="M12 2.2v2.1M12 19.7v2.1M4.1 4.1l1.5 1.5M18.4 18.4l1.5 1.5M2.2 12h2.1M19.7 12h2.1M4.1 19.9l1.5-1.5M18.4 5.6l1.5-1.5"/></svg>
+                    </span>
+                    <span class="theme-toggle-thumb"></span>
+                    <span class="theme-toggle-icon theme-toggle-moon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.2 15.2A8.2 8.2 0 0 1 8.8 3.8 8.2 8.2 0 1 0 20.2 15.2Z"/><path d="M16.8 4.5v2.4M15.6 5.7H18"/></svg>
+                    </span>
+                </span>
+                <span class="sr-only" data-theme-label>Dark mode</span>
+            </button>
             <a class="nav-cart" href="<%= ctx %>/orders#order-cart" aria-label="Open food cart">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                     <path d="M3 4h2l2.2 10.1a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 2-1.6L20.5 8H7"/>

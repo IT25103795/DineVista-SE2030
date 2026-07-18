@@ -1,7 +1,7 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <% request.setAttribute("pageTitle", "Events and Packages"); request.setAttribute("activeNav", "events"); %>
 <%@ include file="fragments/header.jspf" %>
-<section class="page-hero">
+<section class="page-hero events-hero">
     <div class="container">
         <div class="breadcrumbs"><a href="<%= ctx %>/">Home</a><span>/</span><span>Events</span></div>
         <span class="eyebrow">DineVista events</span>

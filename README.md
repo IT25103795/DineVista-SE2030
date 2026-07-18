@@ -79,8 +79,8 @@ The current authentication flow is for UI demonstration:
 
 ## Git Workflow
 
-- `main` - stable releases
-- `develop` - integrated development
-- `feature/*` - individual modules
+This repository currently uses only the `main` branch.
 
-Commit the website baseline to `develop`, then create each feature branch from the updated `develop` branch.
+- `main` - active development and stable project source
+
+All approved project changes should be committed and pushed directly to `main`.

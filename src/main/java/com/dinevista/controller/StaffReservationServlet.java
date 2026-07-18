@@ -50,19 +50,27 @@ public class StaffReservationServlet extends HttpServlet {
             return;
         }
 
-        String status = RequestUtil.clean(request, "status");
-        String date = RequestUtil.clean(request, "date");
-        request.setAttribute("reservationFilterStatus", status);
-        request.setAttribute("reservationFilterDate", date);
-        request.setAttribute("staffReservations", service.allReservations(status, date));
-        request.getRequestDispatcher("/WEB-INF/views/staff-reservations.jsp")
-                .forward(request, response);
+        if (path(request).isEmpty()) {
+            String status = RequestUtil.clean(request, "status");
+            String date = RequestUtil.clean(request, "date");
+            request.setAttribute("reservationFilterStatus", status);
+            request.setAttribute("reservationFilterDate", date);
+            request.setAttribute("staffReservations", service.allReservations(status, date));
+            request.getRequestDispatcher("/WEB-INF/views/staff-reservations.jsp")
+                    .forward(request, response);
+            return;
+        }
+        response.sendError(HttpServletResponse.SC_NOT_FOUND);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         if (!requireManager(request, response)) return;
+        if (!"/update".equals(path(request))) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
 
         String reference = RequestUtil.clean(request, "reference");
         OperationResult<TableReservationRecord> result = service.staffUpdateReservation(

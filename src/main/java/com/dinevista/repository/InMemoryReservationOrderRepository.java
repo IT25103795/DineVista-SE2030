@@ -170,6 +170,7 @@ public class InMemoryReservationOrderRepository implements ReservationOrderRepos
             if (!reservation.getReservationDate().equals(date)) continue;
             if ("CANCELLED".equals(reservation.getStatus())
                     || "REJECTED".equals(reservation.getStatus())
+                    || "COMPLETED".equals(reservation.getStatus())
                     || "NO_SHOW".equals(reservation.getStatus())) continue;
 
             LocalDateTime existing = LocalDateTime.of(

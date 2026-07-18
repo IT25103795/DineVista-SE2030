@@ -42,19 +42,29 @@ public class ReservationServlet extends HttpServlet {
             showEdit(request, response);
             return;
         }
-        renderMain(request, response);
+        if (path.isEmpty()) {
+            renderMain(request, response);
+            return;
+        }
+        response.sendError(HttpServletResponse.SC_NOT_FOUND);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String path = path(request);
-        if ("/update".equals(path)) {
-            update(request, response);
-        } else if ("/cancel".equals(path)) {
-            cancel(request, response);
-        } else {
-            create(request, response);
+        switch (path) {
+            case "/create":
+                create(request, response);
+                break;
+            case "/update":
+                update(request, response);
+                break;
+            case "/cancel":
+                cancel(request, response);
+                break;
+            default:
+                response.sendError(HttpServletResponse.SC_NOT_FOUND);
         }
     }
 
@@ -69,12 +79,17 @@ public class ReservationServlet extends HttpServlet {
         int availabilityParty = RequestUtil.integer(request, "availabilityPartySize", 0);
         String availabilityArea = RequestUtil.clean(request, "availabilityArea");
 
-        if (availabilityDate != null && availabilityTime != null && availabilityParty > 0) {
-            List<RestaurantTableRecord> available = service.findAvailableTables(
-                    availabilityDate, availabilityTime, availabilityParty,
-                    availabilityArea, null);
-            request.setAttribute("availableTables", available);
+        if (request.getParameter("availabilityDate") != null
+                || request.getParameter("availabilityTime") != null
+                || request.getParameter("availabilityPartySize") != null) {
             request.setAttribute("availabilitySearched", true);
+            OperationResult<List<RestaurantTableRecord>> availability = service.searchAvailableTables(
+                    availabilityDate, availabilityTime, availabilityParty, availabilityArea);
+            if (availability.isSuccess()) {
+                request.setAttribute("availableTables", availability.getValue());
+            } else {
+                request.setAttribute("errors", availability.getErrors());
+            }
         }
 
         request.getRequestDispatcher("/WEB-INF/views/reservations.jsp").forward(request, response);
@@ -125,6 +140,11 @@ public class ReservationServlet extends HttpServlet {
             throws ServletException, IOException {
         String customerKey = ReservationOrderContext.customerKey(request);
         String reference = RequestUtil.clean(request, "reference");
+        Optional<TableReservationRecord> existing = service.reservation(reference);
+        if (existing.isEmpty() || !existing.get().getCustomerKey().equals(customerKey)) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
         OperationResult<TableReservationRecord> result = service.updateReservation(
                 customerKey, reference,
                 RequestUtil.clean(request, "guestName"),
@@ -138,7 +158,7 @@ public class ReservationServlet extends HttpServlet {
 
         if (!result.isSuccess()) {
             request.setAttribute("errors", result.getErrors());
-            request.setAttribute("editReservation", service.reservation(reference).orElse(null));
+            request.setAttribute("editReservation", existing.get());
             copyReservationForm(request);
             request.getRequestDispatcher("/WEB-INF/views/reservation-edit.jsp").forward(request, response);
             return;

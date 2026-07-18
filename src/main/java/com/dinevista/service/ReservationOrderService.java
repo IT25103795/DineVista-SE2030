@@ -114,13 +114,37 @@ public class ReservationOrderService {
                 .collect(Collectors.toList());
     }
 
-    public OperationResult<TableReservationRecord> createReservation(
+    public OperationResult<List<RestaurantTableRecord>> searchAvailableTables(
+            LocalDate date, LocalTime time, int partySize, String seatingArea) {
+        List<String> errors = new ArrayList<>();
+        String area = normalize(seatingArea);
+        if (date == null) errors.add("Select a valid reservation date.");
+        if (time == null) errors.add("Select a valid reservation time.");
+        if (partySize < 1 || partySize > 20) {
+            errors.add("Party size must be between 1 and 20 guests.");
+        }
+        if (!SEATING_AREAS.contains(area)) errors.add("Select a valid seating preference.");
+        if (date != null && time != null) {
+            LocalDateTime selected = LocalDateTime.of(date, time);
+            if (selected.isBefore(LocalDateTime.now().plusMinutes(30))) {
+                errors.add("Availability can only be checked at least 30 minutes in advance.");
+            }
+            if (time.isBefore(LocalTime.of(11, 0)) || time.isAfter(LocalTime.of(22, 0))) {
+                errors.add("Select a reservation time between 11:00 AM and 10:00 PM.");
+            }
+        }
+        if (!errors.isEmpty()) return OperationResult.failure(errors);
+        return OperationResult.success(findAvailableTables(date, time, partySize, area, null));
+    }
+
+    public synchronized OperationResult<TableReservationRecord> createReservation(
             String customerKey, String guestName, String email, String phone,
             LocalDate date, LocalTime time, int partySize,
             String seatingPreference, String occasionNotes) {
 
         List<String> errors = validateReservation(
-                guestName, email, phone, date, time, partySize, seatingPreference);
+                guestName, email, phone, date, time, partySize, seatingPreference,
+                occasionNotes, null);
 
         boolean duplicate = repository.findReservationsByCustomer(customerKey).stream()
                 .anyMatch(item -> item.getReservationDate().equals(date)
@@ -141,7 +165,7 @@ public class ReservationOrderService {
         return OperationResult.success(record);
     }
 
-    public OperationResult<TableReservationRecord> updateReservation(
+    public synchronized OperationResult<TableReservationRecord> updateReservation(
             String customerKey, String reference, String guestName, String email, String phone,
             LocalDate date, LocalTime time, int partySize,
             String seatingPreference, String occasionNotes) {
@@ -158,11 +182,26 @@ public class ReservationOrderService {
         }
 
         List<String> errors = validateReservation(
-                guestName, email, phone, date, time, partySize, seatingPreference);
+                guestName, email, phone, date, time, partySize, seatingPreference,
+                occasionNotes, reference);
+        boolean duplicate = repository.findReservationsByCustomer(customerKey).stream()
+                .filter(item -> !item.getReference().equals(reference))
+                .anyMatch(item -> item.getReservationDate().equals(date)
+                        && item.getReservationTime().equals(time)
+                        && !isReservationClosed(item.getStatus()));
+        if (duplicate) {
+            errors.add("You already have another active reservation for the selected date and time.");
+        }
         if (!errors.isEmpty()) return OperationResult.failure(errors);
 
+        boolean allocationChanged = record.getTableId() != null
+                && (!record.getReservationDate().equals(date)
+                || !record.getReservationTime().equals(time)
+                || record.getPartySize() != partySize
+                || !record.getSeatingPreference().equals(normalize(seatingPreference)));
         record.updateCustomerDetails(clean(guestName), clean(email), clean(phone),
                 date, time, partySize, normalize(seatingPreference), clean(occasionNotes));
+        if (allocationChanged) record.clearTableAssignment(clean(guestName));
         repository.saveReservation(record);
         return OperationResult.success(record);
     }
@@ -192,6 +231,13 @@ public class ReservationOrderService {
         if (finalReason.length() < 5) {
             return OperationResult.failure("Enter a short cancellation reason.");
         }
+        if (finalReason.length() > 500) {
+            return OperationResult.failure("Cancellation reason cannot exceed 500 characters.");
+        }
+        if (hasActiveLinkedOrders(reference)) {
+            return OperationResult.failure(
+                    "Cancel or complete linked food orders before cancelling this reservation.");
+        }
 
         record.changeStatus("CANCELLED", finalReason, record.getGuestName());
         repository.saveReservation(record);
@@ -206,6 +252,7 @@ public class ReservationOrderService {
 
         TableReservationRecord record = optional.get();
         String targetStatus = normalize(newStatus);
+        String cleanNote = clean(note);
         List<String> errors = new ArrayList<>();
 
         if (!RESERVATION_STATUSES.contains(targetStatus)) {
@@ -220,8 +267,13 @@ public class ReservationOrderService {
             selectedTable = repository.findTable(tableId).orElse(null);
             if (selectedTable == null) {
                 errors.add("The selected table does not exist.");
+            } else if ("OUT_OF_SERVICE".equals(selectedTable.getStatus())) {
+                errors.add("The selected table is out of service.");
             } else if (selectedTable.getCapacity() < record.getPartySize()) {
                 errors.add("The selected table is too small for this party.");
+            } else if (!"ANY".equals(record.getSeatingPreference())
+                    && !record.getSeatingPreference().equals(selectedTable.getSeatingArea())) {
+                errors.add("The selected table does not match the requested seating area.");
             } else if (!repository.isTableAvailable(
                     tableId, record.getReservationDate(), record.getReservationTime(),
                     RESERVATION_SLOT_MINUTES, record.getReference())) {
@@ -229,16 +281,37 @@ public class ReservationOrderService {
             }
         }
 
-        if ("CONFIRMED".equals(targetStatus) && tableId <= 0 && record.getTableId() == null) {
-            errors.add("Assign an available table before confirming the reservation.");
+        RestaurantTableRecord effectiveTable = selectedTable;
+        if (effectiveTable == null && record.getTableId() != null) {
+            effectiveTable = repository.findTable(record.getTableId()).orElse(null);
+        }
+        if ("CONFIRMED".equals(targetStatus)) {
+            if (effectiveTable == null) {
+                errors.add("Assign an available table before confirming the reservation.");
+            } else if ("OUT_OF_SERVICE".equals(effectiveTable.getStatus())
+                    || effectiveTable.getCapacity() < record.getPartySize()
+                    || (!"ANY".equals(record.getSeatingPreference())
+                    && !record.getSeatingPreference().equals(effectiveTable.getSeatingArea()))
+                    || !repository.isTableAvailable(
+                    effectiveTable.getId(), record.getReservationDate(), record.getReservationTime(),
+                    RESERVATION_SLOT_MINUTES, record.getReference())) {
+                errors.add("The assigned table is no longer suitable or available.");
+            }
         }
         if (("REJECTED".equals(targetStatus) || "CANCELLED".equals(targetStatus))
-                && clean(note).length() < 5) {
+                && cleanNote.length() < 5) {
             errors.add("Enter a reason before rejecting or cancelling.");
+        }
+        if (cleanNote.length() > 500) errors.add("Staff note cannot exceed 500 characters.");
+        if (("REJECTED".equals(targetStatus) || "CANCELLED".equals(targetStatus)) && tableId > 0) {
+            errors.add("Do not assign a table when closing a reservation.");
         }
 
         if (!isValidReservationTransition(record.getStatus(), targetStatus)) {
             errors.add("The requested reservation status change is not allowed.");
+        }
+        if (isReservationClosed(targetStatus) && hasActiveLinkedOrders(reference)) {
+            errors.add("Cancel or complete linked food orders before closing this reservation.");
         }
 
         if (!errors.isEmpty()) return OperationResult.failure(errors);
@@ -246,7 +319,7 @@ public class ReservationOrderService {
         if (selectedTable != null) {
             record.assignTable(selectedTable.getId(), selectedTable.getCode(), staffName);
         }
-        record.changeStatus(targetStatus, clean(note), staffName);
+        record.changeStatus(targetStatus, cleanNote, clean(staffName));
         repository.saveReservation(record);
         return OperationResult.success(record);
     }
@@ -280,25 +353,38 @@ public class ReservationOrderService {
         if (quantity < 1 || quantity > MAX_CART_QUANTITY) {
             return OperationResult.failure("Item quantity must be between 1 and " + MAX_CART_QUANTITY + ".");
         }
-        int updated = Math.min(MAX_CART_QUANTITY, cart.getOrDefault(menuItemId, 0) + quantity);
+        int updated = cart.getOrDefault(menuItemId, 0) + quantity;
+        if (updated > MAX_CART_QUANTITY) {
+            return OperationResult.failure("The combined item quantity cannot exceed "
+                    + MAX_CART_QUANTITY + ".");
+        }
         cart.put(menuItemId, updated);
         return OperationResult.success(updated);
     }
 
     public OperationResult<Integer> updateCartItem(Map<Long, Integer> cart, long menuItemId, int quantity) {
         if (!cart.containsKey(menuItemId)) return OperationResult.failure("Cart item was not found.");
-        if (quantity <= 0) {
+        if (quantity < 0) {
+            return OperationResult.failure("Item quantity must be between 0 and "
+                    + MAX_CART_QUANTITY + ".");
+        }
+        if (quantity == 0) {
             cart.remove(menuItemId);
             return OperationResult.success(0);
         }
         if (quantity > MAX_CART_QUANTITY) {
             return OperationResult.failure("Item quantity cannot exceed " + MAX_CART_QUANTITY + ".");
         }
+        Optional<MenuItemRecord> item = repository.findMenuItem(menuItemId);
+        if (item.isEmpty() || !item.get().isAvailable()) {
+            cart.remove(menuItemId);
+            return OperationResult.failure("This menu item is no longer available and was removed.");
+        }
         cart.put(menuItemId, quantity);
         return OperationResult.success(quantity);
     }
 
-    public OperationResult<FoodOrderRecord> createOrder(
+    public synchronized OperationResult<FoodOrderRecord> createOrder(
             String customerKey, String customerName, String email, String phone,
             String orderType, String reservationReference, LocalDateTime requestedFor,
             String orderNotes, Map<Long, Integer> cart) {
@@ -307,9 +393,12 @@ public class ReservationOrderService {
         String type = normalize(orderType);
 
         if (clean(customerName).length() < 2) errors.add("Enter the customer name.");
+        if (clean(customerName).length() > 160) errors.add("Customer name cannot exceed 160 characters.");
         if (!validEmail(email)) errors.add("Enter a valid email address.");
+        if (clean(email).length() > 160) errors.add("Email address cannot exceed 160 characters.");
         if (!validPhone(phone)) errors.add("Enter a valid Sri Lankan mobile number.");
         if (!ORDER_TYPES.contains(type)) errors.add("Select a valid order type.");
+        if (clean(orderNotes).length() > 500) errors.add("Order notes cannot exceed 500 characters.");
 
         List<CartLineRecord> cartLines = cartLines(cart);
         if (cartLines.isEmpty()) errors.add("Add at least one available menu item to the cart.");
@@ -323,12 +412,16 @@ public class ReservationOrderService {
                         .findReservationByReference(linkedReservation);
                 if (reservation.isEmpty()
                         || !reservation.get().getCustomerKey().equals(customerKey)
-                        || !Arrays.asList("CONFIRMED", "SEATED").contains(reservation.get().getStatus())) {
+                        || !Arrays.asList("CONFIRMED", "SEATED").contains(reservation.get().getStatus())
+                        || reservation.get().getTableId() == null) {
                     errors.add("The selected reservation is not eligible for this order.");
-                } else if (requestedFor == null) {
-                    requestedFor = LocalDateTime.of(
-                            reservation.get().getReservationDate(),
-                            reservation.get().getReservationTime());
+                } else {
+                    LocalDateTime reservationAt = LocalDateTime.of(
+                            reservation.get().getReservationDate(), reservation.get().getReservationTime());
+                    if (reservationAt.isBefore(LocalDateTime.now().minusMinutes(30))) {
+                        errors.add("The selected reservation time has already passed.");
+                    }
+                    requestedFor = reservationAt;
                 }
             }
         }
@@ -374,6 +467,9 @@ public class ReservationOrderService {
         if (clean(reason).length() < 5) {
             return OperationResult.failure("Enter a short cancellation reason.");
         }
+        if (clean(reason).length() > 255) {
+            return OperationResult.failure("Cancellation reason cannot exceed 255 characters.");
+        }
 
         order.changeStatus("CANCELLED", clean(reason), order.getCustomerName());
         repository.saveOrder(order);
@@ -388,6 +484,7 @@ public class ReservationOrderService {
 
         FoodOrderRecord order = optional.get();
         String targetStatus = normalize(newStatus);
+        String cleanNote = clean(note);
         List<String> errors = new ArrayList<>();
 
         if (!ORDER_STATUSES.contains(targetStatus)) errors.add("Select a valid order status.");
@@ -395,16 +492,17 @@ public class ReservationOrderService {
             errors.add("Closed food orders cannot be updated.");
         }
         if (("REJECTED".equals(targetStatus) || "CANCELLED".equals(targetStatus))
-                && clean(note).length() < 5) {
+                && cleanNote.length() < 5) {
             errors.add("Enter a reason before rejecting or cancelling.");
         }
+        if (cleanNote.length() > 255) errors.add("Staff note cannot exceed 255 characters.");
         if (!isValidOrderTransition(order.getStatus(), targetStatus, order.getOrderType())) {
             errors.add("The requested order status change is not allowed.");
         }
 
         if (!errors.isEmpty()) return OperationResult.failure(errors);
 
-        order.changeStatus(targetStatus, clean(note), staffName);
+        order.changeStatus(targetStatus, cleanNote, clean(staffName));
         repository.saveOrder(order);
         return OperationResult.success(order);
     }
@@ -432,12 +530,18 @@ public class ReservationOrderService {
 
     private List<String> validateReservation(
             String guestName, String email, String phone, LocalDate date,
-            LocalTime time, int partySize, String seatingPreference) {
+            LocalTime time, int partySize, String seatingPreference,
+            String occasionNotes, String excludingReference) {
 
         List<String> errors = new ArrayList<>();
         if (clean(guestName).length() < 2) errors.add("Enter the guest name.");
+        if (clean(guestName).length() > 160) errors.add("Guest name cannot exceed 160 characters.");
         if (!validEmail(email)) errors.add("Enter a valid email address.");
+        if (clean(email).length() > 160) errors.add("Email address cannot exceed 160 characters.");
         if (!validPhone(phone)) errors.add("Enter a valid Sri Lankan mobile number.");
+        if (clean(occasionNotes).length() > 500) {
+            errors.add("Special request cannot exceed 500 characters.");
+        }
         if (date == null) errors.add("Select a valid reservation date.");
         if (time == null) errors.add("Select a valid reservation time.");
         if (partySize < 1 || partySize > 20) {
@@ -457,7 +561,7 @@ public class ReservationOrderService {
         }
 
         boolean capacityAvailable = date != null && time != null && partySize > 0
-                && !findAvailableTables(date, time, partySize, area, null).isEmpty();
+                && !findAvailableTables(date, time, partySize, area, excludingReference).isEmpty();
         if (date != null && time != null && partySize > 0 && !capacityAvailable) {
             errors.add("No suitable table is available for the selected date, time, party size, and area.");
         }
@@ -499,6 +603,13 @@ public class ReservationOrderService {
 
     private boolean isReservationClosed(String status) {
         return Arrays.asList("COMPLETED", "CANCELLED", "REJECTED", "NO_SHOW").contains(status);
+    }
+
+    private boolean hasActiveLinkedOrders(String reservationReference) {
+        return repository.findAllOrders().stream()
+                .filter(order -> reservationReference.equals(order.getReservationReference()))
+                .anyMatch(order -> !Arrays.asList("COMPLETED", "CANCELLED", "REJECTED")
+                        .contains(order.getStatus()));
     }
 
     private boolean validEmail(String value) {

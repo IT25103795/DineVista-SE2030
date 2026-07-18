@@ -39,8 +39,8 @@
             <form method="post" action="<%= ctx %>/reservations/update" novalidate>
                 <input type="hidden" name="reference" value="<%= HtmlUtil.escape(editReservation.getReference()) %>">
                 <div class="form-grid">
-                    <div class="form-group full"><label for="guestName">Guest name</label><input class="form-control" id="guestName" name="guestName" required minlength="2" value="<%= HtmlUtil.escape(guestName) %>"></div>
-                    <div class="form-group"><label for="email">Email address</label><input class="form-control" id="email" name="email" type="email" required value="<%= HtmlUtil.escape(email) %>"></div>
+                    <div class="form-group full"><label for="guestName">Guest name</label><input class="form-control" id="guestName" name="guestName" required minlength="2" maxlength="160" value="<%= HtmlUtil.escape(guestName) %>"></div>
+                    <div class="form-group"><label for="email">Email address</label><input class="form-control" id="email" name="email" type="email" required maxlength="160" value="<%= HtmlUtil.escape(email) %>"></div>
                     <div class="form-group"><label for="phone">Mobile number</label><input class="form-control" id="phone" name="phone" required pattern="(?:\+94|0)7[0-9]{8}" value="<%= HtmlUtil.escape(phone) %>"></div>
                     <div class="form-group"><label for="date">Reservation date</label><input class="form-control" id="date" name="date" type="date" min="<%= LocalDate.now() %>" required value="<%= HtmlUtil.escape(date) %>"></div>
                     <div class="form-group"><label for="time">Time</label><select class="form-control" id="time" name="time" required>

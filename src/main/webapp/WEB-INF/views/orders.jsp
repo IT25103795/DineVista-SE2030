@@ -192,8 +192,8 @@
                         <label for="requestedFor">Takeaway collection time</label>
                         <input class="form-control" id="requestedFor" name="requestedFor" type="datetime-local" value="<%= HtmlUtil.escape(checkoutRequestedFor) %>">
                     </div>
-                    <div class="form-group full"><label for="customerName">Customer name</label><input class="form-control" id="customerName" name="customerName" required minlength="2" value="<%= HtmlUtil.escape(checkoutName) %>"></div>
-                    <div class="form-group"><label for="orderEmail">Email address</label><input class="form-control" id="orderEmail" name="email" type="email" required value="<%= HtmlUtil.escape(checkoutEmail) %>"></div>
+                    <div class="form-group full"><label for="customerName">Customer name</label><input class="form-control" id="customerName" name="customerName" required minlength="2" maxlength="160" value="<%= HtmlUtil.escape(checkoutName) %>"></div>
+                    <div class="form-group"><label for="orderEmail">Email address</label><input class="form-control" id="orderEmail" name="email" type="email" required maxlength="160" value="<%= HtmlUtil.escape(checkoutEmail) %>"></div>
                     <div class="form-group"><label for="orderPhone">Mobile number</label><input class="form-control" id="orderPhone" name="phone" required pattern="(?:\+94|0)7[0-9]{8}" value="<%= HtmlUtil.escape(checkoutPhone) %>" placeholder="0771234567"></div>
                     <div class="form-group full"><label for="orderNotes">Order notes</label><textarea class="form-control" id="orderNotes" name="orderNotes" maxlength="500" placeholder="Allergies, spice preference, serving notes, or collection instructions"><%= HtmlUtil.escape(checkoutNotes) %></textarea></div>
                 </div>

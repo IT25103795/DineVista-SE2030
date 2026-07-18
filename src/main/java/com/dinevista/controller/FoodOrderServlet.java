@@ -32,11 +32,16 @@ public class FoodOrderServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         FlashUtil.expose(request);
-        if ("/view".equals(path(request))) {
+        String path = path(request);
+        if ("/view".equals(path)) {
             showDetails(request, response);
             return;
         }
-        renderMain(request, response);
+        if (path.isEmpty()) {
+            renderMain(request, response);
+            return;
+        }
+        response.sendError(HttpServletResponse.SC_NOT_FOUND);
     }
 
     @Override
@@ -82,7 +87,7 @@ public class FoodOrderServlet extends HttpServlet {
     private void addToCart(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         long itemId = RequestUtil.longValue(request, "menuItemId", -1);
-        int quantity = RequestUtil.integer(request, "quantity", 1);
+        int quantity = RequestUtil.integer(request, "quantity", -1);
         OperationResult<Integer> result = service.addCartItem(
                 ReservationOrderContext.cart(request), itemId, quantity);
         if (result.isSuccess()) {
@@ -96,7 +101,7 @@ public class FoodOrderServlet extends HttpServlet {
     private void updateCart(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         long itemId = RequestUtil.longValue(request, "menuItemId", -1);
-        int quantity = RequestUtil.integer(request, "quantity", 1);
+        int quantity = RequestUtil.integer(request, "quantity", -1);
         OperationResult<Integer> result = service.updateCartItem(
                 ReservationOrderContext.cart(request), itemId, quantity);
         if (result.isSuccess()) {
@@ -112,8 +117,13 @@ public class FoodOrderServlet extends HttpServlet {
     private void removeFromCart(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         long itemId = RequestUtil.longValue(request, "menuItemId", -1);
-        service.updateCartItem(ReservationOrderContext.cart(request), itemId, 0);
-        FlashUtil.success(request, "Item removed from your order.");
+        OperationResult<Integer> result = service.updateCartItem(
+                ReservationOrderContext.cart(request), itemId, 0);
+        if (result.isSuccess()) {
+            FlashUtil.success(request, "Item removed from your order.");
+        } else {
+            FlashUtil.errors(request, result.getErrors());
+        }
         response.sendRedirect(request.getContextPath() + "/orders#order-cart");
     }
 

@@ -96,7 +96,7 @@
         <p class="muted">The reason is stored in the order status history.</p>
         <form method="post" action="<%= ctx %>/orders/cancel">
             <input type="hidden" name="reference" value="<%= HtmlUtil.escape(order.getReference()) %>">
-            <div class="form-group"><label for="orderCancelReason">Cancellation reason</label><textarea class="form-control" id="orderCancelReason" name="reason" minlength="5" required placeholder="Enter a short reason"></textarea></div>
+            <div class="form-group"><label for="orderCancelReason">Cancellation reason</label><textarea class="form-control" id="orderCancelReason" name="reason" minlength="5" maxlength="255" required placeholder="Enter a short reason"></textarea></div>
             <div class="form-actions"><button class="btn btn-danger" type="submit">Cancel order</button><button class="btn btn-secondary" type="button" data-dialog-close>Keep order</button></div>
         </form>
     </div>

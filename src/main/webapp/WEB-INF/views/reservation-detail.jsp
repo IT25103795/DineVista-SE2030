@@ -96,7 +96,7 @@
         <p class="muted">The reason is stored in the reservation history.</p>
         <form method="post" action="<%= ctx %>/reservations/cancel">
             <input type="hidden" name="reference" value="<%= HtmlUtil.escape(reservation.getReference()) %>">
-            <div class="form-group"><label for="cancelReason">Cancellation reason</label><textarea class="form-control" id="cancelReason" name="reason" minlength="5" required placeholder="Enter a short reason"></textarea></div>
+            <div class="form-group"><label for="cancelReason">Cancellation reason</label><textarea class="form-control" id="cancelReason" name="reason" minlength="5" maxlength="500" required placeholder="Enter a short reason"></textarea></div>
             <div class="form-actions"><button class="btn btn-danger" type="submit">Confirm cancellation</button><button class="btn btn-secondary" type="button" data-dialog-close>Keep reservation</button></div>
         </form>
     </div>

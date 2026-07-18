@@ -197,7 +197,11 @@ public class JdbcReservationOrderRepository implements ReservationOrderRepositor
         String sql = "INSERT INTO reservation_status_history "
                 + "(reservation_id, status, changed_by_name, note, changed_at) VALUES (?,?,?,?,?)";
         try (PreparedStatement insert = connection.prepareStatement(sql)) {
-            for (StatusHistoryRecord history : reservation.getHistory()) {
+            List<StatusHistoryRecord> historyItems = reservation.getHistory();
+            // Models keep newest entries first. Insert oldest first so the auto-increment
+            // id remains a reliable newest-first tiebreaker when MySQL timestamps match.
+            for (int i = historyItems.size() - 1; i >= 0; i--) {
+                StatusHistoryRecord history = historyItems.get(i);
                 insert.setLong(1, reservation.getId());
                 insert.setString(2, history.getStatus());
                 insert.setString(3, history.getChangedBy());
@@ -303,7 +307,7 @@ public class JdbcReservationOrderRepository implements ReservationOrderRepositor
                                     int slotMinutes, String excludingReference) {
         String sql = "SELECT reservation_reference, reservation_time FROM table_reservation "
                 + "WHERE table_id=? AND reservation_date=? "
-                + "AND reservation_status NOT IN ('CANCELLED','REJECTED','NO_SHOW')";
+                + "AND reservation_status NOT IN ('COMPLETED','CANCELLED','REJECTED','NO_SHOW')";
         try (Connection connection = config.openConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setLong(1, tableId);
@@ -426,7 +430,10 @@ public class JdbcReservationOrderRepository implements ReservationOrderRepositor
         String sql = "INSERT INTO order_status_history "
                 + "(order_id, status, changed_by_name, note, changed_at) VALUES (?,?,?,?,?)";
         try (PreparedStatement insert = connection.prepareStatement(sql)) {
-            for (StatusHistoryRecord history : order.getHistory()) {
+            List<StatusHistoryRecord> historyItems = order.getHistory();
+            // Preserve newest-first ordering even when several changes share one SQL second.
+            for (int i = historyItems.size() - 1; i >= 0; i--) {
+                StatusHistoryRecord history = historyItems.get(i);
                 insert.setLong(1, order.getId());
                 insert.setString(2, history.getStatus());
                 insert.setString(3, history.getChangedBy());

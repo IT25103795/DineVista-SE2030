@@ -160,13 +160,13 @@
                 <div class="form-grid">
                     <div class="form-group full">
                         <label for="guestName">Guest name</label>
-                        <input class="form-control" id="guestName" name="guestName" required minlength="2"
+                        <input class="form-control" id="guestName" name="guestName" required minlength="2" maxlength="160"
                                autocomplete="name" value="<%= HtmlUtil.escape(formGuestName) %>"
                                placeholder="Enter the booking name">
                     </div>
                     <div class="form-group">
                         <label for="email">Email address</label>
-                        <input class="form-control" id="email" name="email" type="email" required
+                        <input class="form-control" id="email" name="email" type="email" required maxlength="160"
                                autocomplete="email" value="<%= HtmlUtil.escape(formEmail) %>"
                                placeholder="name@example.com">
                     </div>

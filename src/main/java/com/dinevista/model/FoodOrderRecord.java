@@ -56,6 +56,8 @@ public class FoodOrderRecord implements Serializable {
                 : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
         this.totalAmount = subtotal.add(serviceCharge).setScale(2, RoundingMode.HALF_UP);
         this.status = "PENDING";
+        this.staffNote = "";
+        this.cancellationReason = "";
         this.createdAt = LocalDateTime.now();
         this.updatedAt = createdAt;
         addHistory("PENDING", "Food order created.", customerName);
@@ -101,16 +103,16 @@ public class FoodOrderRecord implements Serializable {
     public String getEmail() { return email; }
     public String getPhone() { return phone; }
     public String getOrderType() { return orderType; }
-    public String getReservationReference() { return reservationReference; }
+    public String getReservationReference() { return reservationReference == null ? "" : reservationReference; }
     public LocalDateTime getRequestedFor() { return requestedFor; }
-    public String getOrderNotes() { return orderNotes; }
+    public String getOrderNotes() { return orderNotes == null ? "" : orderNotes; }
     public String getStatus() { return status; }
     public List<OrderItemRecord> getItems() { return Collections.unmodifiableList(items); }
     public BigDecimal getSubtotal() { return subtotal; }
     public BigDecimal getServiceCharge() { return serviceCharge; }
     public BigDecimal getTotalAmount() { return totalAmount; }
-    public String getStaffNote() { return staffNote; }
-    public String getCancellationReason() { return cancellationReason; }
+    public String getStaffNote() { return staffNote == null ? "" : staffNote; }
+    public String getCancellationReason() { return cancellationReason == null ? "" : cancellationReason; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public List<StatusHistoryRecord> getHistory() { return Collections.unmodifiableList(history); }

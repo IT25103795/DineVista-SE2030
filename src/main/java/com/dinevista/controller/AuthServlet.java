@@ -5,6 +5,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 
 @WebServlet("/login")
@@ -36,9 +37,11 @@ public class AuthServlet extends HttpServlet {
         String emailName = email.contains("@") ? email.substring(0, email.indexOf('@')) : email;
         String displayName = manager ? "Operations Manager" : friendlyName(emailName);
 
-        request.getSession().setAttribute("demoRole", manager ? "manager" : "customer");
-        request.getSession().setAttribute("demoEmail", email.toLowerCase());
-        request.getSession().setAttribute("displayName", displayName);
+        request.getSession().invalidate();
+        HttpSession session = request.getSession(true);
+        session.setAttribute("demoRole", manager ? "manager" : "customer");
+        session.setAttribute("demoEmail", email.toLowerCase());
+        session.setAttribute("displayName", displayName);
         response.sendRedirect(request.getContextPath() + "/dashboard");
     }
 

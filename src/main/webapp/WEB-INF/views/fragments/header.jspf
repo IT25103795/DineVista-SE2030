@@ -41,9 +41,9 @@
 <a class="skip-link" href="#main-content">Skip to content</a>
 <header class="site-header">
     <div class="nav-shell">
-        <a class="brand" href="<%= ctx %>/" aria-label="DineVista home">
-            <img src="<%= ctx %>/assets/images/logo.svg" alt="">
-            <span>Dine<em>Vista</em></span>
+        <a class="brand brand-animated" href="<%= ctx %>/" aria-label="DineVista home">
+            <span class="brand-mark" aria-hidden="true"><img src="<%= ctx %>/assets/images/logo.svg" alt=""></span>
+            <span class="brand-wordmark">Dine<em>Vista</em></span>
         </a>
 
         <nav class="main-nav" data-main-nav aria-label="Primary navigation">

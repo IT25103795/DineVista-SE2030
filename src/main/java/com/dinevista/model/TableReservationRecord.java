@@ -46,6 +46,8 @@ public class TableReservationRecord implements Serializable {
         this.seatingPreference = seatingPreference;
         this.occasionNotes = occasionNotes;
         this.status = "PENDING";
+        this.staffNote = "";
+        this.cancellationReason = "";
         this.createdAt = LocalDateTime.now();
         this.updatedAt = createdAt;
         addHistory("PENDING", "Reservation request created.", guestName);
@@ -91,12 +93,12 @@ public class TableReservationRecord implements Serializable {
     public LocalTime getReservationTime() { return reservationTime; }
     public int getPartySize() { return partySize; }
     public String getSeatingPreference() { return seatingPreference; }
-    public String getOccasionNotes() { return occasionNotes; }
+    public String getOccasionNotes() { return occasionNotes == null ? "" : occasionNotes; }
     public String getStatus() { return status; }
     public Long getTableId() { return tableId; }
     public String getTableCode() { return tableCode; }
-    public String getStaffNote() { return staffNote; }
-    public String getCancellationReason() { return cancellationReason; }
+    public String getStaffNote() { return staffNote == null ? "" : staffNote; }
+    public String getCancellationReason() { return cancellationReason == null ? "" : cancellationReason; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public List<StatusHistoryRecord> getHistory() {
@@ -123,6 +125,15 @@ public class TableReservationRecord implements Serializable {
         this.tableCode = tableCode;
         touch();
         addHistory(status, "Assigned table " + tableCode + ".", changedBy);
+    }
+
+    public void clearTableAssignment(String changedBy) {
+        if (this.tableId == null) return;
+        String previousTable = this.tableCode == null ? "assigned table" : "table " + this.tableCode;
+        this.tableId = null;
+        this.tableCode = null;
+        touch();
+        addHistory(status, "Released " + previousTable + " after reservation details changed.", changedBy);
     }
 
     public void changeStatus(String newStatus, String note, String changedBy) {

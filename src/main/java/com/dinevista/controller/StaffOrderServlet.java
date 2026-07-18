@@ -43,19 +43,27 @@ public class StaffOrderServlet extends HttpServlet {
             return;
         }
 
-        String status = RequestUtil.clean(request, "status");
-        String type = RequestUtil.clean(request, "type");
-        request.setAttribute("orderFilterStatus", status);
-        request.setAttribute("orderFilterType", type);
-        request.setAttribute("staffOrders", service.allOrders(status, type));
-        request.getRequestDispatcher("/WEB-INF/views/staff-orders.jsp")
-                .forward(request, response);
+        if (path(request).isEmpty()) {
+            String status = RequestUtil.clean(request, "status");
+            String type = RequestUtil.clean(request, "type");
+            request.setAttribute("orderFilterStatus", status);
+            request.setAttribute("orderFilterType", type);
+            request.setAttribute("staffOrders", service.allOrders(status, type));
+            request.getRequestDispatcher("/WEB-INF/views/staff-orders.jsp")
+                    .forward(request, response);
+            return;
+        }
+        response.sendError(HttpServletResponse.SC_NOT_FOUND);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         if (!requireManager(request, response)) return;
+        if (!"/update".equals(path(request))) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
 
         String reference = RequestUtil.clean(request, "reference");
         OperationResult<FoodOrderRecord> result = service.staffUpdateOrder(

@@ -1035,6 +1035,105 @@ textarea.form-control { min-height: 118px; resize: vertical; }
     .cta-banner { grid-template-columns: 1fr; }
 }
 
+/* Premium hotel-inspired logo motion */
+.brand-animated {
+    position: relative;
+    isolation: isolate;
+    animation: brand-arrival .7s cubic-bezier(.2,.8,.2,1) both;
+}
+
+.brand-mark {
+    position: relative;
+    display: grid;
+    flex: 0 0 auto;
+    width: 42px;
+    height: 42px;
+    overflow: hidden;
+    place-items: center;
+    border-radius: 12px;
+    transform-origin: 50% 85%;
+    transition: transform .42s cubic-bezier(.2,.8,.2,1), filter .42s ease;
+}
+
+.brand-mark img { width: 42px; height: 42px; }
+
+.brand-mark::after {
+    position: absolute;
+    inset: -35% auto -35% -75%;
+    width: 42%;
+    content: "";
+    background: linear-gradient(100deg, transparent, rgba(255,255,255,.72), transparent);
+    opacity: 0;
+    pointer-events: none;
+    transform: skewX(-18deg);
+}
+
+.brand-wordmark {
+    position: relative;
+    transition: transform .38s cubic-bezier(.2,.8,.2,1), text-shadow .38s ease;
+}
+
+.brand-wordmark::after {
+    position: absolute;
+    right: 0;
+    bottom: -5px;
+    left: 0;
+    height: 2px;
+    content: "";
+    background: linear-gradient(90deg, transparent, var(--gold), var(--brand), transparent);
+    border-radius: 99px;
+    opacity: 0;
+    transform: scaleX(.2);
+    transition: opacity .35s ease, transform .45s cubic-bezier(.2,.8,.2,1);
+}
+
+.brand-animated:hover .brand-mark,
+.brand-animated:focus-visible .brand-mark {
+    filter: drop-shadow(0 8px 9px rgba(233,111,61,.25));
+    transform: translateY(-3px) rotate(-2deg) scale(1.04);
+}
+
+.brand-animated:hover .brand-mark::after,
+.brand-animated:focus-visible .brand-mark::after {
+    opacity: 1;
+    animation: brand-shine .8s ease both;
+}
+
+.brand-animated:hover .brand-wordmark,
+.brand-animated:focus-visible .brand-wordmark {
+    text-shadow: 0 8px 18px rgba(233,111,61,.14);
+    transform: translateY(-1px);
+}
+
+.brand-animated:hover .brand-wordmark::after,
+.brand-animated:focus-visible .brand-wordmark::after {
+    opacity: .9;
+    transform: scaleX(1);
+}
+
+.brand-animated:focus-visible {
+    outline: 3px solid var(--brand-soft);
+    outline-offset: 7px;
+    border-radius: 12px;
+}
+
+@keyframes brand-arrival {
+    from { opacity: 0; transform: translateY(-9px) scale(.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes brand-shine {
+    from { left: -75%; }
+    to { left: 135%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .brand-animated { animation: none; }
+    .brand-mark, .brand-wordmark, .brand-wordmark::after { transition: none; }
+    .brand-animated:hover .brand-mark::after,
+    .brand-animated:focus-visible .brand-mark::after { animation: none; opacity: 0; }
+}
+
 @media (max-width: 620px) {
     .container { width: min(calc(100% - 22px), var(--container)); }
     .section { padding: 70px 0; }
@@ -2583,22 +2682,36 @@ html[data-theme="dark"] {
 .hero .float-card { color: var(--ink); background: var(--panel); }
 
 .page-hero {
-    color: #fff;
+    color: var(--ink);
     background-position: center;
     background-size: cover;
     isolation: isolate;
 }
 .page-hero::after { z-index: -1; }
+.page-hero p, .page-hero .breadcrumbs, .page-hero .breadcrumbs a { color: var(--ink-soft); }
+.page-hero .breadcrumbs span, .page-hero .eyebrow { color: var(--brand-strong); }
+.menu-hero, .order-hero, .reservation-hero, .events-hero, .about-hero { color: #fff; }
 .menu-hero { background-image: var(--hero-overlay), url('../images/bg-menu.svg'); }
 .order-hero { background-image: var(--hero-overlay), url('../images/bg-order.svg'); }
 .reservation-hero { background-image: var(--hero-overlay), url('../images/bg-reserve.svg'); }
 .events-hero { background-image: var(--hero-overlay), url('../images/bg-events.svg'); }
 .about-hero { background-image: var(--hero-overlay), url('../images/bg-about.svg'); }
-.page-hero p, .page-hero .breadcrumbs, .page-hero .breadcrumbs a { color: #e9dfd8; }
-.page-hero .breadcrumbs span { color: #ffb08e; }
-.page-hero .eyebrow { color: #ffb08e; }
-.page-hero .btn-secondary { color: #fff; border-color: rgba(255,255,255,.5); background: rgba(12,12,12,.32); backdrop-filter: blur(8px); }
-.page-hero .btn-secondary:hover { background: rgba(255,255,255,.16); }
+.menu-hero p, .menu-hero .breadcrumbs, .menu-hero .breadcrumbs a,
+.order-hero p, .order-hero .breadcrumbs, .order-hero .breadcrumbs a,
+.reservation-hero p, .reservation-hero .breadcrumbs, .reservation-hero .breadcrumbs a,
+.events-hero p, .events-hero .breadcrumbs, .events-hero .breadcrumbs a,
+.about-hero p, .about-hero .breadcrumbs, .about-hero .breadcrumbs a { color: #e9dfd8; }
+.menu-hero .breadcrumbs span, .menu-hero .eyebrow,
+.order-hero .breadcrumbs span, .order-hero .eyebrow,
+.reservation-hero .breadcrumbs span, .reservation-hero .eyebrow,
+.events-hero .breadcrumbs span, .events-hero .eyebrow,
+.about-hero .breadcrumbs span, .about-hero .eyebrow { color: #ffb08e; }
+.menu-hero .btn-secondary, .order-hero .btn-secondary,
+.reservation-hero .btn-secondary, .events-hero .btn-secondary,
+.about-hero .btn-secondary { color: #fff; border-color: rgba(255,255,255,.5); background: rgba(12,12,12,.32); backdrop-filter: blur(8px); }
+.menu-hero .btn-secondary:hover, .order-hero .btn-secondary:hover,
+.reservation-hero .btn-secondary:hover, .events-hero .btn-secondary:hover,
+.about-hero .btn-secondary:hover { background: rgba(255,255,255,.16); }
 
 .site-header, .main-nav, .nav-cart, .account-pill, .menu-toggle,
 .filter-bar, .card, .feature-card, .menu-item, .cart-panel, .form-card,

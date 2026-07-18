@@ -1,0 +1,59 @@
+</main>
+<footer class="site-footer">
+    <div class="container">
+        <div class="footer-grid">
+            <div class="footer-about">
+                <a class="brand" href="<%= ctx %>/">
+                    <img src="<%= ctx %>/assets/images/logo.svg" alt="">
+                    <span>Dine<em>Vista</em></span>
+                </a>
+                <p>A modern restaurant and event experience designed around memorable food, seamless reservations, and beautifully managed celebrations.</p>
+                <div class="socials" aria-label="Social links">
+                    <a href="#" aria-label="Facebook">
+                        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M14 8h3V4h-3c-3 0-5 2-5 5v3H6v4h3v8h4v-8h3l1-4h-4V9c0-.7.3-1 1-1z"/></svg>
+                    </a>
+                    <a href="#" aria-label="Instagram">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+                    </a>
+                    <a href="#" aria-label="YouTube">
+                        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 7.2a3 3 0 0 0-2.1-2.1C17 4.6 12 4.6 12 4.6s-5 0-6.9.5A3 3 0 0 0 3 7.2 31 31 0 0 0 2.6 12 31 31 0 0 0 3 16.8a3 3 0 0 0 2.1 2.1c1.9.5 6.9.5 6.9.5s5 0 6.9-.5a3 3 0 0 0 2.1-2.1 31 31 0 0 0 .4-4.8 31 31 0 0 0-.4-4.8zM10 15.3V8.7l5.7 3.3z"/></svg>
+                    </a>
+                </div>
+            </div>
+            <div>
+                <h3 class="footer-title">Explore</h3>
+                <div class="footer-links">
+                    <a href="<%= ctx %>/menu">Restaurant menu</a>
+                    <a href="<%= ctx %>/orders">Online ordering</a>
+                    <a href="<%= ctx %>/reservations">Table reservations</a>
+                    <a href="<%= ctx %>/events">Event packages</a>
+                </div>
+            </div>
+            <div>
+                <h3 class="footer-title">Account</h3>
+                <div class="footer-links">
+                    <a href="<%= ctx %>/login">Sign in</a>
+                    <a href="<%= ctx %>/register">Create account</a>
+                    <a href="<%= ctx %>/dashboard">Dashboard</a>
+                    <a href="<%= ctx %>/event-booking">Event inquiry</a>
+                </div>
+            </div>
+            <div>
+                <h3 class="footer-title">Contact</h3>
+                <div class="footer-links">
+                    <a href="tel:+94112345678">+94 11 234 5678</a>
+                    <a href="mailto:hello@dinevista.lk">hello@dinevista.lk</a>
+                    <a href="#">Malabe, Sri Lanka</a>
+                    <a href="#">Daily: 11:00 AM - 11:00 PM</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <span>&copy; 2026 DineVista. SE2030 Software Engineering Group Project.</span>
+            <span>Designed and developed by the DineVista project team.</span>
+        </div>
+    </div>
+</footer>
+<script src="<%= ctx %>/assets/js/app.js"></script>
+</body>
+</html>

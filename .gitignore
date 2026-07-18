@@ -1,0 +1,34 @@
+# Maven and build output
+target/
+build/
+release/*.war
+
+# IntelliJ IDEA
+.idea/
+*.iml
+out/
+
+# Eclipse
+.classpath
+.project
+.settings/
+bin/
+
+# VS Code
+.vscode/
+
+# Local configuration and secrets
+.env
+*.env
+src/main/resources/database.properties
+src/main/resources/application-local.properties
+secrets.properties
+
+# Logs and runtime uploads
+*.log
+logs/
+uploads/
+
+# Operating system files
+.DS_Store
+Thumbs.db

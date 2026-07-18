@@ -6,32 +6,27 @@
 
     const menuToggle = q('[data-menu-toggle]');
     const mainNav = q('[data-main-nav]');
-    if (menuToggle && mainNav) {
-        menuToggle.addEventListener('click', () => {
-            const isOpen = mainNav.classList.toggle('open');
-            menuToggle.setAttribute('aria-expanded', String(isOpen));
-        });
-        qa('a', mainNav).forEach(link => link.addEventListener('click', () => {
-            mainNav.classList.remove('open');
-            menuToggle.setAttribute('aria-expanded', 'false');
-        }));
-        document.addEventListener('click', event => {
-            if (!mainNav.contains(event.target) && !menuToggle.contains(event.target)) {
-                mainNav.classList.remove('open');
-                menuToggle.setAttribute('aria-expanded', 'false');
-            }
-        });
-    }
+    menuToggle?.addEventListener('click', () => {
+        const open = mainNav?.classList.toggle('open');
+        menuToggle.setAttribute('aria-expanded', String(Boolean(open)));
+    });
+    qa('[data-main-nav] a').forEach(link => link.addEventListener('click', () => {
+        mainNav?.classList.remove('open');
+        menuToggle?.setAttribute('aria-expanded', 'false');
+    }));
 
     const today = new Date();
-    const isoToday = today.toISOString().split('T')[0];
-    qa('input[type="date"][data-min-today]').forEach(input => {
-        input.min = isoToday;
+    const localToday = new Date(today.getTime() - today.getTimezoneOffset() * 60000)
+        .toISOString().slice(0, 10);
+    qa('input[type="date"]').forEach(input => {
+        if (!input.min) input.min = localToday;
     });
-    qa('input[type="date"][data-min-event]').forEach(input => {
-        const eventDate = new Date();
-        eventDate.setDate(eventDate.getDate() + 7);
-        input.min = eventDate.toISOString().split('T')[0];
+    qa('input[type="datetime-local"]').forEach(input => {
+        if (!input.min) {
+            const future = new Date(Date.now() + 30 * 60 * 1000);
+            input.min = new Date(future.getTime() - future.getTimezoneOffset() * 60000)
+                .toISOString().slice(0, 16);
+        }
     });
 
     const toastContainer = (() => {
@@ -89,159 +84,102 @@
     });
     menuSearch?.addEventListener('input', filterMenu);
 
-    const CART_KEY = 'dinevista-cart-v1';
-    let cart = [];
-    try {
-        cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
-        if (!Array.isArray(cart)) cart = [];
-    } catch (error) {
-        cart = [];
-    }
-
-    const money = value => `LKR ${Number(value).toLocaleString('en-LK', { maximumFractionDigits: 0 })}`;
-    const saveCart = () => localStorage.setItem(CART_KEY, JSON.stringify(cart));
-    const cartCountEls = qa('[data-cart-count]');
-    const cartItemsEl = q('[data-cart-items]');
-    const cartSubtotalEl = q('[data-cart-subtotal]');
-    const cartServiceEl = q('[data-cart-service]');
-    const cartTotalEl = q('[data-cart-total]');
-    const checkoutBtn = q('[data-checkout]');
-
-    const renderCart = () => {
-        const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
-        cartCountEls.forEach(el => el.textContent = String(totalQty));
-        if (!cartItemsEl) return;
-
-        if (!cart.length) {
-            cartItemsEl.innerHTML = '<div class="cart-empty">Your cart is waiting for something delicious.</div>';
-        } else {
-            cartItemsEl.innerHTML = cart.map(item => `
-                <div class="cart-item" data-cart-row="${item.id}">
-                    <div>
-                        <strong>${escapeHtml(item.name)}</strong>
-                        <span>${money(item.price)} each</span>
-                    </div>
-                    <div class="qty-controls">
-                        <button class="qty-btn" type="button" data-qty-action="minus" data-id="${item.id}" aria-label="Reduce quantity">-</button>
-                        <strong>${item.qty}</strong>
-                        <button class="qty-btn" type="button" data-qty-action="plus" data-id="${item.id}" aria-label="Increase quantity">+</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
-        const service = subtotal > 0 ? Math.round(subtotal * 0.05) : 0;
-        if (cartSubtotalEl) cartSubtotalEl.textContent = money(subtotal);
-        if (cartServiceEl) cartServiceEl.textContent = money(service);
-        if (cartTotalEl) cartTotalEl.textContent = money(subtotal + service);
-        if (checkoutBtn) checkoutBtn.disabled = !cart.length;
-    };
-
-    const escapeHtml = text => String(text)
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#039;');
-
-    qa('[data-add-cart]').forEach(button => {
-        button.addEventListener('click', () => {
-            const id = button.dataset.id;
-            const name = button.dataset.name;
-            const price = Number(button.dataset.price || 0);
-            const found = cart.find(item => item.id === id);
-            if (found) found.qty += 1;
-            else cart.push({ id, name, price, qty: 1 });
-            saveCart();
-            renderCart();
-            window.DineVista.toast(`${name} added to your cart.`);
-        });
-    });
-
-    cartItemsEl?.addEventListener('click', event => {
-        const button = event.target.closest('[data-qty-action]');
-        if (!button) return;
-        const item = cart.find(entry => entry.id === button.dataset.id);
-        if (!item) return;
-        item.qty += button.dataset.qtyAction === 'plus' ? 1 : -1;
-        cart = cart.filter(entry => entry.qty > 0);
-        saveCart();
-        renderCart();
-    });
-
-    const modalBackdrop = q('[data-modal]');
-    const openModal = () => {
-        if (!modalBackdrop) return;
-        modalBackdrop.classList.add('open');
-        document.body.style.overflow = 'hidden';
-    };
-    const closeModal = () => {
-        if (!modalBackdrop) return;
-        modalBackdrop.classList.remove('open');
-        document.body.style.overflow = '';
-    };
-    checkoutBtn?.addEventListener('click', openModal);
-    qa('[data-modal-close]').forEach(button => button.addEventListener('click', closeModal));
-    modalBackdrop?.addEventListener('click', event => {
-        if (event.target === modalBackdrop) closeModal();
-    });
-    document.addEventListener('keydown', event => {
-        if (event.key === 'Escape') closeModal();
-    });
-
-    const checkoutForm = q('[data-checkout-form]');
-    checkoutForm?.addEventListener('submit', event => {
-        event.preventDefault();
-        if (!checkoutForm.reportValidity()) return;
-        const reference = `DV-O-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
-        cart = [];
-        saveCart();
-        renderCart();
-        closeModal();
-        checkoutForm.reset();
-        window.DineVista.toast(`Order ${reference} was created successfully.`);
-    });
-
-    renderCart();
-
     const reservationSummary = q('[data-reservation-summary]');
     const reservationFields = qa('[data-reservation-field]');
     const updateReservationSummary = () => {
         if (!reservationSummary) return;
         const values = Object.fromEntries(reservationFields.map(field => [field.name, field.value]));
-        const dateText = values.date ? new Date(`${values.date}T00:00:00`).toLocaleDateString('en-LK', { dateStyle: 'medium' }) : 'Select a date';
+        const dateText = values.date
+            ? new Date(`${values.date}T00:00:00`).toLocaleDateString('en-LK', { dateStyle: 'medium' })
+            : 'Select a date';
+        const areaText = values.seatingArea
+            ? values.seatingArea.replaceAll('_', ' ').toLowerCase()
+            : 'Not selected';
         reservationSummary.innerHTML = `
             <div class="summary-row"><span>Date</span><strong>${dateText}</strong></div>
-            <div class="summary-row"><span>Time</span><strong>${values.time || 'Select a time'}</strong></div>
-            <div class="summary-row"><span>Guests</span><strong>${values.partySize || '0'}</strong></div>
-            <div class="summary-row"><span>Seating</span><strong>${values.seatingArea || 'Not selected'}</strong></div>
+            <div class="summary-row"><span>Time</span><strong>${formatTime(values.time) || 'Select a time'}</strong></div>
+            <div class="summary-row"><span>Guests</span><strong>${escapeHtml(values.partySize || '0')}</strong></div>
+            <div class="summary-row"><span>Seating</span><strong>${escapeHtml(titleCase(areaText))}</strong></div>
         `;
     };
     reservationFields.forEach(field => field.addEventListener('input', updateReservationSummary));
     updateReservationSummary();
+
+    qa('[data-prefill-reservation]').forEach(link => {
+        link.addEventListener('click', () => {
+            const pairs = {
+                date: link.dataset.date,
+                time: link.dataset.time,
+                partySize: link.dataset.party,
+                seatingArea: link.dataset.area
+            };
+            Object.entries(pairs).forEach(([name, value]) => {
+                const field = q(`[name="${name}"]`, q('[data-reservation-form]') || document);
+                if (field && value) field.value = value;
+            });
+            updateReservationSummary();
+        });
+    });
+
+    const checkout = q('[data-order-checkout]');
+    const orderTypeInputs = qa('input[name="orderType"]', checkout || document);
+    const reservationOrderField = q('[data-reservation-order-field]');
+    const pickupOrderField = q('[data-pickup-order-field]');
+    const updateOrderFields = () => {
+        const selected = q('input[name="orderType"]:checked', checkout || document)?.value || 'TAKEAWAY';
+        if (reservationOrderField) reservationOrderField.hidden = selected === 'TAKEAWAY';
+        if (pickupOrderField) pickupOrderField.hidden = selected !== 'TAKEAWAY';
+        const reservationSelect = q('[name="reservationReference"]', checkout || document);
+        const requestedFor = q('[name="requestedFor"]', checkout || document);
+        if (reservationSelect) reservationSelect.required = selected !== 'TAKEAWAY';
+        if (requestedFor) requestedFor.required = selected === 'TAKEAWAY';
+    };
+    orderTypeInputs.forEach(input => input.addEventListener('change', updateOrderFields));
+    updateOrderFields();
+
+    qa('[data-dialog-open]').forEach(button => {
+        button.addEventListener('click', () => {
+            const dialog = document.getElementById(button.dataset.dialogOpen);
+            dialog?.classList.add('open');
+            document.body.style.overflow = 'hidden';
+            q('textarea, input, select', dialog || document)?.focus();
+        });
+    });
+    qa('[data-dialog-close]').forEach(button => {
+        button.addEventListener('click', () => closeDialog(button.closest('[data-dialog]')));
+    });
+    qa('[data-dialog]').forEach(dialog => {
+        dialog.addEventListener('click', event => {
+            if (event.target === dialog) closeDialog(dialog);
+        });
+    });
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape') qa('[data-dialog].open').forEach(closeDialog);
+    });
 
     const eventSummary = q('[data-event-summary]');
     const eventFields = qa('[data-event-field]');
     const updateEventSummary = () => {
         if (!eventSummary) return;
         const values = Object.fromEntries(eventFields.map(field => [field.name, field.value]));
-        const dateText = values.eventDate ? new Date(`${values.eventDate}T00:00:00`).toLocaleDateString('en-LK', { dateStyle: 'medium' }) : 'Select a date';
+        const dateText = values.eventDate
+            ? new Date(`${values.eventDate}T00:00:00`).toLocaleDateString('en-LK', { dateStyle: 'medium' })
+            : 'Select a date';
         eventSummary.innerHTML = `
-            <div class="summary-row"><span>Event</span><strong>${values.eventType || 'Not selected'}</strong></div>
-            <div class="summary-row"><span>Package</span><strong>${values.packageName || 'Not selected'}</strong></div>
+            <div class="summary-row"><span>Event</span><strong>${escapeHtml(values.eventType || 'Not selected')}</strong></div>
+            <div class="summary-row"><span>Package</span><strong>${escapeHtml(values.packageName || 'Not selected')}</strong></div>
             <div class="summary-row"><span>Date</span><strong>${dateText}</strong></div>
-            <div class="summary-row"><span>Guests</span><strong>${values.guestCount || '0'}</strong></div>
+            <div class="summary-row"><span>Guests</span><strong>${escapeHtml(values.guestCount || '0')}</strong></div>
         `;
     };
     eventFields.forEach(field => field.addEventListener('input', updateEventSummary));
     updateEventSummary();
 
     qa('[data-package-select]').forEach(link => {
-        link.addEventListener('click', event => {
-            const packageValue = link.dataset.packageSelect;
-            if (!packageValue) return;
-            sessionStorage.setItem('dinevista-selected-package', packageValue);
+        link.addEventListener('click', () => {
+            if (link.dataset.packageSelect) {
+                sessionStorage.setItem('dinevista-selected-package', link.dataset.packageSelect);
+            }
         });
     });
     const packageSelect = q('select[name="packageName"]');
@@ -293,7 +231,7 @@
             ctx.clearRect(0, 0, width, height);
             ctx.strokeStyle = '#eadfd5';
             ctx.lineWidth = 1;
-            for (let i = 0; i < 5; i++) {
+            for (let i = 0; i < 5; i += 1) {
                 const y = pad + i * ((height - pad * 2) / 4);
                 ctx.beginPath();
                 ctx.moveTo(pad, y);
@@ -318,20 +256,36 @@
             points.forEach((point, index) => index ? ctx.lineTo(point.x, point.y) : ctx.moveTo(point.x, point.y));
             ctx.strokeStyle = '#e96f3d';
             ctx.lineWidth = 3;
-            ctx.lineJoin = 'round';
-            ctx.lineCap = 'round';
             ctx.stroke();
-            points.forEach(point => {
-                ctx.beginPath();
-                ctx.arc(point.x, point.y, 4.5, 0, Math.PI * 2);
-                ctx.fillStyle = '#fff';
-                ctx.fill();
-                ctx.strokeStyle = '#e96f3d';
-                ctx.lineWidth = 3;
-                ctx.stroke();
-            });
         };
         drawChart();
         window.addEventListener('resize', drawChart);
+    }
+
+    function closeDialog(dialog) {
+        if (!dialog) return;
+        dialog.classList.remove('open');
+        document.body.style.overflow = '';
+    }
+
+    function formatTime(value) {
+        if (!value || !value.includes(':')) return value;
+        const [hours, minutes] = value.split(':').map(Number);
+        const date = new Date();
+        date.setHours(hours, minutes, 0, 0);
+        return date.toLocaleTimeString('en-LK', { hour: 'numeric', minute: '2-digit' });
+    }
+
+    function titleCase(value) {
+        return String(value).replace(/\b\w/g, char => char.toUpperCase());
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#039;');
     }
 })();

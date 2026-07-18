@@ -1,61 +1,67 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="java.util.List" %>
-<%@ page import="com.dinevista.model.ReservationRecord" %>
-<%@ page import="com.dinevista.model.EventBookingRecord" %>
-<% request.setAttribute("pageTitle", "Operations Dashboard"); request.setAttribute("activeNav", ""); %>
-<%@ include file="fragments/header.jspf" %>
+<%@ page import="com.dinevista.model.TableReservationRecord" %>
+<%@ page import="com.dinevista.model.FoodOrderRecord" %>
+<%@ page import="com.dinevista.util.HtmlUtil" %>
 <%
-    List<ReservationRecord> managerReservations = (List<ReservationRecord>) session.getAttribute("reservations");
-    List<EventBookingRecord> managerEvents = (List<EventBookingRecord>) session.getAttribute("eventBookings");
-    int managerReservationCount = managerReservations == null ? 8 : managerReservations.size() + 8;
-    int managerEventCount = managerEvents == null ? 3 : managerEvents.size() + 3;
+    request.setAttribute("pageTitle", "Operations Dashboard");
+    request.setAttribute("activeNav", "");
+    List<TableReservationRecord> managerReservations = (List<TableReservationRecord>) request.getAttribute("managerReservations");
+    List<FoodOrderRecord> managerOrders = (List<FoodOrderRecord>) request.getAttribute("managerOrders");
+    long activeReservationCount = request.getAttribute("activeReservationCount") == null ? 0L : (Long) request.getAttribute("activeReservationCount");
+    long activeOrderCount = request.getAttribute("activeOrderCount") == null ? 0L : (Long) request.getAttribute("activeOrderCount");
 %>
+<%@ include file="fragments/header.jspf" %>
 <section class="dashboard-page">
     <div class="container">
         <div class="dashboard-header">
-            <div><span class="eyebrow">Operations centre</span><h1>DineVista overview</h1><p>Monitor restaurant activity, event demand, sales performance, and operational priorities.</p></div>
-            <div class="hero-actions" style="margin:0"><a class="btn btn-primary" href="<%= ctx %>/reservations">Create reservation</a><a class="btn btn-secondary" href="<%= ctx %>/logout">Sign out</a></div>
+            <div><span class="eyebrow">Operations centre</span><h1>DineVista restaurant overview</h1><p>Monitor table reservations, food-order demand, kitchen status, and operational priorities.</p></div>
+            <div class="hero-actions" style="margin:0"><a class="btn btn-secondary" href="<%= ctx %>/logout">Sign out</a></div>
         </div>
         <div class="kpi-grid">
-            <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span><span class="trend">+12% today</span></div><strong><%= managerReservationCount %></strong><span>Table reservations</span></article>
-            <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4h2l2 10h10l2-7H7"/></svg></span><span class="trend">+8% this week</span></div><strong>42</strong><span>Food orders</span></article>
-            <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h16M6 20V10l6-6 6 6v10"/></svg></span><span class="trend">5 pending</span></div><strong><%= managerEventCount %></strong><span>Event inquiries</span></article>
-            <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg></span><span class="trend">+16.4%</span></div><strong>184K</strong><span>Revenue today (LKR)</span></article>
+            <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span><span class="trend">Live module</span></div><strong><%= activeReservationCount %></strong><span>Active reservations</span></article>
+            <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4h2l2 10h10l2-7H7"/></svg></span><span class="trend">Kitchen queue</span></div><strong><%= activeOrderCount %></strong><span>Active food orders</span></article>
+            <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M3 12h18"/></svg></span><span class="trend">Validation</span></div><strong>90m</strong><span>Reservation slot protection</span></article>
+            <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg></span><span class="trend">Complete flow</span></div><strong>CRUD</strong><span>Reservation and order management</span></article>
         </div>
 
         <div class="dashboard-grid">
             <section class="panel">
-                <div class="panel-header"><div><h3>Revenue performance</h3><span class="muted small">Last seven operating days</span></div><span class="tag orange">Live demo</span></div>
-                <div class="chart-wrap"><canvas data-revenue-chart aria-label="Revenue trend chart"></canvas></div>
+                <div class="panel-header"><div><h3>Restaurant operations</h3><span class="muted small">Open the complete management workspaces.</span></div></div>
+                <div class="operations-launch-grid">
+                    <a class="operations-launch" href="<%= ctx %>/staff/reservations"><span class="launch-icon">R</span><div><strong>Reservation operations</strong><p>Assign tables, confirm requests, seat guests, complete visits, or reject invalid requests.</p></div><span>Open</span></a>
+                    <a class="operations-launch" href="<%= ctx %>/staff/orders"><span class="launch-icon green">O</span><div><strong>Kitchen food orders</strong><p>Accept orders, start preparation, mark ready, serve, complete, or reject with a reason.</p></div><span>Open</span></a>
+                </div>
             </section>
             <aside class="panel">
-                <div class="panel-header"><h3>Recent activity</h3></div>
-                <div class="activity-list">
-                    <div class="activity-item"><span class="activity-dot"></span><span><strong>New garden table request</strong><span>Four guests for 7:30 PM</span></span></div>
-                    <div class="activity-item"><span class="activity-dot"></span><span><strong>Order DV-O-A82D confirmed</strong><span>Kitchen preparation started</span></span></div>
-                    <div class="activity-item"><span class="activity-dot"></span><span><strong>Wedding consultation received</strong><span>Everlasting Elegance package</span></span></div>
-                    <div class="activity-item"><span class="activity-dot"></span><span><strong>Low stock alert</strong><span>Fresh prawns below reorder level</span></span></div>
-                </div>
+                <div class="panel-header"><h3>Business rules active</h3></div>
+                <ul class="check-list operational-checks">
+                    <li>Prevents overlapping table assignments.</li>
+                    <li>Validates party size and table capacity.</li>
+                    <li>Blocks invalid item quantities.</li>
+                    <li>Enforces reservation and order status transitions.</li>
+                    <li>Stores a full status history for audit.</li>
+                </ul>
             </aside>
         </div>
 
         <div class="dashboard-grid" style="margin-top:22px">
             <section class="panel">
-                <div class="panel-header"><h3>Today's reservation schedule</h3><a class="btn btn-ghost btn-sm" href="<%= ctx %>/reservations">View form</a></div>
-                <div class="table-wrap"><table class="data-table"><thead><tr><th>Time</th><th>Guest</th><th>Party</th><th>Area</th><th>Status</th></tr></thead><tbody>
-                    <tr><td>6:30 PM</td><td>N. Perera</td><td>4 guests</td><td>Garden terrace</td><td><span class="status confirmed">Confirmed</span></td></tr>
-                    <tr><td>7:00 PM</td><td>S. Fernando</td><td>2 guests</td><td>Chef's counter</td><td><span class="status confirmed">Confirmed</span></td></tr>
-                    <tr><td>7:30 PM</td><td>A. Silva</td><td>8 guests</td><td>Private dining</td><td><span class="status pending">Pending</span></td></tr>
-                    <tr><td>8:30 PM</td><td>R. Jayasinghe</td><td>5 guests</td><td>Indoor hall</td><td><span class="status processing">Reviewing</span></td></tr>
+                <div class="panel-header"><h3>Upcoming reservation schedule</h3><a class="btn btn-ghost btn-sm" href="<%= ctx %>/staff/reservations">Manage all</a></div>
+                <div class="table-wrap"><table class="data-table"><thead><tr><th>Reference</th><th>Date and time</th><th>Guest</th><th>Party</th><th>Table</th><th>Status</th></tr></thead><tbody>
+                    <% if (managerReservations == null || managerReservations.isEmpty()) { %><tr><td colspan="6">No reservations available.</td></tr>
+                    <% } else { int shown = 0; for (TableReservationRecord item : managerReservations) { if (shown++ >= 6) break; %>
+                        <tr><td><a class="table-link" href="<%= ctx %>/staff/reservations/view?reference=<%= item.getReference() %>"><%= HtmlUtil.escape(item.getReference()) %></a></td><td><%= item.getDateDisplay() %><span class="table-subtext"><%= item.getTimeDisplay() %></span></td><td><%= HtmlUtil.escape(item.getGuestName()) %></td><td><%= item.getPartySize() %></td><td><%= item.getTableCode() == null ? "Unassigned" : HtmlUtil.escape(item.getTableCode()) %></td><td><span class="status <%= item.getStatusCss() %>"><%= HtmlUtil.escape(item.getStatus()) %></span></td></tr>
+                    <% }} %>
                 </tbody></table></div>
             </section>
             <aside class="panel">
-                <div class="panel-header"><h3>Management shortcuts</h3></div>
-                <div class="quick-actions">
-                    <a class="quick-action" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v14H4z"/></svg><span><strong>Menu items</strong><span>Manage dishes</span></span></a>
-                    <a class="quick-action" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5h16v14zM8 9h8M8 13h5"/></svg><span><strong>Inventory</strong><span>Review stock</span></span></a>
-                    <a class="quick-action" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h16M6 20V10l6-6 6 6v10"/></svg><span><strong>Event bookings</strong><span>Plan resources</span></span></a>
-                    <a class="quick-action" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-5 3-8 8-8s8 3 8 8"/></svg><span><strong>Staff schedules</strong><span>Assign shifts</span></span></a>
+                <div class="panel-header"><h3>Current kitchen queue</h3><a class="btn btn-ghost btn-sm" href="<%= ctx %>/staff/orders">Manage all</a></div>
+                <div class="activity-list">
+                    <% if (managerOrders == null || managerOrders.isEmpty()) { %><p class="muted small">No food orders available.</p>
+                    <% } else { int shown = 0; for (FoodOrderRecord order : managerOrders) { if (shown++ >= 5) break; %>
+                        <a class="activity-item" href="<%= ctx %>/staff/orders/view?reference=<%= order.getReference() %>"><span class="activity-dot"></span><span><strong><%= HtmlUtil.escape(order.getReference()) %> — <%= order.getStatus() %></strong><span><%= HtmlUtil.escape(order.getCustomerName()) %> · <%= order.getTotalQuantity() %> item(s)</span></span></a>
+                    <% }} %>
                 </div>
             </aside>
         </div>

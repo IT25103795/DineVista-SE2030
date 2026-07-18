@@ -26,6 +26,7 @@ DROP TABLE IF EXISTS event_package;
 DROP TABLE IF EXISTS order_status_history;
 DROP TABLE IF EXISTS order_item;
 DROP TABLE IF EXISTS food_order;
+DROP TABLE IF EXISTS reservation_status_history;
 DROP TABLE IF EXISTS table_reservation;
 DROP TABLE IF EXISTS restaurant_table;
 DROP TABLE IF EXISTS stock_transaction;
@@ -149,6 +150,7 @@ CREATE TABLE table_reservation (
     reservation_id BIGINT PRIMARY KEY AUTO_INCREMENT,
     reservation_reference VARCHAR(30) NOT NULL UNIQUE,
     customer_id BIGINT,
+    customer_key VARCHAR(190) NOT NULL,
     table_id BIGINT,
     guest_name VARCHAR(160) NOT NULL,
     email VARCHAR(160) NOT NULL,
@@ -158,37 +160,63 @@ CREATE TABLE table_reservation (
     party_size INT NOT NULL,
     seating_preference VARCHAR(100),
     occasion_notes VARCHAR(500),
-    reservation_status ENUM('PENDING','CONFIRMED','SEATED','COMPLETED','CANCELLED','NO_SHOW') NOT NULL DEFAULT 'PENDING',
+    reservation_status ENUM('PENDING','CONFIRMED','SEATED','COMPLETED','CANCELLED','REJECTED','NO_SHOW') NOT NULL DEFAULT 'PENDING',
+    staff_note VARCHAR(500),
+    cancellation_reason VARCHAR(500),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_reservation_customer FOREIGN KEY (customer_id) REFERENCES customer_profile(customer_id),
-    CONSTRAINT fk_reservation_table FOREIGN KEY (table_id) REFERENCES restaurant_table(table_id)
+    CONSTRAINT fk_reservation_table FOREIGN KEY (table_id) REFERENCES restaurant_table(table_id),
+    INDEX idx_reservation_customer_key (customer_key),
+    INDEX idx_reservation_slot (reservation_date, reservation_time, table_id)
+) ENGINE=InnoDB;
+
+CREATE TABLE reservation_status_history (
+    history_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    reservation_id BIGINT NOT NULL,
+    status VARCHAR(40) NOT NULL,
+    changed_by BIGINT,
+    changed_by_name VARCHAR(160),
+    note VARCHAR(500),
+    changed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_reservation_history_reservation FOREIGN KEY (reservation_id)
+        REFERENCES table_reservation(reservation_id) ON DELETE CASCADE,
+    CONSTRAINT fk_reservation_history_user FOREIGN KEY (changed_by)
+        REFERENCES user_account(user_id)
 ) ENGINE=InnoDB;
 
 CREATE TABLE food_order (
     order_id BIGINT PRIMARY KEY AUTO_INCREMENT,
     order_reference VARCHAR(30) NOT NULL UNIQUE,
     customer_id BIGINT,
+    customer_key VARCHAR(190) NOT NULL,
     reservation_id BIGINT,
-    order_type ENUM('DINE_IN','TAKEAWAY','DELIVERY') NOT NULL,
-    order_status ENUM('PENDING','CONFIRMED','PREPARING','READY','OUT_FOR_DELIVERY','COMPLETED','CANCELLED') NOT NULL DEFAULT 'PENDING',
-    delivery_address VARCHAR(500),
+    customer_name VARCHAR(160) NOT NULL,
+    email VARCHAR(160) NOT NULL,
+    phone VARCHAR(20) NOT NULL,
+    order_type ENUM('DINE_IN','TAKEAWAY','PRE_ORDER') NOT NULL,
+    order_status ENUM('PENDING','CONFIRMED','PREPARING','READY','SERVED','COMPLETED','CANCELLED','REJECTED') NOT NULL DEFAULT 'PENDING',
+    requested_for DATETIME,
     subtotal DECIMAL(12,2) NOT NULL DEFAULT 0,
     service_charge DECIMAL(12,2) NOT NULL DEFAULT 0,
     discount_amount DECIMAL(12,2) NOT NULL DEFAULT 0,
     total_amount DECIMAL(12,2) NOT NULL DEFAULT 0,
     order_notes VARCHAR(500),
+    staff_note VARCHAR(500),
+    cancellation_reason VARCHAR(500),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_order_customer FOREIGN KEY (customer_id) REFERENCES customer_profile(customer_id),
-    CONSTRAINT fk_order_reservation FOREIGN KEY (reservation_id) REFERENCES table_reservation(reservation_id)
+    CONSTRAINT fk_order_reservation FOREIGN KEY (reservation_id) REFERENCES table_reservation(reservation_id),
+    INDEX idx_order_customer_key (customer_key),
+    INDEX idx_order_status_type (order_status, order_type)
 ) ENGINE=InnoDB;
 
 CREATE TABLE order_item (
     order_item_id BIGINT PRIMARY KEY AUTO_INCREMENT,
     order_id BIGINT NOT NULL,
     menu_item_id BIGINT NOT NULL,
-    quantity INT NOT NULL,
+    quantity INT NOT NULL CHECK (quantity BETWEEN 1 AND 10),
     unit_price DECIMAL(10,2) NOT NULL,
     item_notes VARCHAR(255),
     line_total DECIMAL(12,2) NOT NULL,
@@ -201,6 +229,7 @@ CREATE TABLE order_status_history (
     order_id BIGINT NOT NULL,
     status VARCHAR(40) NOT NULL,
     changed_by BIGINT,
+    changed_by_name VARCHAR(160),
     note VARCHAR(255),
     changed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_order_history_order FOREIGN KEY (order_id) REFERENCES food_order(order_id) ON DELETE CASCADE,

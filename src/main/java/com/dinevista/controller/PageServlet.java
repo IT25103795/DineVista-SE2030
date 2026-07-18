@@ -1,5 +1,8 @@
 package com.dinevista.controller;
 
+import com.dinevista.service.ReservationOrderService;
+import com.dinevista.util.ReservationOrderContext;
+
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -10,27 +13,34 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-@WebServlet(urlPatterns = {"/menu", "/orders", "/events", "/register", "/about"})
+@WebServlet(urlPatterns = {"/menu", "/events", "/register", "/about"})
 public class PageServlet extends HttpServlet {
     private final Map<String, String> views = new HashMap<>();
+    private ReservationOrderService reservationOrderService;
 
     @Override
     public void init() {
         views.put("/menu", "/WEB-INF/views/menu.jsp");
-        views.put("/orders", "/WEB-INF/views/orders.jsp");
         views.put("/events", "/WEB-INF/views/events.jsp");
         views.put("/register", "/WEB-INF/views/register.jsp");
         views.put("/about", "/WEB-INF/views/about.jsp");
+        reservationOrderService = ReservationOrderContext.service(getServletContext());
     }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String view = views.get(request.getServletPath());
+        String servletPath = request.getServletPath();
+        String view = views.get(servletPath);
         if (view == null) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
+
+        if ("/menu".equals(servletPath)) {
+            request.setAttribute("menuItems", reservationOrderService.menuItems());
+        }
+
         RequestDispatcher dispatcher = request.getRequestDispatcher(view);
         dispatcher.forward(request, response);
     }

@@ -12,6 +12,9 @@ public class AuthServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        if ("manager".equalsIgnoreCase(request.getParameter("required"))) {
+            request.setAttribute("loginNotice", "Sign in as Manager to access restaurant operations.");
+        }
         request.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(request, response);
     }
 
@@ -30,9 +33,26 @@ public class AuthServlet extends HttpServlet {
         }
 
         boolean manager = "manager".equalsIgnoreCase(role);
+        String emailName = email.contains("@") ? email.substring(0, email.indexOf('@')) : email;
+        String displayName = manager ? "Operations Manager" : friendlyName(emailName);
+
         request.getSession().setAttribute("demoRole", manager ? "manager" : "customer");
-        request.getSession().setAttribute("displayName", manager ? "Operations Manager" : "DineVista Guest");
+        request.getSession().setAttribute("demoEmail", email.toLowerCase());
+        request.getSession().setAttribute("displayName", displayName);
         response.sendRedirect(request.getContextPath() + "/dashboard");
+    }
+
+    private String friendlyName(String value) {
+        String clean = value.replace('.', ' ').replace('_', ' ').replace('-', ' ').trim();
+        if (clean.isEmpty()) return "DineVista Guest";
+        StringBuilder result = new StringBuilder();
+        for (String word : clean.split("\\s+")) {
+            if (word.isEmpty()) continue;
+            if (result.length() > 0) result.append(' ');
+            result.append(Character.toUpperCase(word.charAt(0)));
+            if (word.length() > 1) result.append(word.substring(1).toLowerCase());
+        }
+        return result.toString();
     }
 
     private String value(String input) {

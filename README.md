@@ -6,16 +6,31 @@ DineVista is a responsive Java web application developed for the **SE2030 Softwa
 
 ## Current Release
 
-This repository contains the polished frontend baseline and working demo flows for:
+The current release includes a complete **Table Reservation and Food Order Management** module for both customers and restaurant staff.
 
-- Restaurant menu browsing and filtering
-- Food ordering and a browser-based shopping cart
-- Table reservation submission and confirmation
-- Event package exploration and booking requests
-- Customer and manager dashboards
-- Login, registration, validation, error pages, and UTF-8 support
+### Customer functions
 
-The demo forms use session-based temporary records. The architecture is ready for JDBC/MySQL implementation during the CRUD phase.
+- Browse available restaurant tables by date, time, party size, and seating area
+- Create, view, edit, and cancel eligible table reservations
+- Browse and filter the restaurant menu
+- Add, update, and remove food items in a server-side cart
+- Create dine-in, takeaway, and reservation-linked pre-orders
+- View current and previous reservations and orders
+- Track reservation and order status histories
+- Cancel eligible orders before kitchen preparation begins
+
+### Restaurant-staff functions
+
+- View and filter incoming reservations and orders
+- Review complete customer details
+- Assign a suitable available table
+- Confirm, reject, seat, complete, cancel, or mark reservations as no-show
+- Send accepted food orders through the kitchen workflow
+- Update orders from pending to confirmed, preparing, ready, served, and completed
+- Record compulsory operational notes and cancellation or rejection reasons
+- Prevent overlapping table allocations and invalid order quantities
+
+The module runs in **memory mode by default**, so it works immediately without MySQL. A complete JDBC repository is included and can be enabled using the provided database configuration after importing the SQL scripts.
 
 ## Team Members
 
@@ -33,7 +48,7 @@ The demo forms use session-based temporary records. The architecture is ready fo
 - Java 11
 - Java Servlets 4.0
 - JSP
-- JDBC-ready architecture
+- JDBC
 - MySQL 8
 - Maven WAR
 - Apache Tomcat 9
@@ -46,7 +61,12 @@ DineVista/
 ├── src/main/java/com/dinevista/
 │   ├── controller/
 │   ├── filter/
-│   └── model/
+│   ├── model/
+│   ├── repository/
+│   ├── service/
+│   └── util/
+├── src/main/resources/
+│   └── database.example.properties
 ├── src/main/webapp/
 │   ├── assets/
 │   ├── WEB-INF/views/
@@ -56,31 +76,75 @@ DineVista/
 │   └── sample-data.sql
 ├── docs/
 │   ├── proposal/
-│   └── diagrams/
+│   ├── diagrams/
+│   └── TABLE_RESERVATION_AND_FOOD_ORDER_MODULE.md
 ├── pom.xml
 └── README.md
 ```
+
+## Main Module Routes
+
+| Route | Purpose |
+|---|---|
+| `/menu` | Browse and filter menu items |
+| `/reservations` | Search availability and manage customer reservations |
+| `/reservations/view?reference=...` | View one reservation and its timeline |
+| `/reservations/edit?reference=...` | Edit an eligible reservation |
+| `/orders` | Manage the cart, checkout, and customer orders |
+| `/orders/view?reference=...` | View one order and its status timeline |
+| `/staff/reservations` | Staff reservation operations dashboard |
+| `/staff/reservations/view?reference=...` | Staff reservation review and status actions |
+| `/staff/orders` | Staff kitchen/order operations dashboard |
+| `/staff/orders/view?reference=...` | Staff order review and workflow actions |
+| `/dashboard` | Role-based customer or manager dashboard |
+| `/health` | JSON health response |
 
 ## Run in IntelliJ IDEA
 
 1. Open this folder as a Maven project.
 2. Set the Project SDK to Java 11 or later.
-3. Add an Apache Tomcat 9 local configuration.
-4. Deploy the artifact `DineVista:war exploded`.
-5. Open `http://localhost:8080/DineVista/`.
+3. Allow Maven to download dependencies.
+4. Add an Apache Tomcat 9 local configuration.
+5. Deploy the artifact `DineVista:war exploded`.
+6. Open `http://localhost:8080/DineVista/`.
 
 ## Demo Login
 
-The current authentication flow is for UI demonstration:
+The current sign-in screen supports role-based demonstration:
 
-- Choose **Customer** to open the customer dashboard.
-- Choose **Manager** to open the operations dashboard.
-- Any non-empty email and password are accepted until database authentication is connected.
+- Choose **Customer** to open customer reservations and orders.
+- Choose **Manager** to open staff reservation and order operations.
+- Enter any valid-looking email and any password with at least four characters.
+
+## Persistence Modes
+
+### Memory mode — default
+
+No database setup is required. Demo data remains available while the application is running.
+
+### MySQL mode
+
+1. Import `database/schema.sql`.
+2. Import `database/sample-data.sql`.
+3. Copy `src/main/resources/database.example.properties` to `src/main/resources/database.properties`.
+4. Change `storage.mode=memory` to `storage.mode=mysql`.
+5. Enter your local MySQL username and password.
+6. Restart Tomcat.
+
+Never commit `database.properties`; it is already excluded by `.gitignore`.
+
+## Documentation
+
+Detailed implementation, business rules, routes, status transitions, testing steps, and viva points are available in:
+
+```text
+docs/TABLE_RESERVATION_AND_FOOD_ORDER_MODULE.md
+```
 
 ## Git Workflow
 
 This repository currently uses only the `main` branch.
 
-- `main` - active development and stable project source
+- `main` — active development and stable project source
 
-All approved project changes should be committed and pushed directly to `main`.
+Commit approved project changes directly to `main`.

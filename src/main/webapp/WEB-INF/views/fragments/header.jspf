@@ -1,10 +1,16 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page import="com.dinevista.util.ReservationOrderContext" %>
 <%
     String ctx = request.getContextPath();
     String pageTitle = (String) request.getAttribute("pageTitle");
     String activeNav = (String) request.getAttribute("activeNav");
     if (pageTitle == null) pageTitle = "DineVista";
     if (activeNav == null) activeNav = "";
+    String currentRole = session.getAttribute("demoRole") == null ? "" : session.getAttribute("demoRole").toString();
+    String currentName = session.getAttribute("displayName") == null ? "" : session.getAttribute("displayName").toString();
+    boolean signedIn = !currentRole.isEmpty();
+    boolean managerNav = "manager".equalsIgnoreCase(currentRole);
+    int serverCartCount = ReservationOrderContext.cartQuantity(request);
 %>
 <!DOCTYPE html>
 <html lang="en">
@@ -31,18 +37,30 @@
             <a class="<%= "orders".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/orders">Order Food</a>
             <a class="<%= "reservations".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/reservations">Reserve a Table</a>
             <a class="<%= "events".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/events">Events</a>
-            <a class="<%= "about".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/about">About</a>
+            <% if (managerNav) { %>
+                <a class="<%= "staffReservations".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/staff/reservations">Reservations</a>
+                <a class="<%= "staffOrders".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/staff/orders">Kitchen Orders</a>
+            <% } else { %>
+                <a class="<%= "about".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/about">About</a>
+            <% } %>
         </nav>
 
         <div class="nav-actions">
-            <a class="nav-cart" href="<%= ctx %>/orders" aria-label="Open food cart">
+            <a class="nav-cart" href="<%= ctx %>/orders#order-cart" aria-label="Open food cart">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                     <path d="M3 4h2l2.2 10.1a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 2-1.6L20.5 8H7"/>
                     <circle cx="10" cy="20" r="1.2"/><circle cx="18" cy="20" r="1.2"/>
                 </svg>
-                <span class="cart-count" data-cart-count>0</span>
+                <span class="cart-count"><%= serverCartCount %></span>
             </a>
-            <a class="btn btn-secondary btn-sm" href="<%= ctx %>/login">Sign in</a>
+            <% if (signedIn) { %>
+                <a class="account-pill" href="<%= ctx %>/dashboard" title="Open dashboard">
+                    <span class="account-avatar"><%= currentName.isEmpty() ? "DV" : currentName.substring(0, Math.min(2, currentName.length())).toUpperCase() %></span>
+                    <span class="account-name"><%= com.dinevista.util.HtmlUtil.escape(currentName) %></span>
+                </a>
+            <% } else { %>
+                <a class="btn btn-secondary btn-sm" href="<%= ctx %>/login">Sign in</a>
+            <% } %>
             <a class="btn btn-primary btn-sm" href="<%= ctx %>/reservations">Book now</a>
             <button class="menu-toggle" type="button" data-menu-toggle aria-label="Toggle navigation" aria-expanded="false">
                 <span></span>

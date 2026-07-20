@@ -82,6 +82,17 @@ public final class ReservationOrderContext {
         return "manager".equalsIgnoreCase(string(request.getSession().getAttribute("demoRole")));
     }
 
+    public static boolean isSignedIn(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        return session != null && !string(session.getAttribute("demoRole")).isEmpty();
+    }
+
+    public static String notificationRecipientKey(HttpServletRequest request) {
+        return isManager(request)
+                ? ReservationOrderService.MANAGER_NOTIFICATION_KEY
+                : customerKey(request);
+    }
+
     public static String displayName(HttpServletRequest request) {
         String name = string(request.getSession().getAttribute("displayName"));
         return name.isEmpty() ? "DineVista Guest" : name;

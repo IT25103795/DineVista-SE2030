@@ -2,6 +2,7 @@
 target/
 build/
 release/*.war
+.smarttomcat/
 
 # IntelliJ IDEA
 .idea/
@@ -32,3 +33,7 @@ uploads/
 # Operating system files
 .DS_Store
 Thumbs.db
+
+# database
+database.properties
+database.example.properties

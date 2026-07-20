@@ -2,6 +2,7 @@ package com.dinevista.repository;
 
 import com.dinevista.model.FoodOrderRecord;
 import com.dinevista.model.MenuItemRecord;
+import com.dinevista.model.NotificationRecord;
 import com.dinevista.model.RestaurantTableRecord;
 import com.dinevista.model.TableReservationRecord;
 
@@ -27,6 +28,14 @@ public interface ReservationOrderRepository {
     Optional<FoodOrderRecord> findOrderByReference(String reference);
     List<FoodOrderRecord> findOrdersByCustomer(String customerKey);
     List<FoodOrderRecord> findAllOrders();
+
+    NotificationRecord saveNotification(NotificationRecord notification);
+    Optional<NotificationRecord> findNotification(long notificationId);
+    List<NotificationRecord> findNotifications(String recipientKey, int limit);
+    long countUnreadNotifications(String recipientKey);
+    void markNotificationRead(long notificationId, String recipientKey);
+    void markAllNotificationsRead(String recipientKey);
+    void deleteNotifications(String recipientKey);
 
     long nextReservationId();
     long nextOrderId();

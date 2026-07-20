@@ -1,5 +1,8 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="com.dinevista.util.ReservationOrderContext" %>
+<%@ page import="com.dinevista.model.NotificationRecord" %>
+<%@ page import="java.util.Collections" %>
+<%@ page import="java.util.List" %>
 <%
     String ctx = request.getContextPath();
     String pageTitle = (String) request.getAttribute("pageTitle");
@@ -11,6 +14,19 @@
     boolean signedIn = !currentRole.isEmpty();
     boolean managerNav = "manager".equalsIgnoreCase(currentRole);
     int serverCartCount = ReservationOrderContext.cartQuantity(request);
+    List<NotificationRecord> headerNotifications = Collections.emptyList();
+    long headerUnreadCount = 0;
+    if (signedIn) {
+        try {
+            String notificationKey = ReservationOrderContext.notificationRecipientKey(request);
+            headerNotifications = ReservationOrderContext.service(application)
+                    .notifications(notificationKey, 8);
+            headerUnreadCount = ReservationOrderContext.service(application)
+                    .unreadNotificationCount(notificationKey);
+        } catch (RuntimeException ignored) {
+            // Keep every page usable if notification storage is temporarily unavailable.
+        }
+    }
 %>
 <!DOCTYPE html>
 <html lang="en">
@@ -73,6 +89,63 @@
                 </span>
                 <span class="sr-only" data-theme-label>Dark mode</span>
             </button>
+            <% if (signedIn) { %>
+                <details class="notification-menu" data-notification-menu>
+                    <summary class="notification-bell" aria-label="Open notifications" title="Notifications">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/>
+                            <path d="M10 21h4"/>
+                        </svg>
+                        <% if (headerUnreadCount > 0) { %>
+                            <span class="notification-count"><%= headerUnreadCount > 99 ? "99+" : headerUnreadCount %></span>
+                        <% } %>
+                    </summary>
+                    <section class="notification-dropdown" aria-label="Notifications">
+                        <div class="notification-dropdown-head">
+                            <div>
+                                <strong>Notifications</strong>
+                                <span><%= headerUnreadCount %> unread</span>
+                            </div>
+                            <div class="notification-head-actions">
+                                <% if (headerUnreadCount > 0) { %>
+                                    <form method="post" action="<%= ctx %>/notifications/read-all">
+                                        <button type="submit">Mark read</button>
+                                    </form>
+                                <% } %>
+                                <% if (!headerNotifications.isEmpty()) { %>
+                                    <form method="post" action="<%= ctx %>/notifications/clear-all"
+                                          data-clear-notifications-form>
+                                        <button class="notification-clear" type="submit">Clear all</button>
+                                    </form>
+                                <% } %>
+                            </div>
+                        </div>
+                        <div class="notification-list">
+                            <% if (headerNotifications.isEmpty()) { %>
+                                <div class="notification-empty">
+                                    <span aria-hidden="true">✓</span>
+                                    <strong>You are all caught up</strong>
+                                    <p>New reservation and order activity will appear here.</p>
+                                </div>
+                            <% } else {
+                                for (NotificationRecord notification : headerNotifications) { %>
+                                    <a class="notification-item <%= notification.isRead() ? "" : "unread" %>"
+                                       href="<%= ctx %>/notifications/open?id=<%= notification.getId() %>">
+                                        <span class="notification-item-icon" aria-hidden="true">
+                                            <%= "ORDER".equals(notification.getReferenceType()) ? "O" : "R" %>
+                                        </span>
+                                        <span class="notification-item-copy">
+                                            <strong><%= com.dinevista.util.HtmlUtil.escape(notification.getTitle()) %></strong>
+                                            <span><%= com.dinevista.util.HtmlUtil.escape(notification.getMessage()) %></span>
+                                            <small><%= com.dinevista.util.HtmlUtil.escape(notification.getCreatedAtDisplay()) %></small>
+                                        </span>
+                                    </a>
+                            <%  }
+                               } %>
+                        </div>
+                    </section>
+                </details>
+            <% } %>
             <a class="nav-cart" href="<%= ctx %>/orders#order-cart" aria-label="Open food cart" data-cart-open>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                     <path d="M3 4h2l2.2 10.1a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 2-1.6L20.5 8H7"/>

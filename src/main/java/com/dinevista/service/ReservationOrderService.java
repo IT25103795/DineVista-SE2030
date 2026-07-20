@@ -3,6 +3,7 @@ package com.dinevista.service;
 import com.dinevista.model.CartLineRecord;
 import com.dinevista.model.FoodOrderRecord;
 import com.dinevista.model.MenuItemRecord;
+import com.dinevista.model.NotificationRecord;
 import com.dinevista.model.OrderItemRecord;
 import com.dinevista.model.RestaurantTableRecord;
 import com.dinevista.model.TableReservationRecord;
@@ -30,6 +31,7 @@ import java.util.stream.Collectors;
 public class ReservationOrderService {
     public static final int RESERVATION_SLOT_MINUTES = 90;
     public static final int MAX_CART_QUANTITY = 10;
+    public static final String MANAGER_NOTIFICATION_KEY = "role:manager";
 
     private static final Set<String> SEATING_AREAS = new HashSet<>(
             Arrays.asList("ANY", "INDOOR", "GARDEN", "PRIVATE_DINING", "CHEF_COUNTER"));
@@ -162,6 +164,13 @@ public class ReservationOrderService {
                 clean(guestName), clean(email), clean(phone), date, time, partySize,
                 normalize(seatingPreference), clean(occasionNotes));
         repository.saveReservation(record);
+        createNotification(
+                MANAGER_NOTIFICATION_KEY, "MANAGER", "RESERVATION_RECEIVED",
+                "New reservation received",
+                record.getGuestName() + " requested a table for " + record.getPartySize()
+                        + " on " + record.getReservationDate() + " at " + record.getReservationTime() + ".",
+                "RESERVATION", record.getReference(),
+                "/staff/reservations/view?reference=" + record.getReference());
         return OperationResult.success(record);
     }
 
@@ -203,6 +212,12 @@ public class ReservationOrderService {
                 date, time, partySize, normalize(seatingPreference), clean(occasionNotes));
         if (allocationChanged) record.clearTableAssignment(clean(guestName));
         repository.saveReservation(record);
+        createNotification(
+                MANAGER_NOTIFICATION_KEY, "MANAGER", "RESERVATION_UPDATED",
+                "Reservation updated by customer",
+                record.getGuestName() + " updated reservation " + record.getReference() + ".",
+                "RESERVATION", record.getReference(),
+                "/staff/reservations/view?reference=" + record.getReference());
         return OperationResult.success(record);
     }
 
@@ -241,6 +256,12 @@ public class ReservationOrderService {
 
         record.changeStatus("CANCELLED", finalReason, record.getGuestName());
         repository.saveReservation(record);
+        createNotification(
+                MANAGER_NOTIFICATION_KEY, "MANAGER", "RESERVATION_CANCELLED",
+                "Reservation cancelled by customer",
+                record.getGuestName() + " cancelled reservation " + record.getReference() + ".",
+                "RESERVATION", record.getReference(),
+                "/staff/reservations/view?reference=" + record.getReference());
         return OperationResult.success(record);
     }
 
@@ -251,6 +272,7 @@ public class ReservationOrderService {
         if (optional.isEmpty()) return OperationResult.failure("Reservation was not found.");
 
         TableReservationRecord record = optional.get();
+        String previousStatus = record.getStatus();
         String targetStatus = normalize(newStatus);
         String cleanNote = clean(note);
         List<String> errors = new ArrayList<>();
@@ -310,8 +332,9 @@ public class ReservationOrderService {
         if (!isValidReservationTransition(record.getStatus(), targetStatus)) {
             errors.add("The requested reservation status change is not allowed.");
         }
-        if (isReservationClosed(targetStatus) && hasActiveLinkedOrders(reference)) {
-            errors.add("Cancel or complete linked food orders before closing this reservation.");
+        if (Arrays.asList("CANCELLED", "REJECTED", "NO_SHOW").contains(targetStatus)
+                && hasActiveLinkedOrders(reference)) {
+            errors.add("Cancel or complete linked food orders before cancelling or closing this reservation as a no-show.");
         }
 
         if (!errors.isEmpty()) return OperationResult.failure(errors);
@@ -321,6 +344,16 @@ public class ReservationOrderService {
         }
         record.changeStatus(targetStatus, cleanNote, clean(staffName));
         repository.saveReservation(record);
+        boolean statusChanged = !previousStatus.equals(targetStatus);
+        createNotification(
+                record.getCustomerKey(), "CUSTOMER", "RESERVATION_STATUS_UPDATED",
+                statusChanged ? "Reservation " + displayStatus(targetStatus) : "Reservation updated",
+                statusChanged
+                        ? "Your reservation " + record.getReference() + " is now "
+                        + displayStatus(targetStatus) + "."
+                        : "Your reservation " + record.getReference() + " details were updated.",
+                "RESERVATION", record.getReference(),
+                "/reservations/view?reference=" + record.getReference());
         return OperationResult.success(record);
     }
 
@@ -448,6 +481,13 @@ public class ReservationOrderService {
                 linkedReservation, requestedFor, clean(orderNotes), items);
         repository.saveOrder(order);
         cart.clear();
+        createNotification(
+                MANAGER_NOTIFICATION_KEY, "MANAGER", "ORDER_RECEIVED",
+                "New food order received",
+                order.getCustomerName() + " placed " + displayStatus(order.getOrderType())
+                        + " order " + order.getReference() + ".",
+                "ORDER", order.getReference(),
+                "/staff/orders/view?reference=" + order.getReference());
         return OperationResult.success(order);
     }
 
@@ -473,6 +513,12 @@ public class ReservationOrderService {
 
         order.changeStatus("CANCELLED", clean(reason), order.getCustomerName());
         repository.saveOrder(order);
+        createNotification(
+                MANAGER_NOTIFICATION_KEY, "MANAGER", "ORDER_CANCELLED",
+                "Food order cancelled by customer",
+                order.getCustomerName() + " cancelled order " + order.getReference() + ".",
+                "ORDER", order.getReference(),
+                "/staff/orders/view?reference=" + order.getReference());
         return OperationResult.success(order);
     }
 
@@ -483,6 +529,7 @@ public class ReservationOrderService {
         if (optional.isEmpty()) return OperationResult.failure("Food order was not found.");
 
         FoodOrderRecord order = optional.get();
+        String previousStatus = order.getStatus();
         String targetStatus = normalize(newStatus);
         String cleanNote = clean(note);
         List<String> errors = new ArrayList<>();
@@ -504,7 +551,52 @@ public class ReservationOrderService {
 
         order.changeStatus(targetStatus, cleanNote, clean(staffName));
         repository.saveOrder(order);
+        boolean statusChanged = !previousStatus.equals(targetStatus);
+        createNotification(
+                order.getCustomerKey(), "CUSTOMER", "ORDER_STATUS_UPDATED",
+                statusChanged ? "Food order " + displayStatus(targetStatus) : "Food order updated",
+                statusChanged
+                        ? "Your order " + order.getReference() + " is now "
+                        + displayStatus(targetStatus) + "."
+                        : "Your order " + order.getReference() + " details were updated.",
+                "ORDER", order.getReference(),
+                "/orders/view?reference=" + order.getReference());
         return OperationResult.success(order);
+    }
+
+    public List<NotificationRecord> notifications(String recipientKey, int limit) {
+        String key = clean(recipientKey).toLowerCase(Locale.ROOT);
+        if (key.isEmpty()) return Collections.emptyList();
+        return repository.findNotifications(key, Math.max(1, Math.min(limit, 50)));
+    }
+
+    public long unreadNotificationCount(String recipientKey) {
+        String key = clean(recipientKey).toLowerCase(Locale.ROOT);
+        return key.isEmpty() ? 0 : repository.countUnreadNotifications(key);
+    }
+
+    public Optional<String> openNotification(long notificationId, String recipientKey) {
+        String key = clean(recipientKey).toLowerCase(Locale.ROOT);
+        Optional<NotificationRecord> optional = repository.findNotification(notificationId);
+        if (optional.isEmpty() || !optional.get().getRecipientKey().equalsIgnoreCase(key)) {
+            return Optional.empty();
+        }
+        String actionPath = clean(optional.get().getActionPath());
+        if (!actionPath.startsWith("/") || actionPath.startsWith("//")) {
+            return Optional.empty();
+        }
+        repository.markNotificationRead(notificationId, key);
+        return Optional.of(actionPath);
+    }
+
+    public void markAllNotificationsRead(String recipientKey) {
+        String key = clean(recipientKey).toLowerCase(Locale.ROOT);
+        if (!key.isEmpty()) repository.markAllNotificationsRead(key);
+    }
+
+    public void clearNotifications(String recipientKey) {
+        String key = clean(recipientKey).toLowerCase(Locale.ROOT);
+        if (!key.isEmpty()) repository.deleteNotifications(key);
     }
 
     public List<TableReservationRecord> eligibleReservations(String customerKey) {
@@ -610,6 +702,24 @@ public class ReservationOrderService {
                 .filter(order -> reservationReference.equals(order.getReservationReference()))
                 .anyMatch(order -> !Arrays.asList("COMPLETED", "CANCELLED", "REJECTED")
                         .contains(order.getStatus()));
+    }
+
+    private void createNotification(String recipientKey, String recipientRole, String type,
+                                    String title, String message, String referenceType,
+                                    String referenceCode, String actionPath) {
+        try {
+            repository.saveNotification(new NotificationRecord(
+                    0, clean(recipientKey).toLowerCase(Locale.ROOT), normalize(recipientRole),
+                    normalize(type), clean(title), clean(message), normalize(referenceType),
+                    clean(referenceCode), clean(actionPath), false, LocalDateTime.now()));
+        } catch (RuntimeException ignored) {
+            // A notification failure must never roll back a successful reservation or food-order action.
+        }
+    }
+
+    private String displayStatus(String value) {
+        String normalized = normalize(value).toLowerCase(Locale.ROOT).replace('_', ' ');
+        return normalized.isEmpty() ? "updated" : normalized;
     }
 
     private boolean validEmail(String value) {

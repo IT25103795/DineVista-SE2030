@@ -74,6 +74,26 @@
         menuToggle?.setAttribute('aria-expanded', 'false');
     }));
 
+    const notificationMenus = qa('[data-notification-menu]');
+    document.addEventListener('click', event => {
+        notificationMenus.forEach(menu => {
+            if (menu.open && !menu.contains(event.target)) menu.removeAttribute('open');
+        });
+    });
+    document.addEventListener('keydown', event => {
+        if (event.key !== 'Escape') return;
+        notificationMenus.forEach(menu => {
+            if (!menu.open) return;
+            menu.removeAttribute('open');
+            q('summary', menu)?.focus();
+        });
+    });
+    qa('[data-clear-notifications-form]').forEach(form => form.addEventListener('submit', event => {
+        if (!window.confirm('Clear all notifications? This cannot be undone.')) {
+            event.preventDefault();
+        }
+    }));
+
     const today = new Date();
     const localToday = new Date(today.getTime() - today.getTimezoneOffset() * 60000)
         .toISOString().slice(0, 10);

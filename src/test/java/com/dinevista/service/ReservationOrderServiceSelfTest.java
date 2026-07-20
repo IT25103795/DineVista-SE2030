@@ -1,6 +1,7 @@
 package com.dinevista.service;
 
 import com.dinevista.model.FoodOrderRecord;
+import com.dinevista.model.NotificationRecord;
 import com.dinevista.model.RestaurantTableRecord;
 import com.dinevista.model.TableReservationRecord;
 import com.dinevista.repository.InMemoryReservationOrderRepository;
@@ -27,6 +28,7 @@ public final class ReservationOrderServiceSelfTest {
         reservationStaffWorkflow(service, base.plusDays(10));
         cartAndOrderCrud(service, base.plusDays(20));
         linkedOrderRules(service, base.plusDays(30));
+        notificationWorkflow(service, base.plusDays(40));
 
         System.out.println("DineVista reservation/order self-test passed: " + checks + " checks.");
     }
@@ -295,6 +297,14 @@ public final class ReservationOrderServiceSelfTest {
                 "DINE_IN", diningReservation.getValue().getReference(), null, "", diningCart);
         ok(diningOrder.isSuccess(), "dine-in lifecycle order created");
         String diningReference = diningOrder.getValue().getReference();
+        ok(service.staffUpdateReservation(diningReservation.getValue().getReference(), 0,
+                "SEATED", "Guests arrived", "Host").isSuccess(),
+                "linked dining reservation seated");
+        ok(service.staffUpdateReservation(diningReservation.getValue().getReference(), 0,
+                "COMPLETED", "Dining visit complete", "Manager").isSuccess(),
+                "seated reservation completes while linked order remains active");
+        ok("PENDING".equals(service.order(diningReference).orElseThrow().getStatus()),
+                "reservation completion preserves independent order workflow");
         ok(!service.staffUpdateOrder(diningReference, "PREPARING", "Skip", "Manager").isSuccess(),
                 "invalid order status jump blocked");
         ok(service.staffUpdateOrder(diningReference, "CONFIRMED", "Accepted", "Manager").isSuccess(),
@@ -309,6 +319,87 @@ public final class ReservationOrderServiceSelfTest {
                 "dine-in order served");
         ok(service.staffUpdateOrder(diningReference, "COMPLETED", "Completed", "Waiter").isSuccess(),
                 "dine-in order completed");
+    }
+
+    private static void notificationWorkflow(ReservationOrderService service, LocalDate base) {
+        String customerKey = "notify-customer";
+        long managerUnreadBefore = service.unreadNotificationCount(
+                ReservationOrderService.MANAGER_NOTIFICATION_KEY);
+
+        OperationResult<TableReservationRecord> reservation = reservation(
+                service, customerKey, base, LocalTime.of(19, 30), "INDOOR");
+        ok(reservation.isSuccess(), "notification reservation created");
+        String reservationReference = reservation.getValue().getReference();
+        ok(service.unreadNotificationCount(ReservationOrderService.MANAGER_NOTIFICATION_KEY)
+                        == managerUnreadBefore + 1,
+                "manager receives new reservation notification");
+
+        NotificationRecord managerReservationNotification = service.notifications(
+                        ReservationOrderService.MANAGER_NOTIFICATION_KEY, 50).stream()
+                .filter(item -> reservationReference.equals(item.getReferenceCode()))
+                .findFirst().orElseThrow();
+        ok(managerReservationNotification.getActionPath().startsWith("/staff/reservations/view"),
+                "manager reservation notification links to staff record");
+        ok(service.openNotification(managerReservationNotification.getId(), customerKey).isEmpty(),
+                "notification ownership blocks another user");
+        ok(service.openNotification(managerReservationNotification.getId(),
+                        ReservationOrderService.MANAGER_NOTIFICATION_KEY).isPresent(),
+                "manager notification opens and marks read");
+
+        ok(service.staffUpdateReservation(reservationReference, 1, "CONFIRMED",
+                "Confirmed for notification test", "Manager").isSuccess(),
+                "notification reservation confirmed");
+        NotificationRecord customerReservationNotification = service.notifications(customerKey, 20).stream()
+                .filter(item -> reservationReference.equals(item.getReferenceCode()))
+                .findFirst().orElseThrow();
+        ok(!customerReservationNotification.isRead()
+                        && customerReservationNotification.getActionPath().startsWith("/reservations/view"),
+                "customer receives linked reservation status notification");
+
+        Map<Long, Integer> cart = new LinkedHashMap<>();
+        service.addCartItem(cart, 1, 1);
+        long managerUnreadBeforeOrder = service.unreadNotificationCount(
+                ReservationOrderService.MANAGER_NOTIFICATION_KEY);
+        OperationResult<FoodOrderRecord> order = service.createOrder(
+                customerKey, "Notify Guest", "notify@example.com", "0771234567",
+                "TAKEAWAY", "", LocalDateTime.of(base.plusDays(1), LocalTime.of(18, 30)),
+                "Notification test", cart);
+        ok(order.isSuccess(), "notification food order created");
+        String orderReference = order.getValue().getReference();
+        ok(service.unreadNotificationCount(ReservationOrderService.MANAGER_NOTIFICATION_KEY)
+                        == managerUnreadBeforeOrder + 1,
+                "manager receives new food order notification");
+        NotificationRecord managerOrderNotification = service.notifications(
+                        ReservationOrderService.MANAGER_NOTIFICATION_KEY, 50).stream()
+                .filter(item -> orderReference.equals(item.getReferenceCode()))
+                .findFirst().orElseThrow();
+        ok(managerOrderNotification.getActionPath().startsWith("/staff/orders/view"),
+                "manager order notification links to staff record");
+
+        long customerUnreadBefore = service.unreadNotificationCount(customerKey);
+        ok(service.staffUpdateOrder(orderReference, "CONFIRMED", "Accepted", "Manager").isSuccess(),
+                "notification food order confirmed");
+        ok(service.unreadNotificationCount(customerKey) == customerUnreadBefore + 1,
+                "customer receives food order status notification");
+        NotificationRecord customerOrderNotification = service.notifications(customerKey, 20).stream()
+                .filter(item -> orderReference.equals(item.getReferenceCode()))
+                .findFirst().orElseThrow();
+        ok(service.openNotification(customerOrderNotification.getId(), customerKey)
+                        .orElse("").startsWith("/orders/view"),
+                "customer order notification opens relevant record");
+
+        service.markAllNotificationsRead(customerKey);
+        ok(service.unreadNotificationCount(customerKey) == 0,
+                "customer can mark every notification as read");
+
+        int managerNotificationCount = service.notifications(
+                ReservationOrderService.MANAGER_NOTIFICATION_KEY, 50).size();
+        service.clearNotifications(customerKey);
+        ok(service.notifications(customerKey, 20).isEmpty(),
+                "customer can clear every owned notification");
+        ok(service.notifications(ReservationOrderService.MANAGER_NOTIFICATION_KEY, 50).size()
+                        == managerNotificationCount,
+                "clearing customer notifications preserves manager notifications");
     }
 
     private static OperationResult<TableReservationRecord> reservation(

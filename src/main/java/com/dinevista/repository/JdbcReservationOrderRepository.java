@@ -2,6 +2,7 @@ package com.dinevista.repository;
 
 import com.dinevista.model.FoodOrderRecord;
 import com.dinevista.model.MenuItemRecord;
+import com.dinevista.model.NotificationRecord;
 import com.dinevista.model.OrderItemRecord;
 import com.dinevista.model.RestaurantTableRecord;
 import com.dinevista.model.StatusHistoryRecord;
@@ -14,6 +15,7 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.Duration;
@@ -32,6 +34,28 @@ public class JdbcReservationOrderRepository implements ReservationOrderRepositor
         this.config = config;
         try (Connection ignored = config.openConnection()) {
             // Fail early so the application can safely fall back to memory mode.
+        }
+        ensureNotificationTable();
+    }
+
+    private void ensureNotificationTable() throws SQLException {
+        String sql = "CREATE TABLE IF NOT EXISTS workflow_notification ("
+                + "notification_id BIGINT PRIMARY KEY AUTO_INCREMENT, "
+                + "recipient_key VARCHAR(190) NOT NULL, "
+                + "recipient_role VARCHAR(30) NOT NULL, "
+                + "notification_type VARCHAR(60) NOT NULL, "
+                + "title VARCHAR(180) NOT NULL, "
+                + "message VARCHAR(800) NOT NULL, "
+                + "reference_type VARCHAR(50), "
+                + "reference_code VARCHAR(40), "
+                + "action_path VARCHAR(500) NOT NULL, "
+                + "is_read BOOLEAN NOT NULL DEFAULT FALSE, "
+                + "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
+                + "INDEX idx_workflow_notification_recipient "
+                + "(recipient_key, is_read, created_at)) ENGINE=InnoDB";
+        try (Connection connection = config.openConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.executeUpdate();
         }
     }
 
@@ -564,6 +588,135 @@ public class JdbcReservationOrderRepository implements ReservationOrderRepositor
                 return rows.next() ? rows.getLong(1) : null;
             }
         }
+    }
+
+    @Override
+    public NotificationRecord saveNotification(NotificationRecord notification) {
+        String sql = "INSERT INTO workflow_notification "
+                + "(recipient_key, recipient_role, notification_type, title, message, "
+                + "reference_type, reference_code, action_path, is_read, created_at) "
+                + "VALUES (?,?,?,?,?,?,?,?,?,?)";
+        try (Connection connection = config.openConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                     sql, Statement.RETURN_GENERATED_KEYS)) {
+            statement.setString(1, notification.getRecipientKey());
+            statement.setString(2, notification.getRecipientRole());
+            statement.setString(3, notification.getType());
+            statement.setString(4, notification.getTitle());
+            statement.setString(5, notification.getMessage());
+            statement.setString(6, notification.getReferenceType());
+            statement.setString(7, notification.getReferenceCode());
+            statement.setString(8, notification.getActionPath());
+            statement.setBoolean(9, notification.isRead());
+            statement.setTimestamp(10, Timestamp.valueOf(notification.getCreatedAt()));
+            statement.executeUpdate();
+            try (ResultSet keys = statement.getGeneratedKeys()) {
+                return keys.next() ? notification.withId(keys.getLong(1)) : notification;
+            }
+        } catch (SQLException ex) {
+            throw repositoryFailure("Unable to save notification.", ex);
+        }
+    }
+
+    @Override
+    public Optional<NotificationRecord> findNotification(long notificationId) {
+        String sql = "SELECT * FROM workflow_notification WHERE notification_id=?";
+        try (Connection connection = config.openConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, notificationId);
+            try (ResultSet rows = statement.executeQuery()) {
+                return rows.next() ? Optional.of(mapNotification(rows)) : Optional.empty();
+            }
+        } catch (SQLException ex) {
+            throw repositoryFailure("Unable to load notification.", ex);
+        }
+    }
+
+    @Override
+    public List<NotificationRecord> findNotifications(String recipientKey, int limit) {
+        String sql = "SELECT * FROM workflow_notification WHERE recipient_key=? "
+                + "ORDER BY created_at DESC, notification_id DESC LIMIT ?";
+        List<NotificationRecord> result = new ArrayList<>();
+        try (Connection connection = config.openConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, recipientKey);
+            statement.setInt(2, Math.max(1, Math.min(50, limit)));
+            try (ResultSet rows = statement.executeQuery()) {
+                while (rows.next()) result.add(mapNotification(rows));
+            }
+        } catch (SQLException ex) {
+            throw repositoryFailure("Unable to load notifications.", ex);
+        }
+        return result;
+    }
+
+    @Override
+    public long countUnreadNotifications(String recipientKey) {
+        String sql = "SELECT COUNT(*) FROM workflow_notification "
+                + "WHERE recipient_key=? AND is_read=FALSE";
+        try (Connection connection = config.openConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, recipientKey);
+            try (ResultSet rows = statement.executeQuery()) {
+                return rows.next() ? rows.getLong(1) : 0;
+            }
+        } catch (SQLException ex) {
+            throw repositoryFailure("Unable to count unread notifications.", ex);
+        }
+    }
+
+    @Override
+    public void markNotificationRead(long notificationId, String recipientKey) {
+        String sql = "UPDATE workflow_notification SET is_read=TRUE "
+                + "WHERE notification_id=? AND recipient_key=?";
+        try (Connection connection = config.openConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, notificationId);
+            statement.setString(2, recipientKey);
+            statement.executeUpdate();
+        } catch (SQLException ex) {
+            throw repositoryFailure("Unable to mark notification as read.", ex);
+        }
+    }
+
+    @Override
+    public void markAllNotificationsRead(String recipientKey) {
+        String sql = "UPDATE workflow_notification SET is_read=TRUE "
+                + "WHERE recipient_key=? AND is_read=FALSE";
+        try (Connection connection = config.openConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, recipientKey);
+            statement.executeUpdate();
+        } catch (SQLException ex) {
+            throw repositoryFailure("Unable to mark notifications as read.", ex);
+        }
+    }
+
+    @Override
+    public void deleteNotifications(String recipientKey) {
+        String sql = "DELETE FROM workflow_notification WHERE recipient_key=?";
+        try (Connection connection = config.openConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, recipientKey);
+            statement.executeUpdate();
+        } catch (SQLException ex) {
+            throw repositoryFailure("Unable to clear notifications.", ex);
+        }
+    }
+
+    private NotificationRecord mapNotification(ResultSet rows) throws SQLException {
+        return new NotificationRecord(
+                rows.getLong("notification_id"),
+                rows.getString("recipient_key"),
+                rows.getString("recipient_role"),
+                rows.getString("notification_type"),
+                rows.getString("title"),
+                rows.getString("message"),
+                nullableString(rows.getString("reference_type")),
+                nullableString(rows.getString("reference_code")),
+                rows.getString("action_path"),
+                rows.getBoolean("is_read"),
+                rows.getTimestamp("created_at").toLocalDateTime());
     }
 
     @Override

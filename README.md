@@ -17,6 +17,7 @@ The current release includes a complete **Table Reservation and Food Order Manag
 - Create dine-in, takeaway, and reservation-linked pre-orders
 - View current and previous reservations and orders
 - Track reservation and order status histories
+- Receive manager confirmation and lifecycle updates from the notification bell
 - Cancel eligible orders before kitchen preparation begins
 
 ### Customer experience enhancements
@@ -39,6 +40,7 @@ The current release includes a complete **Table Reservation and Food Order Manag
 - Confirm, reject, seat, complete, cancel, or mark reservations as no-show
 - Send accepted food orders through the kitchen workflow
 - Update orders from pending to confirmed, preparing, ready, served, and completed
+- Receive new, edited, and cancelled customer activity from the notification bell
 - Record compulsory operational notes and cancellation or rejection reasons
 - Prevent overlapping table allocations and invalid order quantities
 
@@ -48,12 +50,12 @@ The module runs in **memory mode by default**, so it works immediately without M
 
 | Student ID | Student Name | Assigned Major Function |
 |---|---|---|
-| IT25103799 | Wijesuriya W. A. T. D. | User, Customer and Staff Management |
+| IT25103799 | Wijesuriya W. A. T. D. | Event Resource and Staff Scheduling Management |
 | IT25103794 | Samarasinghe M. A. I. | Menu and Inventory Management |
 | IT25103795 | De Silva K. H. B. N. | Table Reservation and Food Order Management |
 | IT25103796 | Manzab M. G. M. | Event Package and Booking Management |
 | IT25103797 | Nawarathna N. M. I. N. | Payment, Billing and Promotion Management |
-| IT25103798 | Hansaka A. K. | Event Resource and Staff Scheduling Management |
+| IT25103798 | Hansaka A. K. | User, Customer and Staff Management |
 
 ## Technology Stack
 
@@ -109,6 +111,9 @@ DineVista/
 | `/staff/orders` | Staff kitchen/order operations dashboard |
 | `/staff/orders/view?reference=...` | Staff order review and workflow actions |
 | `/dashboard` | Role-based customer or manager dashboard |
+| `/notifications/open?id=...` | Mark an owned notification read and open its related record |
+| `/notifications/read-all` | Mark the signed-in user's notifications as read |
+| `/notifications/clear-all` | Permanently clear only the signed-in user's notifications |
 | `/health` | JSON health response |
 
 ## Run in IntelliJ IDEA
@@ -153,7 +158,7 @@ Detailed implementation, business rules, routes, status transitions, testing ste
 docs/TABLE_RESERVATION_AND_FOOD_ORDER_MODULE.md
 ```
 
-The latest audit results, including the 88-check CRUD suite and UI interaction
+The latest audit results, including the 107-check CRUD and notification suite and UI interaction
 verification, are recorded in `docs/CRUD_AUDIT_RESULTS.md`.
 
 ## Git Workflow

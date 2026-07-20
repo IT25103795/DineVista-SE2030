@@ -8,6 +8,7 @@ USE dinevista;
 
 SET FOREIGN_KEY_CHECKS = 0;
 
+DROP TABLE IF EXISTS workflow_notification;
 DROP TABLE IF EXISTS notification;
 DROP TABLE IF EXISTS promotion_usage;
 DROP TABLE IF EXISTS promotion;
@@ -417,17 +418,19 @@ CREATE TABLE promotion_usage (
     CONSTRAINT fk_usage_event FOREIGN KEY (event_booking_id) REFERENCES event_booking(event_booking_id)
 ) ENGINE=InnoDB;
 
-CREATE TABLE notification (
+CREATE TABLE workflow_notification (
     notification_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    user_id BIGINT NOT NULL,
+    recipient_key VARCHAR(190) NOT NULL,
+    recipient_role VARCHAR(30) NOT NULL,
     notification_type VARCHAR(60) NOT NULL,
     title VARCHAR(180) NOT NULL,
     message VARCHAR(800) NOT NULL,
     reference_type VARCHAR(50),
-    reference_id BIGINT,
+    reference_code VARCHAR(40),
+    action_path VARCHAR(500) NOT NULL,
     is_read BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_notification_user FOREIGN KEY (user_id) REFERENCES user_account(user_id) ON DELETE CASCADE
+    INDEX idx_workflow_notification_recipient (recipient_key, is_read, created_at)
 ) ENGINE=InnoDB;
 
 CREATE INDEX idx_reservation_date_status ON table_reservation(reservation_date, reservation_status);

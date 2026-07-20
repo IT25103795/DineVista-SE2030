@@ -57,9 +57,15 @@
                     <% } else { %>
                         <ol class="status-journey" aria-label="Reservation progress">
                             <% for (int i = 0; i < reservationStages.length; i++) {
-                                String stageClass = i < reservationStageIndex ? "complete" : (i == reservationStageIndex ? "active" : "upcoming");
+                                boolean successfulCurrentStage = i == reservationStageIndex
+                                        && ("SEATED".equals(reservation.getStatus())
+                                        || "COMPLETED".equals(reservation.getStatus()));
+                                boolean reachedStage = i < reservationStageIndex || successfulCurrentStage;
+                                String stageClass = i < reservationStageIndex ? "complete"
+                                        : (successfulCurrentStage ? "reached"
+                                        : (i == reservationStageIndex ? "active" : "upcoming"));
                             %>
-                                <li class="<%= stageClass %>"><span class="status-node"><%= i < reservationStageIndex ? "✓" : (i + 1) %></span><strong><%= HtmlUtil.escape(reservationStages[i].replace('_', ' ')) %></strong></li>
+                                <li class="<%= stageClass %>"<%= i == reservationStageIndex ? " aria-current=\"step\"" : "" %>><span class="status-node"><%= reachedStage ? "✓" : (i + 1) %></span><strong><%= HtmlUtil.escape(reservationStages[i].replace('_', ' ')) %></strong></li>
                             <% } %>
                         </ol>
                     <% } %>

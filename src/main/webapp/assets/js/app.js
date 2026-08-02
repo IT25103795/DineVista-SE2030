@@ -271,16 +271,32 @@
 
     const checkout = q('[data-order-checkout]');
     const orderTypeInputs = qa('input[name="orderType"]', checkout || document);
-    const reservationOrderField = q('[data-reservation-order-field]');
+    const dineInOrderField = q('[data-dinein-order-field]');
+    const preOrderField = q('[data-preorder-order-field]');
     const pickupOrderField = q('[data-pickup-order-field]');
+    const orderSubmitLabel = q('[data-order-submit-label]');
+    const restaurantSummaryRows = qa('[data-restaurant-charge], [data-restaurant-total]');
+    const takeawaySummaryRow = q('[data-takeaway-total]');
+    const setOrderFieldState = (field, active) => {
+        if (!field) return;
+        field.hidden = !active;
+        qa('input, select', field).forEach(control => {
+            control.disabled = !active;
+            control.required = active;
+        });
+    };
     const updateOrderFields = () => {
         const selected = q('input[name="orderType"]:checked', checkout || document)?.value || 'TAKEAWAY';
-        if (reservationOrderField) reservationOrderField.hidden = selected === 'TAKEAWAY';
-        if (pickupOrderField) pickupOrderField.hidden = selected !== 'TAKEAWAY';
-        const reservationSelect = q('[name="reservationReference"]', checkout || document);
-        const requestedFor = q('[name="requestedFor"]', checkout || document);
-        if (reservationSelect) reservationSelect.required = selected !== 'TAKEAWAY';
-        if (requestedFor) requestedFor.required = selected === 'TAKEAWAY';
+        setOrderFieldState(dineInOrderField, selected === 'DINE_IN');
+        setOrderFieldState(preOrderField, selected === 'PRE_ORDER');
+        setOrderFieldState(pickupOrderField, selected === 'TAKEAWAY');
+        restaurantSummaryRows.forEach(row => { row.hidden = selected === 'TAKEAWAY'; });
+        if (takeawaySummaryRow) takeawaySummaryRow.hidden = selected !== 'TAKEAWAY';
+        if (orderSubmitLabel) {
+            orderSubmitLabel.textContent = selected === 'DINE_IN'
+                ? 'Place dine-in order'
+                : (selected === 'PRE_ORDER' ? 'Place pre-order' : 'Place takeaway order');
+        }
     };
     orderTypeInputs.forEach(input => input.addEventListener('change', updateOrderFields));
     updateOrderFields();

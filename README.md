@@ -14,7 +14,8 @@ The current release includes a complete **Table Reservation and Food Order Manag
 - Create, view, edit, and cancel eligible table reservations
 - Browse and filter the restaurant menu
 - Add, update, and remove food items in a server-side cart
-- Create dine-in, takeaway, and reservation-linked pre-orders
+- Create pre-orders for future confirmed reservations, dine-in orders after seating,
+  and takeaway orders without a reservation
 - Add, update, or remove items from a submitted order while it is still pending
 - View current and previous reservations and orders
 - Track reservation and order status histories
@@ -30,6 +31,8 @@ The current release includes a complete **Table Reservation and Food Order Manag
 - Floor-style table availability preview that safely pre-fills the existing form
 - Nearest-slot suggestions when the requested table time is fully booked
 - Slide-out food cart backed by the original server-side update/remove/checkout forms
+- Type-aware checkout that displays only eligible confirmed pre-order bookings or
+  currently seated dine-in tables
 - Clear confirmation cards, copyable references, and live status-progress tracks
 - Mobile bottom navigation, keyboard-friendly dialogs, focus handling, and
   reduced-motion support
@@ -166,7 +169,7 @@ Detailed implementation, business rules, routes, status transitions, testing ste
 docs/TABLE_RESERVATION_AND_FOOD_ORDER_MODULE.md
 ```
 
-The latest audit results, including the 147-check CRUD and notification suite and UI interaction
+The latest audit results, including the 162-check CRUD and notification suite and UI interaction
 verification, are recorded in `docs/CRUD_AUDIT_RESULTS.md`.
 
 ## Git Workflow

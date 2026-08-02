@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 public class ReservationOrderService {
     public static final int RESERVATION_SLOT_MINUTES = 90;
     public static final int MAX_CART_QUANTITY = 10;
+    public static final int PRE_ORDER_LEAD_MINUTES = 30;
     public static final String MANAGER_NOTIFICATION_KEY = "role:manager";
 
     private static final Set<String> SEATING_AREAS = new HashSet<>(
@@ -484,20 +485,31 @@ public class ReservationOrderService {
         String linkedReservation = clean(reservationReference);
         if ("DINE_IN".equals(type) || "PRE_ORDER".equals(type)) {
             if (linkedReservation.isEmpty()) {
-                errors.add("Select a confirmed reservation for dine-in or pre-order food.");
+                errors.add("DINE_IN".equals(type)
+                        ? "Select the reservation for your currently seated table."
+                        : "Select a confirmed future reservation for your pre-order.");
             } else {
                 Optional<TableReservationRecord> reservation = repository
                         .findReservationByReference(linkedReservation);
                 if (reservation.isEmpty()
                         || !reservation.get().getCustomerKey().equals(customerKey)
-                        || !Arrays.asList("CONFIRMED", "SEATED").contains(reservation.get().getStatus())
                         || reservation.get().getTableId() == null) {
                     errors.add("The selected reservation is not eligible for this order.");
                 } else {
                     LocalDateTime reservationAt = LocalDateTime.of(
                             reservation.get().getReservationDate(), reservation.get().getReservationTime());
-                    if (reservationAt.isBefore(LocalDateTime.now().minusMinutes(30))) {
-                        errors.add("The selected reservation time has already passed.");
+                    if ("DINE_IN".equals(type)
+                            && !"SEATED".equals(reservation.get().getStatus())) {
+                        errors.add("Dine-in ordering becomes available after restaurant staff mark your reservation as seated.");
+                    }
+                    if ("PRE_ORDER".equals(type)) {
+                        if (!"CONFIRMED".equals(reservation.get().getStatus())) {
+                            errors.add("Pre-orders require a confirmed reservation and cannot be placed after seating.");
+                        } else if (reservationAt.isBefore(
+                                LocalDateTime.now().plusMinutes(PRE_ORDER_LEAD_MINUTES))) {
+                            errors.add("Pre-orders must be submitted at least "
+                                    + PRE_ORDER_LEAD_MINUTES + " minutes before the reservation time.");
+                        }
                     }
                     requestedFor = reservationAt;
                 }
@@ -731,12 +743,34 @@ public class ReservationOrderService {
         if (!key.isEmpty()) repository.deleteNotifications(key);
     }
 
-    public List<TableReservationRecord> eligibleReservations(String customerKey) {
+    public List<TableReservationRecord> eligiblePreOrderReservations(String customerKey) {
+        LocalDateTime cutoff = LocalDateTime.now().plusMinutes(PRE_ORDER_LEAD_MINUTES);
         return repository.findReservationsByCustomer(customerKey).stream()
-                .filter(item -> Arrays.asList("CONFIRMED", "SEATED").contains(item.getStatus()))
+                .filter(item -> "CONFIRMED".equals(item.getStatus()))
+                .filter(item -> item.getTableId() != null)
                 .filter(item -> LocalDateTime.of(item.getReservationDate(), item.getReservationTime())
-                        .isAfter(LocalDateTime.now().minusMinutes(30)))
+                        .compareTo(cutoff) >= 0)
                 .collect(Collectors.toList());
+    }
+
+    public List<TableReservationRecord> eligibleDineInReservations(String customerKey) {
+        return repository.findReservationsByCustomer(customerKey).stream()
+                .filter(item -> "SEATED".equals(item.getStatus()))
+                .filter(item -> item.getTableId() != null)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Compatibility view for older callers. New checkout screens should use the
+     * type-specific eligibility methods above.
+     */
+    public List<TableReservationRecord> eligibleReservations(String customerKey) {
+        List<TableReservationRecord> eligible = new ArrayList<>(
+                eligiblePreOrderReservations(customerKey));
+        eligible.addAll(eligibleDineInReservations(customerKey));
+        eligible.sort(Comparator.comparing(TableReservationRecord::getReservationDate)
+                .thenComparing(TableReservationRecord::getReservationTime));
+        return eligible;
     }
 
     public long countActiveReservations() {

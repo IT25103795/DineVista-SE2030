@@ -30,6 +30,7 @@ public final class ReservationOrderServiceSelfTest {
         linkedOrderRules(service, base.plusDays(30));
         notificationWorkflow(service, base.plusDays(40));
         proposalAlignmentRegressions(service, base.plusDays(50));
+        orderTypeEligibilityBoundary();
 
         System.out.println("DineVista reservation/order self-test passed: " + checks + " checks.");
     }
@@ -261,29 +262,40 @@ public final class ReservationOrderServiceSelfTest {
         String reservationReference = reservation.getValue().getReference();
         ok(service.staffUpdateReservation(reservationReference, 4, "CONFIRMED",
                 "Table confirmed", "Manager").isSuccess(), "linked reservation confirm");
+        ok(service.eligiblePreOrderReservations("linked-customer").stream()
+                        .anyMatch(item -> item.getReference().equals(reservationReference)),
+                "confirmed table appears for pre-order");
+        ok(service.eligibleDineInReservations("linked-customer").stream()
+                        .noneMatch(item -> item.getReference().equals(reservationReference)),
+                "confirmed but unseated table excluded from dine-in");
 
         Map<Long, Integer> cart = new LinkedHashMap<>();
         service.addCartItem(cart, 2, 2);
         LocalDateTime manipulated = LocalDateTime.of(base.plusDays(20), LocalTime.NOON);
+        ok(!service.createOrder(
+                "linked-customer", "Linked Guest", "linked@example.com", "0771234567",
+                "DINE_IN", reservationReference, manipulated, "Too early", cart).isSuccess(),
+                "dine-in order blocked before seating");
+        ok(!cart.isEmpty(), "failed dine-in attempt preserves cart");
         OperationResult<FoodOrderRecord> linked = service.createOrder(
                 "linked-customer", "Linked Guest", "linked@example.com", "0771234567",
-                "DINE_IN", reservationReference, manipulated, "Serve at table", cart);
-        ok(linked.isSuccess(), "linked dine-in order create");
+                "PRE_ORDER", reservationReference, manipulated, "Serve at table", cart);
+        ok(linked.isSuccess(), "linked pre-order create");
         ok(linked.getValue().getRequestedFor().equals(LocalDateTime.of(base, LocalTime.of(19, 30))),
                 "linked order time forced to reservation slot");
-        ok(linked.getValue().getServiceCharge().signum() > 0, "dine-in service charge calculated server-side");
+        ok(linked.getValue().getServiceCharge().signum() > 0,
+                "pre-order restaurant service charge calculated server-side");
+        Map<Long, Integer> foreignCart = new LinkedHashMap<>();
+        service.addCartItem(foreignCart, 2, 1);
+        ok(!service.createOrder("other-customer", "Other Guest", "other@example.com", "0712345678",
+                "PRE_ORDER", reservationReference, null, "", foreignCart).isSuccess(),
+                "linked reservation ownership enforced");
         ok(!service.cancelReservation("linked-customer", reservationReference,
                 "Visit cancelled").isSuccess(), "reservation closure blocked by active linked order");
         ok(service.cancelOrder("linked-customer", linked.getValue().getReference(),
                 "Cancel food first").isSuccess(), "linked pending order cancelled first");
         ok(service.cancelReservation("linked-customer", reservationReference,
                 "Visit cancelled").isSuccess(), "reservation cancels after linked order closes");
-
-        Map<Long, Integer> foreignCart = new LinkedHashMap<>();
-        service.addCartItem(foreignCart, 2, 1);
-        ok(!service.createOrder("other-customer", "Other Guest", "other@example.com", "0712345678",
-                "PRE_ORDER", reservationReference, null, "", foreignCart).isSuccess(),
-                "linked reservation ownership enforced");
 
         OperationResult<TableReservationRecord> diningReservation = reservation(
                 service, "dining-customer", base.plusDays(1), LocalTime.of(18, 30), "GARDEN");
@@ -293,14 +305,32 @@ public final class ReservationOrderServiceSelfTest {
                 "dine-in lifecycle reservation confirmed");
         Map<Long, Integer> diningCart = new LinkedHashMap<>();
         service.addCartItem(diningCart, 1, 1);
-        OperationResult<FoodOrderRecord> diningOrder = service.createOrder(
+        ok(!service.createOrder(
                 "dining-customer", "Dining Guest", "dining@example.com", "0771234567",
-                "DINE_IN", diningReservation.getValue().getReference(), null, "", diningCart);
-        ok(diningOrder.isSuccess(), "dine-in lifecycle order created");
-        String diningReference = diningOrder.getValue().getReference();
+                "DINE_IN", diningReservation.getValue().getReference(), null, "", diningCart).isSuccess(),
+                "confirmed reservation cannot place dine-in order before seating");
         ok(service.staffUpdateReservation(diningReservation.getValue().getReference(), 0,
                 "SEATED", "Guests arrived", "Host").isSuccess(),
                 "linked dining reservation seated");
+        ok(service.eligibleDineInReservations("dining-customer").stream()
+                        .anyMatch(item -> item.getReference().equals(
+                                diningReservation.getValue().getReference())),
+                "seated table appears for dine-in");
+        ok(service.eligiblePreOrderReservations("dining-customer").stream()
+                        .noneMatch(item -> item.getReference().equals(
+                                diningReservation.getValue().getReference())),
+                "seated table excluded from pre-order");
+        ok(!service.createOrder(
+                "dining-customer", "Dining Guest", "dining@example.com", "0771234567",
+                "PRE_ORDER", diningReservation.getValue().getReference(), null, "", diningCart).isSuccess(),
+                "pre-order blocked after seating");
+        OperationResult<FoodOrderRecord> diningOrder = service.createOrder(
+                "dining-customer", "Dining Guest", "dining@example.com", "0771234567",
+                "DINE_IN", diningReservation.getValue().getReference(), null, "", diningCart);
+        ok(diningOrder.isSuccess(), "seated dine-in order created");
+        ok(diningOrder.getValue().getServiceCharge().signum() > 0,
+                "dine-in service charge calculated server-side");
+        String diningReference = diningOrder.getValue().getReference();
         ok(service.staffUpdateReservation(diningReservation.getValue().getReference(), 0,
                 "COMPLETED", "Dining visit complete", "Manager").isSuccess(),
                 "seated reservation completes while linked order remains active");
@@ -518,6 +548,8 @@ public final class ReservationOrderServiceSelfTest {
                 "PRE_ORDER", preOrderReservation.getValue().getReference(), null,
                 "Serve after seating", preOrderCart);
         ok(preOrder.isSuccess(), "pre-order created");
+        ok(preOrder.getValue().getServiceCharge().signum() > 0,
+                "pre-order receives restaurant service charge");
         String preOrderReference = preOrder.getValue().getReference();
         ok(service.staffUpdateOrder(preOrderReference, "CONFIRMED", "Accepted", "Manager").isSuccess(),
                 "pre-order confirmed");
@@ -531,6 +563,39 @@ public final class ReservationOrderServiceSelfTest {
                 "pre-order served");
         ok(service.staffUpdateOrder(preOrderReference, "COMPLETED", "Completed", "Waiter").isSuccess(),
                 "pre-order completed after service");
+    }
+
+    private static void orderTypeEligibilityBoundary() {
+        InMemoryReservationOrderRepository repository = new InMemoryReservationOrderRepository();
+        ReservationOrderService service = new ReservationOrderService(repository);
+        LocalDateTime closeAt = LocalDateTime.now().plusMinutes(20).withSecond(0).withNano(0);
+        TableReservationRecord closeReservation = new TableReservationRecord(
+                repository.nextReservationId(), "DV-R-CUTOFF", "cutoff-customer",
+                "Cutoff Guest", "cutoff@example.com", "0771234567",
+                closeAt.toLocalDate(), closeAt.toLocalTime(), 2, "INDOOR", "");
+        closeReservation.assignTable(1L, "I-01", "Manager");
+        closeReservation.changeStatus("CONFIRMED", "Confirmed", "Manager");
+        repository.saveReservation(closeReservation);
+
+        ok(service.eligiblePreOrderReservations("cutoff-customer").isEmpty(),
+                "reservation inside 30-minute cutoff excluded from pre-order");
+        Map<Long, Integer> cart = new LinkedHashMap<>();
+        service.addCartItem(cart, 1, 1);
+        ok(!service.createOrder(
+                "cutoff-customer", "Cutoff Guest", "cutoff@example.com", "0771234567",
+                "PRE_ORDER", closeReservation.getReference(), null, "", cart).isSuccess(),
+                "pre-order inside 30-minute cutoff blocked by service");
+        ok(!cart.isEmpty(), "pre-order cutoff failure preserves cart");
+
+        closeReservation.changeStatus("SEATED", "Guest seated", "Host");
+        repository.saveReservation(closeReservation);
+        ok(service.eligibleDineInReservations("cutoff-customer").stream()
+                        .anyMatch(item -> item.getReference().equals(closeReservation.getReference())),
+                "seated reservation becomes eligible for dine-in");
+        ok(service.createOrder(
+                "cutoff-customer", "Cutoff Guest", "cutoff@example.com", "0771234567",
+                "DINE_IN", closeReservation.getReference(), null, "", cart).isSuccess(),
+                "seated customer can place dine-in order");
     }
 
     private static OperationResult<TableReservationRecord> reservation(

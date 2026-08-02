@@ -89,7 +89,10 @@ public class FoodOrderServlet extends HttpServlet {
         request.setAttribute("cartSubtotal", subtotal);
         request.setAttribute("cartServiceCharge", subtotal.multiply(new BigDecimal("0.05")));
         request.setAttribute("customerOrders", service.ordersForCustomer(customerKey));
-        request.setAttribute("eligibleReservations", service.eligibleReservations(customerKey));
+        request.setAttribute("preOrderReservations",
+                service.eligiblePreOrderReservations(customerKey));
+        request.setAttribute("dineInReservations",
+                service.eligibleDineInReservations(customerKey));
         request.getRequestDispatcher("/WEB-INF/views/orders.jsp").forward(request, response);
     }
 
@@ -139,13 +142,15 @@ public class FoodOrderServlet extends HttpServlet {
     private void checkout(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String customerKey = ReservationOrderContext.customerKey(request);
+        String orderType = RequestUtil.clean(request, "orderType");
+        String linkedReservation = postedReservationReference(request, orderType);
         OperationResult<FoodOrderRecord> result = service.createOrder(
                 customerKey,
                 RequestUtil.clean(request, "customerName"),
                 RequestUtil.clean(request, "email"),
                 RequestUtil.clean(request, "phone"),
-                RequestUtil.clean(request, "orderType"),
-                RequestUtil.clean(request, "reservationReference"),
+                orderType,
+                linkedReservation,
                 RequestUtil.dateTime(request, "requestedFor"),
                 RequestUtil.clean(request, "orderNotes"),
                 ReservationOrderContext.cart(request));
@@ -155,8 +160,12 @@ public class FoodOrderServlet extends HttpServlet {
             request.setAttribute("checkoutName", RequestUtil.clean(request, "customerName"));
             request.setAttribute("checkoutEmail", RequestUtil.clean(request, "email"));
             request.setAttribute("checkoutPhone", RequestUtil.clean(request, "phone"));
-            request.setAttribute("checkoutOrderType", RequestUtil.clean(request, "orderType"));
-            request.setAttribute("checkoutReservation", RequestUtil.clean(request, "reservationReference"));
+            request.setAttribute("checkoutOrderType", orderType);
+            if ("DINE_IN".equals(orderType)) {
+                request.setAttribute("checkoutDineInReservation", linkedReservation);
+            } else if ("PRE_ORDER".equals(orderType)) {
+                request.setAttribute("checkoutPreOrderReservation", linkedReservation);
+            }
             request.setAttribute("checkoutRequestedFor", RequestUtil.clean(request, "requestedFor"));
             request.setAttribute("checkoutNotes", RequestUtil.clean(request, "orderNotes"));
             renderMain(request, response);
@@ -167,6 +176,18 @@ public class FoodOrderServlet extends HttpServlet {
                 + " was created successfully and sent to restaurant staff.");
         response.sendRedirect(request.getContextPath() + "/orders/view?reference="
                 + result.getValue().getReference());
+    }
+
+    private String postedReservationReference(HttpServletRequest request, String orderType) {
+        String fieldName = "DINE_IN".equals(orderType)
+                ? "dineInReservationReference"
+                : ("PRE_ORDER".equals(orderType)
+                ? "preOrderReservationReference" : "");
+        String specificReference = fieldName.isEmpty()
+                ? "" : RequestUtil.clean(request, fieldName);
+        return specificReference.isEmpty()
+                ? RequestUtil.clean(request, "reservationReference")
+                : specificReference;
     }
 
     private void cancel(HttpServletRequest request, HttpServletResponse response)

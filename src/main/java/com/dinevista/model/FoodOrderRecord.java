@@ -134,7 +134,7 @@ public class FoodOrderRecord implements Serializable {
                 .map(OrderItemRecord::getLineTotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
                 .setScale(2, RoundingMode.HALF_UP);
-        this.serviceCharge = "DINE_IN".equals(orderType)
+        this.serviceCharge = ("DINE_IN".equals(orderType) || "PRE_ORDER".equals(orderType))
                 ? subtotal.multiply(new BigDecimal("0.05")).setScale(2, RoundingMode.HALF_UP)
                 : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
         this.totalAmount = subtotal.add(serviceCharge).setScale(2, RoundingMode.HALF_UP);

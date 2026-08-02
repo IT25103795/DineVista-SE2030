@@ -15,9 +15,11 @@
     List<MenuItemRecord> menuItems = (List<MenuItemRecord>) request.getAttribute("menuItems");
     List<CartLineRecord> cartLines = (List<CartLineRecord>) request.getAttribute("cartLines");
     List<FoodOrderRecord> customerOrders = (List<FoodOrderRecord>) request.getAttribute("customerOrders");
-    List<TableReservationRecord> eligibleReservations = (List<TableReservationRecord>) request.getAttribute("eligibleReservations");
+    List<TableReservationRecord> preOrderReservations = (List<TableReservationRecord>) request.getAttribute("preOrderReservations");
+    List<TableReservationRecord> dineInReservations = (List<TableReservationRecord>) request.getAttribute("dineInReservations");
     BigDecimal cartSubtotal = (BigDecimal) request.getAttribute("cartSubtotal");
     BigDecimal cartService = (BigDecimal) request.getAttribute("cartServiceCharge");
+    BigDecimal cartRestaurantTotal = cartSubtotal.add(cartService);
 
     String checkoutName = request.getAttribute("checkoutName") == null
             ? (session.getAttribute("displayName") == null ? "" : session.getAttribute("displayName").toString())
@@ -27,7 +29,8 @@
             : request.getAttribute("checkoutEmail").toString();
     String checkoutPhone = request.getAttribute("checkoutPhone") == null ? "" : request.getAttribute("checkoutPhone").toString();
     String checkoutType = request.getAttribute("checkoutOrderType") == null ? "TAKEAWAY" : request.getAttribute("checkoutOrderType").toString();
-    String checkoutReservation = request.getAttribute("checkoutReservation") == null ? "" : request.getAttribute("checkoutReservation").toString();
+    String checkoutDineInReservation = request.getAttribute("checkoutDineInReservation") == null ? "" : request.getAttribute("checkoutDineInReservation").toString();
+    String checkoutPreOrderReservation = request.getAttribute("checkoutPreOrderReservation") == null ? "" : request.getAttribute("checkoutPreOrderReservation").toString();
     String checkoutRequestedFor = request.getAttribute("checkoutRequestedFor") == null ? "" : request.getAttribute("checkoutRequestedFor").toString();
     String checkoutNotes = request.getAttribute("checkoutNotes") == null ? "" : request.getAttribute("checkoutNotes").toString();
 %>
@@ -160,8 +163,9 @@
                 </div>
                 <div class="cart-summary server-cart-summary">
                     <div class="summary-row"><span>Subtotal</span><strong>LKR <%= String.format("%,.0f", cartSubtotal) %></strong></div>
-                    <div class="summary-row"><span>Dine-in service charge (5%)</span><strong>LKR <%= String.format("%,.0f", cartService) %></strong></div>
-                    <div class="summary-row total"><span>Takeaway total</span><strong>LKR <%= String.format("%,.0f", cartSubtotal) %></strong></div>
+                    <div class="summary-row" data-restaurant-charge <%= "TAKEAWAY".equals(checkoutType) ? "hidden" : "" %>><span>Restaurant service charge (5%)</span><strong>LKR <%= String.format("%,.0f", cartService) %></strong></div>
+                    <div class="summary-row total" data-restaurant-total <%= "TAKEAWAY".equals(checkoutType) ? "hidden" : "" %>><span>Restaurant order total</span><strong>LKR <%= String.format("%,.0f", cartRestaurantTotal) %></strong></div>
+                    <div class="summary-row total" data-takeaway-total <%= "TAKEAWAY".equals(checkoutType) ? "" : "hidden" %>><span>Takeaway total</span><strong>LKR <%= String.format("%,.0f", cartSubtotal) %></strong></div>
                 </div>
             <% } %>
         </section>
@@ -169,35 +173,49 @@
         <section class="form-card checkout-card">
             <span class="section-kicker">Confirm food order</span>
             <h2>Order details and fulfilment.</h2>
-            <p>Dine-in and pre-order food must be linked to a confirmed reservation. Takeaway collection must be at least 30 minutes ahead.</p>
+            <p>Pre-order before arrival, order dine-in after staff seat your table, or choose takeaway without a reservation.</p>
 
             <form method="post" action="<%= ctx %>/orders/checkout" novalidate data-order-checkout>
                 <div class="form-grid">
                     <div class="form-group full">
                         <label>Order type</label>
                         <div class="choice-grid three">
-                            <label class="choice-card"><input type="radio" name="orderType" value="DINE_IN" <%= "DINE_IN".equals(checkoutType) ? "checked" : "" %>><span><strong>Dine-in</strong><small>Linked to a confirmed table</small></span></label>
+                            <label class="choice-card"><input type="radio" name="orderType" value="DINE_IN" <%= "DINE_IN".equals(checkoutType) ? "checked" : "" %>><span><strong>Dine-in</strong><small>Available after staff mark you seated</small></span></label>
                             <label class="choice-card"><input type="radio" name="orderType" value="TAKEAWAY" <%= "TAKEAWAY".equals(checkoutType) ? "checked" : "" %>><span><strong>Takeaway</strong><small>Collect from the restaurant</small></span></label>
-                            <label class="choice-card"><input type="radio" name="orderType" value="PRE_ORDER" <%= "PRE_ORDER".equals(checkoutType) ? "checked" : "" %>><span><strong>Pre-order</strong><small>Prepare for your reservation</small></span></label>
+                            <label class="choice-card"><input type="radio" name="orderType" value="PRE_ORDER" <%= "PRE_ORDER".equals(checkoutType) ? "checked" : "" %>><span><strong>Pre-order</strong><small>Order 30+ minutes before arrival</small></span></label>
                         </div>
                     </div>
-                    <div class="form-group full" data-reservation-order-field>
-                        <label for="reservationReference">Confirmed reservation</label>
-                        <select class="form-control" id="reservationReference" name="reservationReference">
-                            <option value="">Select reservation</option>
-                            <% if (eligibleReservations != null) { for (TableReservationRecord reservation : eligibleReservations) { %>
-                                <option value="<%= HtmlUtil.escape(reservation.getReference()) %>" <%= HtmlUtil.selected(reservation.getReference(), checkoutReservation) %>>
+                    <div class="form-group full" data-dinein-order-field <%= "DINE_IN".equals(checkoutType) ? "" : "hidden" %>>
+                        <label for="dineInReservationReference">Your seated table</label>
+                        <select class="form-control" id="dineInReservationReference" name="dineInReservationReference" <%= "DINE_IN".equals(checkoutType) ? "required" : "disabled" %>>
+                            <option value="">Select seated reservation</option>
+                            <% if (dineInReservations != null) { for (TableReservationRecord reservation : dineInReservations) { %>
+                                <option value="<%= HtmlUtil.escape(reservation.getReference()) %>" <%= HtmlUtil.selected(reservation.getReference(), checkoutDineInReservation) %>>
                                     <%= HtmlUtil.escape(reservation.getReference()) %> — <%= reservation.getDateDisplay() %> at <%= reservation.getTimeDisplay() %> — Table <%= HtmlUtil.escape(reservation.getTableCode()) %>
                                 </option>
                             <% }} %>
                         </select>
-                        <% if (eligibleReservations == null || eligibleReservations.isEmpty()) { %>
-                            <span class="form-note">No confirmed reservation is currently available. Create a table reservation first or choose takeaway.</span>
+                        <% if (dineInReservations == null || dineInReservations.isEmpty()) { %>
+                            <span class="form-note">Dine-in ordering becomes available after restaurant staff mark your confirmed reservation as <strong>SEATED</strong>.</span>
                         <% } %>
                     </div>
-                    <div class="form-group full" data-pickup-order-field>
+                    <div class="form-group full" data-preorder-order-field <%= "PRE_ORDER".equals(checkoutType) ? "" : "hidden" %>>
+                        <label for="preOrderReservationReference">Future confirmed reservation</label>
+                        <select class="form-control" id="preOrderReservationReference" name="preOrderReservationReference" <%= "PRE_ORDER".equals(checkoutType) ? "required" : "disabled" %>>
+                            <option value="">Select confirmed reservation</option>
+                            <% if (preOrderReservations != null) { for (TableReservationRecord reservation : preOrderReservations) { %>
+                                <option value="<%= HtmlUtil.escape(reservation.getReference()) %>" <%= HtmlUtil.selected(reservation.getReference(), checkoutPreOrderReservation) %>>
+                                    <%= HtmlUtil.escape(reservation.getReference()) %> — <%= reservation.getDateDisplay() %> at <%= reservation.getTimeDisplay() %> — Table <%= HtmlUtil.escape(reservation.getTableCode()) %>
+                                </option>
+                            <% }} %>
+                        </select>
+                        <% if (preOrderReservations == null || preOrderReservations.isEmpty()) { %>
+                            <span class="form-note">No eligible future reservation is available. It must be confirmed, have an assigned table, and be at least 30 minutes away.</span>
+                        <% } %>
+                    </div>
+                    <div class="form-group full" data-pickup-order-field <%= "TAKEAWAY".equals(checkoutType) ? "" : "hidden" %>>
                         <label for="requestedFor">Takeaway collection time</label>
-                        <input class="form-control" id="requestedFor" name="requestedFor" type="datetime-local" value="<%= HtmlUtil.escape(checkoutRequestedFor) %>">
+                        <input class="form-control" id="requestedFor" name="requestedFor" type="datetime-local" value="<%= HtmlUtil.escape(checkoutRequestedFor) %>" <%= "TAKEAWAY".equals(checkoutType) ? "required" : "disabled" %>>
                     </div>
                     <div class="form-group full"><label for="customerName">Customer name</label><input class="form-control" id="customerName" name="customerName" required minlength="2" maxlength="160" value="<%= HtmlUtil.escape(checkoutName) %>"></div>
                     <div class="form-group"><label for="orderEmail">Email address</label><input class="form-control" id="orderEmail" name="email" type="email" required maxlength="160" value="<%= HtmlUtil.escape(checkoutEmail) %>"></div>
@@ -205,7 +223,7 @@
                     <div class="form-group full"><label for="orderNotes">Order notes</label><textarea class="form-control" id="orderNotes" name="orderNotes" maxlength="500" placeholder="Allergies, spice preference, serving notes, or collection instructions"><%= HtmlUtil.escape(checkoutNotes) %></textarea></div>
                 </div>
                 <div class="form-actions">
-                    <button class="btn btn-primary btn-block" type="submit" <%= cartLines == null || cartLines.isEmpty() ? "disabled" : "" %>>Submit food order</button>
+                    <button class="btn btn-primary btn-block" type="submit" data-order-submit <%= cartLines == null || cartLines.isEmpty() ? "disabled" : "" %>><span data-order-submit-label><%= "DINE_IN".equals(checkoutType) ? "Place dine-in order" : ("PRE_ORDER".equals(checkoutType) ? "Place pre-order" : "Place takeaway order") %></span></button>
                 </div>
             </form>
         </section>

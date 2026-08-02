@@ -410,14 +410,18 @@ public class JdbcReservationOrderRepository implements ReservationOrderRepositor
     }
 
     private void updateOrder(Connection connection, FoodOrderRecord order) throws SQLException {
-        String sql = "UPDATE food_order SET order_status=?, staff_note=?, cancellation_reason=?, "
-                + "updated_at=? WHERE order_reference=?";
+        String sql = "UPDATE food_order SET order_status=?, subtotal=?, service_charge=?, "
+                + "total_amount=?, staff_note=?, cancellation_reason=?, updated_at=? "
+                + "WHERE order_reference=?";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, order.getStatus());
-            statement.setString(2, order.getStaffNote());
-            statement.setString(3, order.getCancellationReason());
-            statement.setTimestamp(4, Timestamp.valueOf(order.getUpdatedAt()));
-            statement.setString(5, order.getReference());
+            statement.setBigDecimal(2, order.getSubtotal());
+            statement.setBigDecimal(3, order.getServiceCharge());
+            statement.setBigDecimal(4, order.getTotalAmount());
+            statement.setString(5, order.getStaffNote());
+            statement.setString(6, order.getCancellationReason());
+            statement.setTimestamp(7, Timestamp.valueOf(order.getUpdatedAt()));
+            statement.setString(8, order.getReference());
             statement.executeUpdate();
         }
     }

@@ -54,7 +54,7 @@
                                 <% if ("PENDING".equals(order.getStatus())) { %><option value="CONFIRMED">Accept order</option><option value="REJECTED">Reject order</option><option value="CANCELLED">Cancel order</option>
                                 <% } else if ("CONFIRMED".equals(order.getStatus())) { %><option value="PREPARING">Send to kitchen / start preparation</option><option value="CANCELLED">Cancel order</option>
                                 <% } else if ("PREPARING".equals(order.getStatus())) { %><option value="READY">Mark ready</option>
-                                <% } else if ("READY".equals(order.getStatus())) { if ("DINE_IN".equals(order.getOrderType())) { %><option value="SERVED">Mark served</option><% } else { %><option value="COMPLETED">Complete collection</option><% } 
+                                <% } else if ("READY".equals(order.getStatus())) { if ("TAKEAWAY".equals(order.getOrderType())) { %><option value="COMPLETED">Complete collection</option><% } else { %><option value="SERVED">Mark served</option><% }
                                 } else if ("SERVED".equals(order.getStatus())) { %><option value="COMPLETED">Complete order</option><% } %>
                             </select>
                         </div>

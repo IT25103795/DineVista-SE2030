@@ -842,6 +842,27 @@ textarea.form-control { min-height: 118px; resize: vertical; }
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 22px;
 }
+
+.feature-owner {
+    display: block;
+    margin: 15px 0 7px;
+    color: var(--brand-strong);
+    font-size: .72rem;
+    font-weight: 900;
+    letter-spacing: .025em;
+    text-transform: uppercase;
+}
+
+.feature-card .feature-owner + h3 { margin-top: 0; }
+.supporting-function-note {
+    margin: 22px 0 0;
+    padding: 16px 18px;
+    color: var(--ink-soft);
+    border: 1px solid var(--line);
+    background: var(--surface-alt);
+    border-radius: 16px;
+}
+.supporting-function-note strong { color: var(--ink); }
 .package-card {
     display: flex;
     overflow: hidden;
@@ -1380,6 +1401,50 @@ textarea.form-control { min-height: 118px; resize: vertical; }
     color: var(--ink-soft);
 }
 
+.alternative-slots {
+    margin-top: 18px;
+    padding: 22px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    border-radius: 22px;
+    box-shadow: var(--shadow-sm);
+}
+
+.alternative-slots-heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 16px;
+}
+
+.alternative-slots-heading .section-kicker { margin-bottom: 7px; }
+.alternative-slots-heading h3 { margin: 0; }
+.alternative-slots-heading > span { color: var(--ink-soft); font-size: .78rem; }
+
+.alternative-slot-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.alternative-slot-card {
+    display: grid;
+    min-width: 0;
+    padding: 16px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    border-radius: 16px;
+    gap: 14px;
+}
+
+.alternative-slot-card strong,
+.alternative-slot-card span,
+.alternative-slot-card small { display: block; }
+.alternative-slot-card span { margin-top: 3px; color: var(--brand-strong); font-size: 1.05rem; font-weight: 900; }
+.alternative-slot-card small { margin-top: 5px; color: var(--ink-soft); }
+.alternative-slot-card .btn { width: 100%; }
+
 .record-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1831,6 +1896,26 @@ textarea.form-control { min-height: 118px; resize: vertical; }
     font-size: .76rem;
 }
 
+.editable-order-line { align-items: flex-start; }
+.pending-item-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
+.pending-item-actions form { display: flex; align-items: center; gap: 7px; }
+.pending-item-actions .form-control { width: 72px; min-height: 38px; padding: 7px 9px; }
+.pending-order-editor {
+    display: grid;
+    margin-top: 18px;
+    padding: 18px;
+    align-items: end;
+    border: 1px solid var(--line);
+    background: var(--surface-alt);
+    border-radius: 16px;
+    grid-template-columns: minmax(220px, 1fr) minmax(360px, 1.25fr);
+    gap: 18px;
+}
+.pending-order-editor h3 { margin: 0 0 5px; }
+.pending-order-editor p { margin: 0; }
+.pending-order-editor > form { display: grid; align-items: end; grid-template-columns: minmax(180px, 1fr) 92px auto; gap: 10px; }
+.pending-order-editor .form-group { margin: 0; }
+
 .order-total-box {
     max-width: 420px;
     margin: 18px 0 0 auto;
@@ -2030,6 +2115,10 @@ textarea.form-control { min-height: 118px; resize: vertical; }
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
+    .alternative-slot-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    .pending-order-editor { grid-template-columns: 1fr; }
+
     .record-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -2089,11 +2178,14 @@ textarea.form-control { min-height: 118px; resize: vertical; }
     .choice-grid.three {
         grid-template-columns: 1fr;
     }
+
+    .pending-order-editor > form { grid-template-columns: minmax(180px, 1fr) 92px auto; }
 }
 
 @media (max-width: 620px) {
     .module-heading,
-    .result-heading {
+    .result-heading,
+    .alternative-slots-heading {
         align-items: flex-start;
         flex-direction: column;
     }
@@ -2105,12 +2197,16 @@ textarea.form-control { min-height: 118px; resize: vertical; }
     .availability-form,
     .operations-filter,
     .table-card-grid,
+    .alternative-slot-grid,
     .record-grid,
     .operations-summary,
     .detail-fact-grid,
     .detail-sidebar {
         grid-template-columns: 1fr;
     }
+
+    .pending-order-editor > form { grid-template-columns: 1fr; }
+    .pending-item-actions { justify-content: flex-start; }
 
     .server-cart-item {
         grid-template-columns: 52px 1fr auto;

@@ -2,18 +2,23 @@
 <%@ page import="java.util.List" %>
 <%@ page import="com.dinevista.model.FoodOrderRecord" %>
 <%@ page import="com.dinevista.model.OrderItemRecord" %>
+<%@ page import="com.dinevista.model.MenuItemRecord" %>
 <%@ page import="com.dinevista.model.StatusHistoryRecord" %>
 <%@ page import="com.dinevista.util.HtmlUtil" %>
 <%
     request.setAttribute("pageTitle", "Food Order Details");
     request.setAttribute("activeNav", "orders");
     FoodOrderRecord order = (FoodOrderRecord) request.getAttribute("foodOrder");
+    List<MenuItemRecord> menuItems = (List<MenuItemRecord>) request.getAttribute("menuItems");
+    boolean managerView = Boolean.TRUE.equals(request.getAttribute("managerView"));
+    boolean editablePendingOrder = !managerView && "PENDING".equals(order.getStatus());
+    boolean itemsUpdated = "items".equals(request.getParameter("updated"));
 %>
 <%@ include file="fragments/header.jspf" %>
 <%
-    String[] orderStages = "DINE_IN".equals(order.getOrderType())
-            ? new String[]{"PENDING", "CONFIRMED", "PREPARING", "READY", "SERVED", "COMPLETED"}
-            : new String[]{"PENDING", "CONFIRMED", "PREPARING", "READY", "COMPLETED"};
+    String[] orderStages = "TAKEAWAY".equals(order.getOrderType())
+            ? new String[]{"PENDING", "CONFIRMED", "PREPARING", "READY", "COMPLETED"}
+            : new String[]{"PENDING", "CONFIRMED", "PREPARING", "READY", "SERVED", "COMPLETED"};
     int orderStageIndex = -1;
     for (int i = 0; i < orderStages.length; i++) {
         if (orderStages[i].equals(order.getStatus())) orderStageIndex = i;
@@ -35,8 +40,8 @@
                 <div class="success-celebration" role="status" aria-live="polite">
                     <span class="success-celebration-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m5 12 4 4L19 6"/></svg></span>
                     <div>
-                        <span class="success-label"><%= "CANCELLED".equals(order.getStatus()) ? "Order cancelled" : "Order received" %></span>
-                        <h2><%= "CANCELLED".equals(order.getStatus()) ? "Cancellation confirmed." : "You're all set." %></h2>
+                        <span class="success-label"><%= "CANCELLED".equals(order.getStatus()) ? "Order cancelled" : (itemsUpdated ? "Order items updated" : "Order received") %></span>
+                        <h2><%= "CANCELLED".equals(order.getStatus()) ? "Cancellation confirmed." : (itemsUpdated ? "Your pending order was updated." : "You're all set.") %></h2>
                         <p><%= HtmlUtil.escape(request.getAttribute("successMessage")) %></p>
                         <div class="success-actions">
                             <code><%= HtmlUtil.escape(order.getReference()) %></code>
@@ -58,9 +63,14 @@
                     <% } else { %>
                         <ol class="status-journey" aria-label="Food order progress">
                             <% for (int i = 0; i < orderStages.length; i++) {
-                                String stageClass = i < orderStageIndex ? "complete" : (i == orderStageIndex ? "active" : "upcoming");
+                                boolean successfulCurrentStage = i == orderStageIndex
+                                        && "COMPLETED".equals(order.getStatus());
+                                boolean reachedStage = i < orderStageIndex || successfulCurrentStage;
+                                String stageClass = i < orderStageIndex ? "complete"
+                                        : (successfulCurrentStage ? "reached"
+                                        : (i == orderStageIndex ? "active" : "upcoming"));
                             %>
-                                <li class="<%= stageClass %>"><span class="status-node"><%= i < orderStageIndex ? "✓" : (i + 1) %></span><strong><%= HtmlUtil.escape(orderStages[i].replace('_', ' ')) %></strong></li>
+                                <li class="<%= stageClass %>"<%= i == orderStageIndex ? " aria-current=\"step\"" : "" %>><span class="status-node"><%= reachedStage ? "✓" : (i + 1) %></span><strong><%= HtmlUtil.escape(orderStages[i].replace('_', ' ')) %></strong></li>
                             <% } %>
                         </ol>
                     <% } %>
@@ -77,12 +87,52 @@
                 </div>
                 <div class="order-line-list">
                     <% for (OrderItemRecord item : order.getItems()) { %>
-                        <div class="order-line">
+                        <div class="order-line <%= editablePendingOrder ? "editable-order-line" : "" %>">
                             <div><strong><%= HtmlUtil.escape(item.getItemName()) %></strong><span><%= item.getQuantity() %> × <%= item.getUnitPriceDisplay() %></span></div>
-                            <strong><%= item.getLineTotalDisplay() %></strong>
+                            <% if (editablePendingOrder) { %>
+                                <div class="pending-item-actions">
+                                    <form method="post" action="<%= ctx %>/orders/items/update">
+                                        <input type="hidden" name="reference" value="<%= HtmlUtil.escape(order.getReference()) %>">
+                                        <input type="hidden" name="menuItemId" value="<%= item.getMenuItemId() %>">
+                                        <label class="sr-only" for="pending-quantity-<%= item.getMenuItemId() %>">Quantity for <%= HtmlUtil.escape(item.getItemName()) %></label>
+                                        <input class="form-control" id="pending-quantity-<%= item.getMenuItemId() %>" name="quantity" type="number" min="1" max="10" value="<%= item.getQuantity() %>" required>
+                                        <button class="btn btn-secondary btn-sm" type="submit">Update</button>
+                                    </form>
+                                    <form method="post" action="<%= ctx %>/orders/items/remove">
+                                        <input type="hidden" name="reference" value="<%= HtmlUtil.escape(order.getReference()) %>">
+                                        <input type="hidden" name="menuItemId" value="<%= item.getMenuItemId() %>">
+                                        <button class="btn btn-ghost btn-sm" type="submit">Remove</button>
+                                    </form>
+                                    <strong><%= item.getLineTotalDisplay() %></strong>
+                                </div>
+                            <% } else { %>
+                                <strong><%= item.getLineTotalDisplay() %></strong>
+                            <% } %>
                         </div>
                     <% } %>
                 </div>
+                <% if (editablePendingOrder) { %>
+                    <div class="pending-order-editor">
+                        <div><span class="section-kicker">Before staff confirmation</span><h3>Add another menu item</h3><p class="muted small">Quantities and totals are recalculated on the server and recorded in the order history.</p></div>
+                        <form method="post" action="<%= ctx %>/orders/items/add">
+                            <input type="hidden" name="reference" value="<%= HtmlUtil.escape(order.getReference()) %>">
+                            <div class="form-group">
+                                <label for="pendingMenuItem">Available menu item</label>
+                                <select class="form-control" id="pendingMenuItem" name="menuItemId" required>
+                                    <option value="">Select an item</option>
+                                    <% if (menuItems != null) { for (MenuItemRecord menuItem : menuItems) { if (menuItem.isAvailable()) { %>
+                                        <option value="<%= menuItem.getId() %>"><%= HtmlUtil.escape(menuItem.getName()) %> — <%= menuItem.getPriceDisplay() %></option>
+                                    <% }}} %>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="pendingItemQuantity">Quantity</label>
+                                <input class="form-control" id="pendingItemQuantity" name="quantity" type="number" min="1" max="10" value="1" required>
+                            </div>
+                            <button class="btn btn-primary btn-sm" type="submit">Add to pending order</button>
+                        </form>
+                    </div>
+                <% } %>
                 <div class="cart-summary order-total-box">
                     <div class="summary-row"><span>Subtotal</span><strong><%= order.getSubtotalDisplay() %></strong></div>
                     <div class="summary-row"><span>Service charge</span><strong><%= order.getServiceChargeDisplay() %></strong></div>
@@ -91,7 +141,7 @@
                 <% if (!order.getOrderNotes().isEmpty()) { %><div class="note-box"><span>Customer notes</span><p><%= HtmlUtil.escape(order.getOrderNotes()) %></p></div><% } %>
                 <% if (!order.getStaffNote().isEmpty()) { %><div class="note-box staff"><span>Latest staff note</span><p><%= HtmlUtil.escape(order.getStaffNote()) %></p></div><% } %>
                 <div class="record-actions">
-                    <% if ("PENDING".equals(order.getStatus()) || "CONFIRMED".equals(order.getStatus())) { %>
+                    <% if (!managerView && ("PENDING".equals(order.getStatus()) || "CONFIRMED".equals(order.getStatus()))) { %>
                         <button class="btn btn-danger" type="button" data-dialog-open="cancel-order-dialog">Cancel order</button>
                     <% } %>
                     <a class="btn btn-secondary" href="<%= ctx %>/orders">Back to food ordering</a>

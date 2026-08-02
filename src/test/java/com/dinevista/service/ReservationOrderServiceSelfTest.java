@@ -29,6 +29,7 @@ public final class ReservationOrderServiceSelfTest {
         cartAndOrderCrud(service, base.plusDays(20));
         linkedOrderRules(service, base.plusDays(30));
         notificationWorkflow(service, base.plusDays(40));
+        proposalAlignmentRegressions(service, base.plusDays(50));
 
         System.out.println("DineVista reservation/order self-test passed: " + checks + " checks.");
     }
@@ -400,6 +401,136 @@ public final class ReservationOrderServiceSelfTest {
         ok(service.notifications(ReservationOrderService.MANAGER_NOTIFICATION_KEY, 50).size()
                         == managerNotificationCount,
                 "clearing customer notifications preserves manager notifications");
+    }
+
+    private static void proposalAlignmentRegressions(ReservationOrderService service,
+                                                     LocalDate base) {
+        RestaurantTableRecord occupiedTable = service.tables().stream()
+                .filter(table -> table.getId() == 1).findFirst().orElseThrow();
+        occupiedTable.setStatus("OCCUPIED");
+        ok(service.findAvailableTables(base, LocalTime.of(18, 30), 2, "INDOOR", null)
+                        .stream().noneMatch(table -> table.getId() == occupiedTable.getId()),
+                "occupied table excluded from customer availability");
+        occupiedTable.setStatus("AVAILABLE");
+
+        OperationResult<TableReservationRecord> occupiedConfirmation = reservation(
+                service, "occupied-confirmation", base, LocalTime.of(20, 30), "INDOOR");
+        ok(occupiedConfirmation.isSuccess(), "occupied confirmation reservation created");
+        ok(service.staffUpdateReservation(occupiedConfirmation.getValue().getReference(), 1,
+                "PENDING", "Temporary table assignment", "Manager").isSuccess(),
+                "occupied confirmation table assigned while available");
+        occupiedTable.setStatus("OCCUPIED");
+        ok(!service.staffUpdateReservation(occupiedConfirmation.getValue().getReference(), 0,
+                "CONFIRMED", "Attempt confirmation", "Manager").isSuccess(),
+                "occupied retained table cannot confirm a pending reservation");
+        occupiedTable.setStatus("AVAILABLE");
+        ok(service.staffUpdateReservation(occupiedConfirmation.getValue().getReference(), 0,
+                "REJECTED", "Test reservation closed", "Manager").isSuccess(),
+                "occupied confirmation test record closed safely");
+
+        OperationResult<TableReservationRecord> closure = reservation(
+                service, "staff-closure", base.plusDays(1), LocalTime.of(18, 30), "INDOOR");
+        ok(closure.isSuccess(), "staff closure reservation created");
+        String closureReference = closure.getValue().getReference();
+        ok(service.staffUpdateReservation(closureReference, 1, "CONFIRMED",
+                "Table confirmed", "Manager").isSuccess(),
+                "staff closure reservation confirmed");
+        ok(service.staffUpdateReservation(closureReference, 1, "CANCELLED",
+                "Customer could not attend", "Manager").isSuccess(),
+                "confirmed reservation closes even when UI submits its current table");
+
+        LocalDate unavailableDate = base.plusDays(2);
+        for (long tableId = 1; tableId <= 3; tableId++) {
+            OperationResult<TableReservationRecord> tableReservation = reservation(
+                    service, "alternative-" + tableId, unavailableDate,
+                    LocalTime.of(18, 30), "INDOOR");
+            ok(tableReservation.isSuccess(), "alternative-slot blocking reservation " + tableId);
+            ok(service.staffUpdateReservation(tableReservation.getValue().getReference(), tableId,
+                    "CONFIRMED", "Table allocated", "Manager").isSuccess(),
+                    "alternative-slot table allocation " + tableId);
+        }
+        ok(service.findAvailableTables(unavailableDate, LocalTime.of(18, 30),
+                2, "INDOOR", null).isEmpty(), "fully booked requested slot detected");
+        ok(!service.alternativeTableSlots(unavailableDate, LocalTime.of(18, 30),
+                        2, "INDOOR", 4).isEmpty(),
+                "nearest alternative reservation slots returned");
+        ok(service.alternativeTableSlots(unavailableDate, LocalTime.of(18, 30),
+                        2, "INDOOR", 4).stream()
+                        .noneMatch(item -> item.getDate().equals(unavailableDate)
+                                && item.getTime().equals(LocalTime.of(18, 30))),
+                "requested full slot excluded from alternatives");
+        ok(service.alternativeTableSlots(unavailableDate, LocalTime.of(5, 0),
+                        2, "INDOOR", 4).isEmpty(),
+                "alternative search rejects an invalid requested time");
+
+        Map<Long, Integer> editableCart = new LinkedHashMap<>();
+        service.addCartItem(editableCart, 1, 1);
+        service.addCartItem(editableCart, 2, 1);
+        OperationResult<FoodOrderRecord> editableOrder = service.createOrder(
+                "item-editor", "Item Editor", "editor@example.com", "0771234567",
+                "TAKEAWAY", "", LocalDateTime.of(base.plusDays(3), LocalTime.of(19, 30)),
+                "Pending item CRUD", editableCart);
+        ok(editableOrder.isSuccess(), "pending item CRUD order created");
+        String editableReference = editableOrder.getValue().getReference();
+        ok(!service.updatePendingOrderItem("another-customer", editableReference, 1, 2).isSuccess(),
+                "pending item update ownership enforced");
+        long managerUnreadBeforeItemChange = service.unreadNotificationCount(
+                ReservationOrderService.MANAGER_NOTIFICATION_KEY);
+        ok(service.addPendingOrderItem("item-editor", editableReference, 3, 1).isSuccess(),
+                "item added to submitted pending order");
+        ok(service.unreadNotificationCount(ReservationOrderService.MANAGER_NOTIFICATION_KEY)
+                        == managerUnreadBeforeItemChange + 1,
+                "manager notified when submitted order items change");
+        ok(service.updatePendingOrderItem("item-editor", editableReference, 1, 3).isSuccess(),
+                "submitted pending order quantity updated");
+        ok(service.order(editableReference).orElseThrow().getItems().stream()
+                        .anyMatch(item -> item.getMenuItemId() == 1 && item.getQuantity() == 3),
+                "pending quantity persisted in order record");
+        ok(service.removePendingOrderItem("item-editor", editableReference, 2).isSuccess(),
+                "item removed from submitted pending order");
+        ok(service.order(editableReference).orElseThrow().getItems().stream()
+                        .noneMatch(item -> item.getMenuItemId() == 2),
+                "pending item removal persisted");
+        ok(service.order(editableReference).orElseThrow().getSubtotal()
+                        .compareTo(service.order(editableReference).orElseThrow().getItems().stream()
+                                .map(item -> item.getLineTotal())
+                                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add)) == 0,
+                "pending order totals remain synchronized with edited items");
+        ok(service.removePendingOrderItem("item-editor", editableReference, 3).isSuccess(),
+                "second pending item removed");
+        ok(!service.removePendingOrderItem("item-editor", editableReference, 1).isSuccess(),
+                "submitted order cannot lose its final item");
+        ok(service.staffUpdateOrder(editableReference, "CONFIRMED", "Accepted", "Manager").isSuccess(),
+                "edited pending order confirmed");
+        ok(!service.addPendingOrderItem("item-editor", editableReference, 4, 1).isSuccess(),
+                "item edits blocked after staff confirmation");
+
+        OperationResult<TableReservationRecord> preOrderReservation = reservation(
+                service, "pre-order-lifecycle", base.plusDays(4), LocalTime.of(19, 30), "GARDEN");
+        ok(preOrderReservation.isSuccess(), "pre-order lifecycle reservation created");
+        ok(service.staffUpdateReservation(preOrderReservation.getValue().getReference(), 5,
+                "CONFIRMED", "Garden table confirmed", "Manager").isSuccess(),
+                "pre-order lifecycle reservation confirmed");
+        Map<Long, Integer> preOrderCart = new LinkedHashMap<>();
+        service.addCartItem(preOrderCart, 4, 1);
+        OperationResult<FoodOrderRecord> preOrder = service.createOrder(
+                "pre-order-lifecycle", "Pre Order Guest", "preorder@example.com", "0771234567",
+                "PRE_ORDER", preOrderReservation.getValue().getReference(), null,
+                "Serve after seating", preOrderCart);
+        ok(preOrder.isSuccess(), "pre-order created");
+        String preOrderReference = preOrder.getValue().getReference();
+        ok(service.staffUpdateOrder(preOrderReference, "CONFIRMED", "Accepted", "Manager").isSuccess(),
+                "pre-order confirmed");
+        ok(service.staffUpdateOrder(preOrderReference, "PREPARING", "Cooking", "Chef").isSuccess(),
+                "pre-order preparing");
+        ok(service.staffUpdateOrder(preOrderReference, "READY", "Ready", "Chef").isSuccess(),
+                "pre-order ready");
+        ok(!service.staffUpdateOrder(preOrderReference, "COMPLETED", "Skip service", "Manager").isSuccess(),
+                "pre-order cannot skip served status");
+        ok(service.staffUpdateOrder(preOrderReference, "SERVED", "Served", "Waiter").isSuccess(),
+                "pre-order served");
+        ok(service.staffUpdateOrder(preOrderReference, "COMPLETED", "Completed", "Waiter").isSuccess(),
+                "pre-order completed after service");
     }
 
     private static OperationResult<TableReservationRecord> reservation(

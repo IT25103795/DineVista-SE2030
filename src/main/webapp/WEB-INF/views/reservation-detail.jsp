@@ -7,6 +7,7 @@
     request.setAttribute("pageTitle", "Reservation Details");
     request.setAttribute("activeNav", "reservations");
     TableReservationRecord reservation = (TableReservationRecord) request.getAttribute("reservation");
+    boolean managerView = Boolean.TRUE.equals(request.getAttribute("managerView"));
 %>
 <%@ include file="fragments/header.jspf" %>
 <%
@@ -89,13 +90,13 @@
                     <div class="note-box staff"><span>Latest staff note</span><p><%= HtmlUtil.escape(reservation.getStaffNote()) %></p></div>
                 <% } %>
                 <div class="record-actions">
-                    <% if ("PENDING".equals(reservation.getStatus())) { %>
+                    <% if (!managerView && "PENDING".equals(reservation.getStatus())) { %>
                         <a class="btn btn-secondary" href="<%= ctx %>/reservations/edit?reference=<%= reservation.getReference() %>">Edit pending reservation</a>
                     <% } %>
-                    <% if ("PENDING".equals(reservation.getStatus()) || "CONFIRMED".equals(reservation.getStatus())) { %>
+                    <% if (!managerView && ("PENDING".equals(reservation.getStatus()) || "CONFIRMED".equals(reservation.getStatus()))) { %>
                         <button class="btn btn-danger" type="button" data-dialog-open="cancel-reservation-dialog">Cancel reservation</button>
                     <% } %>
-                    <a class="btn btn-ghost" href="<%= ctx %>/orders">Create linked food order</a>
+                    <% if (!managerView) { %><a class="btn btn-ghost" href="<%= ctx %>/orders">Create linked food order</a><% } %>
                 </div>
             </article>
 

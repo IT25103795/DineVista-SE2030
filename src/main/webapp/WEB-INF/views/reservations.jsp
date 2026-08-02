@@ -1,6 +1,7 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.time.LocalDate" %>
+<%@ page import="com.dinevista.model.AvailabilityAlternativeRecord" %>
 <%@ page import="com.dinevista.model.RestaurantTableRecord" %>
 <%@ page import="com.dinevista.model.TableReservationRecord" %>
 <%@ page import="com.dinevista.util.HtmlUtil" %>
@@ -14,6 +15,8 @@
             (List<TableReservationRecord>) request.getAttribute("customerReservations");
     List<RestaurantTableRecord> availableTables =
             (List<RestaurantTableRecord>) request.getAttribute("availableTables");
+    List<AvailabilityAlternativeRecord> availabilityAlternatives =
+            (List<AvailabilityAlternativeRecord>) request.getAttribute("availabilityAlternatives");
     boolean availabilitySearched = Boolean.TRUE.equals(request.getAttribute("availabilitySearched"));
 
     String formGuestName = request.getAttribute("formGuestName") == null
@@ -133,8 +136,38 @@
                 <% if (availableTables == null || availableTables.isEmpty()) { %>
                     <div class="empty-module-state">
                         <strong>No suitable table is available for this slot.</strong>
-                        <p>Try another time, seating area, or smaller party size.</p>
+                        <p>Try one of the nearest available times below, another seating area, or a smaller party size.</p>
                     </div>
+                    <% if (availabilityAlternatives != null && !availabilityAlternatives.isEmpty()) { %>
+                        <div class="alternative-slots" aria-labelledby="alternative-slots-title">
+                            <div class="alternative-slots-heading">
+                                <div>
+                                    <span class="section-kicker">Nearest availability</span>
+                                    <h3 id="alternative-slots-title">Other times that fit your party</h3>
+                                </div>
+                                <span>Up to four closest options</span>
+                            </div>
+                            <div class="alternative-slot-grid">
+                                <% for (AvailabilityAlternativeRecord alternative : availabilityAlternatives) {
+                                    RestaurantTableRecord suggestedTable = alternative.getTables().get(0);
+                                %>
+                                    <article class="alternative-slot-card">
+                                        <div>
+                                            <strong><%= HtmlUtil.escape(alternative.getDateDisplay()) %></strong>
+                                            <span><%= HtmlUtil.escape(alternative.getTimeDisplay()) %></span>
+                                            <small><%= alternative.getAvailableTableCount() %> suitable table<%= alternative.getAvailableTableCount() == 1 ? "" : "s" %></small>
+                                        </div>
+                                        <a class="btn btn-secondary btn-sm" href="#create-reservation"
+                                           data-prefill-reservation
+                                           data-date="<%= HtmlUtil.escape(alternative.getDateInputValue()) %>"
+                                           data-time="<%= HtmlUtil.escape(alternative.getTimeInputValue()) %>"
+                                           data-party="<%= HtmlUtil.escape(request.getParameter("availabilityPartySize")) %>"
+                                           data-area="<%= HtmlUtil.escape(suggestedTable.getSeatingArea()) %>">Choose time</a>
+                                    </article>
+                                <% } %>
+                            </div>
+                        </div>
+                    <% } %>
                 <% } else { %>
                     <div class="floor-plan-legend" aria-label="Table availability legend">
                         <span><i class="legend-dot available"></i>Available now</span>

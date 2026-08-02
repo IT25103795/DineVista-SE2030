@@ -87,6 +87,12 @@ public class ReservationServlet extends HttpServlet {
                     availabilityDate, availabilityTime, availabilityParty, availabilityArea);
             if (availability.isSuccess()) {
                 request.setAttribute("availableTables", availability.getValue());
+                if (availability.getValue().isEmpty()) {
+                    request.setAttribute("availabilityAlternatives",
+                            service.alternativeTableSlots(
+                                    availabilityDate, availabilityTime, availabilityParty,
+                                    availabilityArea, 4));
+                }
             } else {
                 request.setAttribute("errors", availability.getErrors());
             }
@@ -196,6 +202,7 @@ public class ReservationServlet extends HttpServlet {
             return;
         }
         request.setAttribute("reservation", record.get());
+        request.setAttribute("managerView", manager);
         request.getRequestDispatcher("/WEB-INF/views/reservation-detail.jsp").forward(request, response);
     }
 

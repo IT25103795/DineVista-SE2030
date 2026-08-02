@@ -49,7 +49,7 @@
                             <select class="form-control" id="tableId" name="tableId">
                                 <option value="0">Keep current assignment</option>
                                 <% if (availableTables != null) { for (RestaurantTableRecord table : availableTables) { %>
-                                    <option value="<%= table.getId() %>" <%= reservation.getTableId() != null && reservation.getTableId() == table.getId() ? "selected" : "" %>>
+                                    <option value="<%= table.getId() %>">
                                         <%= HtmlUtil.escape(table.getCode()) %> — <%= HtmlUtil.escape(table.getSeatingAreaDisplay()) %> — <%= table.getCapacity() %> seats
                                     </option>
                                 <% }} %>

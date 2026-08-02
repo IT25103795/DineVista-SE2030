@@ -15,6 +15,7 @@ The current release includes a complete **Table Reservation and Food Order Manag
 - Browse and filter the restaurant menu
 - Add, update, and remove food items in a server-side cart
 - Create dine-in, takeaway, and reservation-linked pre-orders
+- Add, update, or remove items from a submitted order while it is still pending
 - View current and previous reservations and orders
 - Track reservation and order status histories
 - Receive manager confirmation and lifecycle updates from the notification bell
@@ -27,6 +28,7 @@ The current release includes a complete **Table Reservation and Food Order Manag
 - Local illustrated hero backgrounds with readable overlays on all public pages
 - Three-step reservation form with a synchronized review summary
 - Floor-style table availability preview that safely pre-fills the existing form
+- Nearest-slot suggestions when the requested table time is fully booked
 - Slide-out food cart backed by the original server-side update/remove/checkout forms
 - Clear confirmation cards, copyable references, and live status-progress tracks
 - Mobile bottom navigation, keyboard-friendly dialogs, focus handling, and
@@ -50,12 +52,15 @@ The module runs in **memory mode by default**, so it works immediately without M
 
 | Student ID | Student Name | Assigned Major Function |
 |---|---|---|
-| IT25103799 | Wijesuriya W. A. T. D. | Event Resource and Staff Scheduling Management |
-| IT25103794 | Samarasinghe M. A. I. | Menu and Inventory Management |
+| IT25103798 | Hansaka A. K. | Inventory Management |
+| IT25103794 | Samarasinghe M. A. I. | Menu Management |
 | IT25103795 | De Silva K. H. B. N. | Table Reservation and Food Order Management |
 | IT25103796 | Manzab M. G. M. | Event Package and Booking Management |
-| IT25103797 | Nawarathna N. M. I. N. | Payment, Billing and Promotion Management |
-| IT25103798 | Hansaka A. K. | User, Customer and Staff Management |
+| IT25103797 | Nawarathna N. M. I. N. | Billing Management with Promotions and Discounts |
+| IT25103799 | Wijesuriya W. A. T. D. | Event Resource and Staff Scheduling Management |
+
+Authentication, customer profiles, and staff access remain shared supporting
+capabilities; they are not one of the six assigned core functions.
 
 ## Technology Stack
 
@@ -106,6 +111,9 @@ DineVista/
 | `/reservations/edit?reference=...` | Edit an eligible reservation |
 | `/orders` | Manage the cart, checkout, and customer orders |
 | `/orders/view?reference=...` | View one order and its status timeline |
+| `/orders/items/add` | Add an item to a customer-owned pending order |
+| `/orders/items/update` | Change an item quantity in a customer-owned pending order |
+| `/orders/items/remove` | Remove a non-final item from a customer-owned pending order |
 | `/staff/reservations` | Staff reservation operations dashboard |
 | `/staff/reservations/view?reference=...` | Staff reservation review and status actions |
 | `/staff/orders` | Staff kitchen/order operations dashboard |
@@ -158,7 +166,7 @@ Detailed implementation, business rules, routes, status transitions, testing ste
 docs/TABLE_RESERVATION_AND_FOOD_ORDER_MODULE.md
 ```
 
-The latest audit results, including the 107-check CRUD and notification suite and UI interaction
+The latest audit results, including the 147-check CRUD and notification suite and UI interaction
 verification, are recorded in `docs/CRUD_AUDIT_RESULTS.md`.
 
 ## Git Workflow

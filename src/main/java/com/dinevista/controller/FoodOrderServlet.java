@@ -60,6 +60,15 @@ public class FoodOrderServlet extends HttpServlet {
             case "/checkout":
                 checkout(request, response);
                 break;
+            case "/items/add":
+                addPendingItem(request, response);
+                break;
+            case "/items/update":
+                updatePendingItem(request, response);
+                break;
+            case "/items/remove":
+                removePendingItem(request, response);
+                break;
             case "/cancel":
                 cancel(request, response);
                 break;
@@ -175,6 +184,48 @@ public class FoodOrderServlet extends HttpServlet {
         response.sendRedirect(request.getContextPath() + "/orders/view?reference=" + reference);
     }
 
+    private void addPendingItem(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        String reference = RequestUtil.clean(request, "reference");
+        OperationResult<FoodOrderRecord> result = service.addPendingOrderItem(
+                ReservationOrderContext.customerKey(request), reference,
+                RequestUtil.longValue(request, "menuItemId", -1),
+                RequestUtil.integer(request, "quantity", -1));
+        exposeItemResult(request, result, "Item added to the pending order.");
+        response.sendRedirect(request.getContextPath() + "/orders/view?reference=" + reference
+                + "&updated=items");
+    }
+
+    private void updatePendingItem(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        String reference = RequestUtil.clean(request, "reference");
+        OperationResult<FoodOrderRecord> result = service.updatePendingOrderItem(
+                ReservationOrderContext.customerKey(request), reference,
+                RequestUtil.longValue(request, "menuItemId", -1),
+                RequestUtil.integer(request, "quantity", -1));
+        exposeItemResult(request, result, "Pending order quantity updated.");
+        response.sendRedirect(request.getContextPath() + "/orders/view?reference=" + reference
+                + "&updated=items");
+    }
+
+    private void removePendingItem(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        String reference = RequestUtil.clean(request, "reference");
+        OperationResult<FoodOrderRecord> result = service.removePendingOrderItem(
+                ReservationOrderContext.customerKey(request), reference,
+                RequestUtil.longValue(request, "menuItemId", -1));
+        exposeItemResult(request, result, "Item removed from the pending order.");
+        response.sendRedirect(request.getContextPath() + "/orders/view?reference=" + reference
+                + "&updated=items");
+    }
+
+    private void exposeItemResult(HttpServletRequest request,
+                                  OperationResult<FoodOrderRecord> result,
+                                  String successMessage) {
+        if (result.isSuccess()) FlashUtil.success(request, successMessage);
+        else FlashUtil.errors(request, result.getErrors());
+    }
+
     private void showDetails(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String reference = RequestUtil.clean(request, "reference");
@@ -188,6 +239,8 @@ public class FoodOrderServlet extends HttpServlet {
             return;
         }
         request.setAttribute("foodOrder", record.get());
+        request.setAttribute("managerView", manager);
+        request.setAttribute("menuItems", service.menuItems());
         request.getRequestDispatcher("/WEB-INF/views/order-detail.jsp").forward(request, response);
     }
 

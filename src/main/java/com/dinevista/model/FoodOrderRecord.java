@@ -22,9 +22,9 @@ public class FoodOrderRecord implements Serializable {
     private final String orderNotes;
     private String status;
     private final List<OrderItemRecord> items;
-    private final BigDecimal subtotal;
-    private final BigDecimal serviceCharge;
-    private final BigDecimal totalAmount;
+    private BigDecimal subtotal;
+    private BigDecimal serviceCharge;
+    private BigDecimal totalAmount;
     private String staffNote;
     private String cancellationReason;
     private final LocalDateTime createdAt;
@@ -47,14 +47,7 @@ public class FoodOrderRecord implements Serializable {
         this.requestedFor = requestedFor;
         this.orderNotes = orderNotes == null ? "" : orderNotes;
         this.items = new ArrayList<>(items);
-        this.subtotal = items.stream()
-                .map(OrderItemRecord::getLineTotal)
-                .reduce(BigDecimal.ZERO, BigDecimal::add)
-                .setScale(2, RoundingMode.HALF_UP);
-        this.serviceCharge = "DINE_IN".equals(orderType)
-                ? subtotal.multiply(new BigDecimal("0.05")).setScale(2, RoundingMode.HALF_UP)
-                : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
-        this.totalAmount = subtotal.add(serviceCharge).setScale(2, RoundingMode.HALF_UP);
+        recalculateTotals();
         this.status = "PENDING";
         this.staffNote = "";
         this.cancellationReason = "";
@@ -125,6 +118,26 @@ public class FoodOrderRecord implements Serializable {
         }
         this.updatedAt = LocalDateTime.now();
         addHistory(newStatus, note, changedBy);
+    }
+
+    public void replaceItems(List<OrderItemRecord> replacementItems,
+                             String note, String changedBy) {
+        this.items.clear();
+        this.items.addAll(replacementItems);
+        recalculateTotals();
+        this.updatedAt = LocalDateTime.now();
+        addHistory(status, note, changedBy);
+    }
+
+    private void recalculateTotals() {
+        this.subtotal = items.stream()
+                .map(OrderItemRecord::getLineTotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .setScale(2, RoundingMode.HALF_UP);
+        this.serviceCharge = "DINE_IN".equals(orderType)
+                ? subtotal.multiply(new BigDecimal("0.05")).setScale(2, RoundingMode.HALF_UP)
+                : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+        this.totalAmount = subtotal.add(serviceCharge).setScale(2, RoundingMode.HALF_UP);
     }
 
     private void addHistory(String status, String note, String changedBy) {

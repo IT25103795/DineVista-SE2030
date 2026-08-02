@@ -1,6 +1,7 @@
 package com.dinevista.service;
 
 import com.dinevista.model.CartLineRecord;
+import com.dinevista.model.AvailabilityAlternativeRecord;
 import com.dinevista.model.FoodOrderRecord;
 import com.dinevista.model.MenuItemRecord;
 import com.dinevista.model.NotificationRecord;
@@ -43,6 +44,10 @@ public class ReservationOrderService {
     private static final Set<String> ORDER_STATUSES = new HashSet<>(
             Arrays.asList("PENDING", "CONFIRMED", "PREPARING", "READY",
                     "SERVED", "COMPLETED", "CANCELLED", "REJECTED"));
+    private static final List<LocalTime> RESERVATION_TIMES = Arrays.asList(
+            LocalTime.of(11, 30), LocalTime.of(12, 30), LocalTime.of(13, 30),
+            LocalTime.of(18, 30), LocalTime.of(19, 30), LocalTime.of(20, 30),
+            LocalTime.of(21, 30));
 
     private final ReservationOrderRepository repository;
 
@@ -106,7 +111,7 @@ public class ReservationOrderService {
         String area = normalize(seatingArea);
         return repository.findAllTables().stream()
                 .filter(table -> table.getCapacity() >= partySize)
-                .filter(table -> !"OUT_OF_SERVICE".equals(table.getStatus()))
+                .filter(table -> "AVAILABLE".equals(table.getStatus()))
                 .filter(table -> "ANY".equals(area) || area.isEmpty()
                         || table.getSeatingArea().equals(area))
                 .filter(table -> repository.isTableAvailable(
@@ -114,6 +119,48 @@ public class ReservationOrderService {
                 .sorted(Comparator.comparingInt(RestaurantTableRecord::getCapacity)
                         .thenComparing(RestaurantTableRecord::getCode))
                 .collect(Collectors.toList());
+    }
+
+    public List<AvailabilityAlternativeRecord> alternativeTableSlots(
+            LocalDate date, LocalTime time, int partySize, String seatingArea, int limit) {
+        String area = normalize(seatingArea);
+        if (date == null || time == null || partySize < 1 || partySize > 20
+                || !SEATING_AREAS.contains(area)) {
+            return Collections.emptyList();
+        }
+
+        LocalDateTime requested = LocalDateTime.of(date, time);
+        if (requested.isBefore(LocalDateTime.now().plusMinutes(30))
+                || time.isBefore(LocalTime.of(11, 0))
+                || time.isAfter(LocalTime.of(22, 0))) {
+            return Collections.emptyList();
+        }
+        List<LocalDateTime> candidates = new ArrayList<>();
+        for (int dayOffset = 0; dayOffset <= 1; dayOffset++) {
+            LocalDate candidateDate = date.plusDays(dayOffset);
+            for (LocalTime candidateTime : RESERVATION_TIMES) {
+                LocalDateTime candidate = LocalDateTime.of(candidateDate, candidateTime);
+                if (!candidate.equals(requested)
+                        && !candidate.isBefore(LocalDateTime.now().plusMinutes(30))) {
+                    candidates.add(candidate);
+                }
+            }
+        }
+        candidates.sort(Comparator.comparingLong(candidate ->
+                Math.abs(Duration.between(requested, candidate).toMinutes())));
+
+        List<AvailabilityAlternativeRecord> alternatives = new ArrayList<>();
+        int resultLimit = Math.max(1, Math.min(limit, 6));
+        for (LocalDateTime candidate : candidates) {
+            List<RestaurantTableRecord> tables = findAvailableTables(
+                    candidate.toLocalDate(), candidate.toLocalTime(), partySize, area, null);
+            if (!tables.isEmpty()) {
+                alternatives.add(new AvailabilityAlternativeRecord(
+                        candidate.toLocalDate(), candidate.toLocalTime(), tables));
+                if (alternatives.size() >= resultLimit) break;
+            }
+        }
+        return alternatives;
     }
 
     public OperationResult<List<RestaurantTableRecord>> searchAvailableTables(
@@ -221,7 +268,7 @@ public class ReservationOrderService {
         return OperationResult.success(record);
     }
 
-    public OperationResult<TableReservationRecord> cancelReservation(
+    public synchronized OperationResult<TableReservationRecord> cancelReservation(
             String customerKey, String reference, String reason) {
 
         Optional<TableReservationRecord> optional = repository.findReservationByReference(reference);
@@ -265,7 +312,7 @@ public class ReservationOrderService {
         return OperationResult.success(record);
     }
 
-    public OperationResult<TableReservationRecord> staffUpdateReservation(
+    public synchronized OperationResult<TableReservationRecord> staffUpdateReservation(
             String reference, long tableId, String newStatus, String note, String staffName) {
 
         Optional<TableReservationRecord> optional = repository.findReservationByReference(reference);
@@ -276,6 +323,8 @@ public class ReservationOrderService {
         String targetStatus = normalize(newStatus);
         String cleanNote = clean(note);
         List<String> errors = new ArrayList<>();
+        boolean closureTarget = Arrays.asList("CANCELLED", "REJECTED", "NO_SHOW")
+                .contains(targetStatus);
 
         if (!RESERVATION_STATUSES.contains(targetStatus)) {
             errors.add("Select a valid reservation status.");
@@ -285,12 +334,12 @@ public class ReservationOrderService {
         }
 
         RestaurantTableRecord selectedTable = null;
-        if (tableId > 0) {
+        if (tableId > 0 && !closureTarget) {
             selectedTable = repository.findTable(tableId).orElse(null);
             if (selectedTable == null) {
                 errors.add("The selected table does not exist.");
-            } else if ("OUT_OF_SERVICE".equals(selectedTable.getStatus())) {
-                errors.add("The selected table is out of service.");
+            } else if (!isOperationallyUsable(selectedTable, record, targetStatus)) {
+                errors.add("The selected table is not currently available for assignment.");
             } else if (selectedTable.getCapacity() < record.getPartySize()) {
                 errors.add("The selected table is too small for this party.");
             } else if (!"ANY".equals(record.getSeatingPreference())
@@ -310,7 +359,7 @@ public class ReservationOrderService {
         if ("CONFIRMED".equals(targetStatus)) {
             if (effectiveTable == null) {
                 errors.add("Assign an available table before confirming the reservation.");
-            } else if ("OUT_OF_SERVICE".equals(effectiveTable.getStatus())
+            } else if (!isOperationallyUsable(effectiveTable, record, targetStatus)
                     || effectiveTable.getCapacity() < record.getPartySize()
                     || (!"ANY".equals(record.getSeatingPreference())
                     && !record.getSeatingPreference().equals(effectiveTable.getSeatingArea()))
@@ -325,10 +374,6 @@ public class ReservationOrderService {
             errors.add("Enter a reason before rejecting or cancelling.");
         }
         if (cleanNote.length() > 500) errors.add("Staff note cannot exceed 500 characters.");
-        if (("REJECTED".equals(targetStatus) || "CANCELLED".equals(targetStatus)) && tableId > 0) {
-            errors.add("Do not assign a table when closing a reservation.");
-        }
-
         if (!isValidReservationTransition(record.getStatus(), targetStatus)) {
             errors.add("The requested reservation status change is not allowed.");
         }
@@ -491,7 +536,7 @@ public class ReservationOrderService {
         return OperationResult.success(order);
     }
 
-    public OperationResult<FoodOrderRecord> cancelOrder(
+    public synchronized OperationResult<FoodOrderRecord> cancelOrder(
             String customerKey, String reference, String reason) {
 
         Optional<FoodOrderRecord> optional = repository.findOrderByReference(reference);
@@ -522,7 +567,7 @@ public class ReservationOrderService {
         return OperationResult.success(order);
     }
 
-    public OperationResult<FoodOrderRecord> staffUpdateOrder(
+    public synchronized OperationResult<FoodOrderRecord> staffUpdateOrder(
             String reference, String newStatus, String note, String staffName) {
 
         Optional<FoodOrderRecord> optional = repository.findOrderByReference(reference);
@@ -562,6 +607,93 @@ public class ReservationOrderService {
                 "ORDER", order.getReference(),
                 "/orders/view?reference=" + order.getReference());
         return OperationResult.success(order);
+    }
+
+    public synchronized OperationResult<FoodOrderRecord> addPendingOrderItem(
+            String customerKey, String reference, long menuItemId, int quantity) {
+        Optional<FoodOrderRecord> optional = repository.findOrderByReference(reference);
+        OperationResult<FoodOrderRecord> validation = validatePendingOrderOwnership(
+                optional, customerKey);
+        if (!validation.isSuccess()) return validation;
+        if (quantity < 1 || quantity > MAX_CART_QUANTITY) {
+            return OperationResult.failure("Item quantity must be between 1 and "
+                    + MAX_CART_QUANTITY + ".");
+        }
+        Optional<MenuItemRecord> menuItem = repository.findMenuItem(menuItemId);
+        if (menuItem.isEmpty() || !menuItem.get().isAvailable()) {
+            return OperationResult.failure("This menu item is currently unavailable.");
+        }
+
+        FoodOrderRecord order = validation.getValue();
+        List<OrderItemRecord> updatedItems = new ArrayList<>(order.getItems());
+        int existingIndex = itemIndex(updatedItems, menuItemId);
+        int updatedQuantity = quantity;
+        String itemNotes = "";
+        String itemName = menuItem.get().getName();
+        BigDecimal unitPrice = menuItem.get().getPrice();
+        if (existingIndex >= 0) {
+            OrderItemRecord existing = updatedItems.get(existingIndex);
+            updatedQuantity += existing.getQuantity();
+            itemNotes = existing.getItemNotes();
+            itemName = existing.getItemName();
+            unitPrice = existing.getUnitPrice();
+            if (updatedQuantity > MAX_CART_QUANTITY) {
+                return OperationResult.failure("The combined item quantity cannot exceed "
+                        + MAX_CART_QUANTITY + ".");
+            }
+            updatedItems.remove(existingIndex);
+        }
+        updatedItems.add(new OrderItemRecord(
+                menuItem.get().getId(), itemName, updatedQuantity, unitPrice, itemNotes));
+        return saveCustomerOrderItemChange(order, updatedItems,
+                "Customer added " + menuItem.get().getName() + ".");
+    }
+
+    public synchronized OperationResult<FoodOrderRecord> updatePendingOrderItem(
+            String customerKey, String reference, long menuItemId, int quantity) {
+        Optional<FoodOrderRecord> optional = repository.findOrderByReference(reference);
+        OperationResult<FoodOrderRecord> validation = validatePendingOrderOwnership(
+                optional, customerKey);
+        if (!validation.isSuccess()) return validation;
+        if (quantity < 1 || quantity > MAX_CART_QUANTITY) {
+            return OperationResult.failure("Item quantity must be between 1 and "
+                    + MAX_CART_QUANTITY + ".");
+        }
+        Optional<MenuItemRecord> menuItem = repository.findMenuItem(menuItemId);
+        if (menuItem.isEmpty() || !menuItem.get().isAvailable()) {
+            return OperationResult.failure("This menu item is currently unavailable.");
+        }
+
+        FoodOrderRecord order = validation.getValue();
+        List<OrderItemRecord> updatedItems = new ArrayList<>(order.getItems());
+        int index = itemIndex(updatedItems, menuItemId);
+        if (index < 0) return OperationResult.failure("Order item was not found.");
+        OrderItemRecord existing = updatedItems.get(index);
+        updatedItems.set(index, new OrderItemRecord(
+                existing.getMenuItemId(), existing.getItemName(), quantity,
+                existing.getUnitPrice(), existing.getItemNotes()));
+        return saveCustomerOrderItemChange(order, updatedItems,
+                "Customer updated " + menuItem.get().getName() + " quantity to " + quantity + ".");
+    }
+
+    public synchronized OperationResult<FoodOrderRecord> removePendingOrderItem(
+            String customerKey, String reference, long menuItemId) {
+        Optional<FoodOrderRecord> optional = repository.findOrderByReference(reference);
+        OperationResult<FoodOrderRecord> validation = validatePendingOrderOwnership(
+                optional, customerKey);
+        if (!validation.isSuccess()) return validation;
+
+        FoodOrderRecord order = validation.getValue();
+        List<OrderItemRecord> updatedItems = new ArrayList<>(order.getItems());
+        int index = itemIndex(updatedItems, menuItemId);
+        if (index < 0) return OperationResult.failure("Order item was not found.");
+        if (updatedItems.size() == 1) {
+            return OperationResult.failure(
+                    "A submitted order must keep at least one item. Cancel the order instead.");
+        }
+        String itemName = updatedItems.remove(index).getItemName();
+        return saveCustomerOrderItemChange(order, updatedItems,
+                "Customer removed " + itemName + ".");
     }
 
     public List<NotificationRecord> notifications(String recipientKey, int limit) {
@@ -684,8 +816,8 @@ public class ReservationOrderService {
             case "PREPARING":
                 return "READY".equals(target);
             case "READY":
-                if ("DINE_IN".equals(orderType)) return "SERVED".equals(target);
-                return "COMPLETED".equals(target);
+                if ("TAKEAWAY".equals(orderType)) return "COMPLETED".equals(target);
+                return "SERVED".equals(target);
             case "SERVED":
                 return "COMPLETED".equals(target);
             default:
@@ -702,6 +834,52 @@ public class ReservationOrderService {
                 .filter(order -> reservationReference.equals(order.getReservationReference()))
                 .anyMatch(order -> !Arrays.asList("COMPLETED", "CANCELLED", "REJECTED")
                         .contains(order.getStatus()));
+    }
+
+    private boolean isOperationallyUsable(RestaurantTableRecord table,
+                                          TableReservationRecord reservation,
+                                          String targetStatus) {
+        if ("AVAILABLE".equals(table.getStatus())) return true;
+        boolean currentAssignment = reservation.getTableId() != null
+                && reservation.getTableId() == table.getId();
+        if (!currentAssignment) return false;
+        if ("RESERVED".equals(table.getStatus())) return true;
+        return "OCCUPIED".equals(table.getStatus())
+                && !"PENDING".equals(reservation.getStatus())
+                && !"CONFIRMED".equals(targetStatus);
+    }
+
+    private OperationResult<FoodOrderRecord> validatePendingOrderOwnership(
+            Optional<FoodOrderRecord> optional, String customerKey) {
+        if (optional.isEmpty()) return OperationResult.failure("Food order was not found.");
+        FoodOrderRecord order = optional.get();
+        if (!order.getCustomerKey().equals(customerKey)) {
+            return OperationResult.failure("You are not allowed to update this order.");
+        }
+        if (!"PENDING".equals(order.getStatus())) {
+            return OperationResult.failure("Order items can only be changed before staff confirmation.");
+        }
+        return OperationResult.success(order);
+    }
+
+    private int itemIndex(List<OrderItemRecord> items, long menuItemId) {
+        for (int i = 0; i < items.size(); i++) {
+            if (items.get(i).getMenuItemId() == menuItemId) return i;
+        }
+        return -1;
+    }
+
+    private OperationResult<FoodOrderRecord> saveCustomerOrderItemChange(
+            FoodOrderRecord order, List<OrderItemRecord> updatedItems, String historyNote) {
+        order.replaceItems(updatedItems, historyNote, order.getCustomerName());
+        repository.saveOrder(order);
+        createNotification(
+                MANAGER_NOTIFICATION_KEY, "MANAGER", "ORDER_UPDATED",
+                "Food order updated by customer",
+                order.getCustomerName() + " updated items in order " + order.getReference() + ".",
+                "ORDER", order.getReference(),
+                "/staff/orders/view?reference=" + order.getReference());
+        return OperationResult.success(order);
     }
 
     private void createNotification(String recipientKey, String recipientRole, String type,

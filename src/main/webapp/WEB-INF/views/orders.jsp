@@ -20,6 +20,9 @@
     BigDecimal cartSubtotal = (BigDecimal) request.getAttribute("cartSubtotal");
     BigDecimal cartService = (BigDecimal) request.getAttribute("cartServiceCharge");
     BigDecimal cartRestaurantTotal = cartSubtotal.add(cartService);
+    List<String> pageErrors = (List<String>) request.getAttribute("errors");
+    boolean cartHasItems = cartLines != null && !cartLines.isEmpty();
+    boolean checkoutHasErrors = pageErrors != null && request.getAttribute("checkoutName") != null;
 
     String checkoutName = request.getAttribute("checkoutName") == null
             ? (session.getAttribute("displayName") == null ? "" : session.getAttribute("displayName").toString())
@@ -52,9 +55,9 @@
         <% if (request.getAttribute("successMessage") != null) { %>
             <div class="alert alert-success"><strong><%= HtmlUtil.escape(request.getAttribute("successMessage")) %></strong></div>
         <% } %>
-        <% if (request.getAttribute("errors") != null) { %>
+        <% if (pageErrors != null && !checkoutHasErrors) { %>
             <div class="alert alert-danger"><div><strong>Please correct the following:</strong><ul>
-                <% for (String error : (List<String>) request.getAttribute("errors")) { %><li><%= HtmlUtil.escape(error) %></li><% } %>
+                <% for (String error : pageErrors) { %><li><%= HtmlUtil.escape(error) %></li><% } %>
             </ul></div></div>
         <% } %>
 
@@ -125,7 +128,7 @@
 </section>
 
 <div class="cart-drawer-backdrop" data-cart-backdrop aria-hidden="true"></div>
-<section class="section-sm section-soft cart-drawer" id="order-cart" data-order-cart-drawer data-cart-has-errors="<%= request.getAttribute("checkoutName") == null ? "false" : "true" %>">
+<section class="section-sm section-soft cart-drawer" id="order-cart" data-order-cart-drawer data-cart-has-errors="<%= checkoutHasErrors %>">
     <button class="icon-btn cart-drawer-close" type="button" data-cart-close aria-label="Close food cart">×</button>
     <div class="container order-workspace">
         <section class="cart-panel cart-panel-static">
@@ -175,7 +178,20 @@
             <h2>Order details and fulfilment.</h2>
             <p>Pre-order before arrival, order dine-in after staff seat your table, or choose takeaway without a reservation.</p>
 
-            <form method="post" action="<%= ctx %>/orders/checkout" novalidate data-order-checkout>
+            <div class="alert alert-danger checkout-feedback" role="alert" aria-live="assertive"
+                 data-order-feedback <%= checkoutHasErrors ? "" : "hidden" %>>
+                <div>
+                    <strong data-order-feedback-title>Unable to place the food order.</strong>
+                    <ul data-order-feedback-list>
+                        <% if (checkoutHasErrors) { for (String error : pageErrors) { %>
+                            <li><%= HtmlUtil.escape(error) %></li>
+                        <% }} %>
+                    </ul>
+                </div>
+            </div>
+
+            <form method="post" action="<%= ctx %>/orders/checkout" novalidate data-order-checkout
+                  data-cart-has-items="<%= cartHasItems %>">
                 <div class="form-grid">
                     <div class="form-group full">
                         <label>Order type</label>
@@ -223,7 +239,14 @@
                     <div class="form-group full"><label for="orderNotes">Order notes</label><textarea class="form-control" id="orderNotes" name="orderNotes" maxlength="500" placeholder="Allergies, spice preference, serving notes, or collection instructions"><%= HtmlUtil.escape(checkoutNotes) %></textarea></div>
                 </div>
                 <div class="form-actions">
-                    <button class="btn btn-primary btn-block" type="submit" data-order-submit <%= cartLines == null || cartLines.isEmpty() ? "disabled" : "" %>><span data-order-submit-label><%= "DINE_IN".equals(checkoutType) ? "Place dine-in order" : ("PRE_ORDER".equals(checkoutType) ? "Place pre-order" : "Place takeaway order") %></span></button>
+                    <% if (cartHasItems) { %>
+                        <button class="btn btn-primary btn-block" type="submit" data-order-submit>
+                            <span data-order-submit-label><%= "DINE_IN".equals(checkoutType) ? "Place dine-in order" : ("PRE_ORDER".equals(checkoutType) ? "Place pre-order" : "Place takeaway order") %></span>
+                        </button>
+                    <% } else { %>
+                        <a class="btn btn-primary btn-block" href="#food-menu" data-cart-close>Add dishes before ordering</a>
+                        <span class="form-note order-submit-note">Your cart is empty. Add at least one available menu item, then return to checkout.</span>
+                    <% } %>
                 </div>
             </form>
         </section>

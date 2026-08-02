@@ -275,14 +275,40 @@
     const preOrderField = q('[data-preorder-order-field]');
     const pickupOrderField = q('[data-pickup-order-field]');
     const orderSubmitLabel = q('[data-order-submit-label]');
+    const orderSubmit = q('[data-order-submit]');
+    const orderFeedback = q('[data-order-feedback]');
+    const orderFeedbackTitle = q('[data-order-feedback-title]');
+    const orderFeedbackList = q('[data-order-feedback-list]');
     const restaurantSummaryRows = qa('[data-restaurant-charge], [data-restaurant-total]');
     const takeawaySummaryRow = q('[data-takeaway-total]');
+    const clearOrderFeedback = () => {
+        if (!orderFeedback) return;
+        orderFeedback.hidden = true;
+        if (orderFeedbackList) orderFeedbackList.replaceChildren();
+    };
+    const showOrderFeedback = (messages, title = 'Unable to place the food order.') => {
+        if (!orderFeedback || !messages.length) return;
+        if (orderFeedbackTitle) orderFeedbackTitle.textContent = title;
+        if (orderFeedbackList) {
+            orderFeedbackList.replaceChildren(...messages.map(message => {
+                const item = document.createElement('li');
+                item.textContent = message;
+                return item;
+            }));
+        }
+        orderFeedback.hidden = false;
+        orderFeedback.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    };
     const setOrderFieldState = (field, active) => {
         if (!field) return;
         field.hidden = !active;
         qa('input, select', field).forEach(control => {
             control.disabled = !active;
             control.required = active;
+            if (active && control instanceof HTMLSelectElement
+                    && !control.value && control.options.length === 2) {
+                control.selectedIndex = 1;
+            }
         });
     };
     const updateOrderFields = () => {
@@ -298,8 +324,56 @@
                 : (selected === 'PRE_ORDER' ? 'Place pre-order' : 'Place takeaway order');
         }
     };
-    orderTypeInputs.forEach(input => input.addEventListener('change', updateOrderFields));
+    orderTypeInputs.forEach(input => input.addEventListener('change', () => {
+        clearOrderFeedback();
+        updateOrderFields();
+    }));
+    qa('input, select, textarea', checkout || document).forEach(control => {
+        control.addEventListener('input', clearOrderFeedback);
+        control.addEventListener('change', clearOrderFeedback);
+    });
     updateOrderFields();
+
+    checkout?.addEventListener('submit', event => {
+        if (checkout.dataset.submitting === 'true') {
+            event.preventDefault();
+            return;
+        }
+
+        const selected = q('input[name="orderType"]:checked', checkout)?.value || '';
+        const messages = [];
+        const dineInReservation = q('#dineInReservationReference', checkout);
+        const preOrderReservation = q('#preOrderReservationReference', checkout);
+        const takeawayTime = q('#requestedFor', checkout);
+
+        if (checkout.dataset.cartHasItems !== 'true') {
+            messages.push('Add at least one available menu item before placing the order.');
+        }
+        if (selected === 'DINE_IN' && !dineInReservation?.value) {
+            messages.push('Select your seated reservation before placing a dine-in order.');
+        }
+        if (selected === 'PRE_ORDER' && !preOrderReservation?.value) {
+            messages.push('Select an eligible confirmed reservation before placing a pre-order.');
+        }
+        if (selected === 'TAKEAWAY' && !takeawayTime?.value) {
+            messages.push('Select a takeaway collection time.');
+        }
+        if (!checkout.checkValidity()) {
+            messages.push('Complete the highlighted customer and fulfilment fields correctly.');
+        }
+
+        const uniqueMessages = [...new Set(messages)];
+        if (uniqueMessages.length) {
+            event.preventDefault();
+            showOrderFeedback(uniqueMessages);
+            checkout.reportValidity();
+            return;
+        }
+
+        checkout.dataset.submitting = 'true';
+        if (orderSubmit) orderSubmit.disabled = true;
+        if (orderSubmitLabel) orderSubmitLabel.textContent = 'Placing order…';
+    });
 
     const cartDrawer = q('[data-order-cart-drawer]');
     if (cartDrawer) {

@@ -16,7 +16,7 @@
 <section class="operations-hero">
     <div class="container">
         <div>
-            <span class="eyebrow">Restaurant staff operations · Owner: Hansaka A. K.</span>
+            <span class="eyebrow">Restaurant staff operations </span>
             <h1>Inventory control centre.</h1>
             <p>Maintain accurate ingredients, stock quantities, reorder levels, and an auditable transaction history so the kitchen and menu always reflect real availability.</p>
         </div>

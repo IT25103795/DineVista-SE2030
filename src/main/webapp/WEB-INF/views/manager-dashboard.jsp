@@ -16,7 +16,6 @@
     <div class="container">
         <div class="dashboard-header">
             <div><span class="eyebrow">Operations centre</span><h1>DineVista restaurant overview</h1><p>Monitor table reservations, food-order demand, kitchen status, and operational priorities.</p></div>
-            <div class="hero-actions" style="margin:0"><a class="btn btn-secondary" href="<%= ctx %>/logout">Sign out</a></div>
         </div>
         <div class="kpi-grid">
             <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span><span class="trend">Live operations</span></div><strong><%= activeReservationCount %></strong><span>Active reservations</span></article>

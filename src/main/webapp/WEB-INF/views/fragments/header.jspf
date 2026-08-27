@@ -163,8 +163,6 @@
                     </svg>
                     <span class="cart-count"><%= serverCartCount %></span>
                 </a>
-            <% } else { %>
-                <a class="manager-public-link" href="<%= ctx %>/" title="Open the public DineVista website">View website</a>
             <% } %>
             <% if (managerInterface) { %>
                 <a class="account-pill manager-account-pill" href="<%= ctx %>/dashboard" title="Open operations dashboard">

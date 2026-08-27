@@ -1,6 +1,8 @@
 package com.dinevista.controller;
 
 import com.dinevista.model.EventBookingRecord;
+import com.dinevista.repository.EventBookingRepository;
+import com.dinevista.util.EventBookingContext;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -17,6 +19,13 @@ import java.util.UUID;
 
 @WebServlet("/event-booking")
 public class EventBookingServlet extends HttpServlet {
+    private EventBookingRepository repository;
+
+    @Override
+    public void init() {
+        repository = EventBookingContext.repository(getServletContext());
+    }
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -33,6 +42,7 @@ public class EventBookingServlet extends HttpServlet {
         String packageName = clean(request.getParameter("packageName"));
         String venue = clean(request.getParameter("venue"));
         String eventDate = clean(request.getParameter("eventDate"));
+        String notes = clean(request.getParameter("notes"));
         String guestCountValue = clean(request.getParameter("guestCount"));
         int guestCount = parseInt(guestCountValue, 0);
 
@@ -44,6 +54,7 @@ public class EventBookingServlet extends HttpServlet {
         if (packageName.isEmpty()) errors.add("Select an event package.");
         if (venue.isEmpty()) errors.add("Select a venue preference.");
         if (guestCount < 10 || guestCount > 500) errors.add("Guest count must be between 10 and 500.");
+        if (notes.length() > 1500) errors.add("Initial requirements cannot exceed 1500 characters.");
 
         try {
             if (eventDate.isEmpty() || LocalDate.parse(eventDate).isBefore(LocalDate.now().plusDays(7))) {
@@ -63,13 +74,16 @@ public class EventBookingServlet extends HttpServlet {
             request.setAttribute("formVenue", venue);
             request.setAttribute("formEventDate", eventDate);
             request.setAttribute("formGuestCount", guestCountValue);
+            request.setAttribute("formNotes", notes);
             request.getRequestDispatcher("/WEB-INF/views/event-booking.jsp").forward(request, response);
             return;
         }
 
         String reference = "DV-E-" + UUID.randomUUID().toString().substring(0, 6).toUpperCase(Locale.ROOT);
         EventBookingRecord record = new EventBookingRecord(reference, customerName, email, phone,
-                eventType, packageName, venue, eventDate, guestCount, "Consultation requested");
+                eventType, packageName, venue, eventDate, guestCount,
+                "Consultation requested", notes);
+        repository.save(record);
 
         HttpSession session = request.getSession();
         @SuppressWarnings("unchecked")

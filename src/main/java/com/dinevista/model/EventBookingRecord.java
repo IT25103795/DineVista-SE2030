@@ -13,10 +13,11 @@ public class EventBookingRecord implements Serializable {
     private final String eventDate;
     private final int guestCount;
     private final String status;
+    private final String notes;
 
     public EventBookingRecord(String reference, String customerName, String email, String phone,
                               String eventType, String packageName, String venue,
-                              String eventDate, int guestCount, String status) {
+                              String eventDate, int guestCount, String status, String notes) {
         this.reference = reference;
         this.customerName = customerName;
         this.email = email;
@@ -27,6 +28,7 @@ public class EventBookingRecord implements Serializable {
         this.eventDate = eventDate;
         this.guestCount = guestCount;
         this.status = status;
+        this.notes = notes;
     }
 
     public String getReference() { return reference; }
@@ -39,4 +41,5 @@ public class EventBookingRecord implements Serializable {
     public String getEventDate() { return eventDate; }
     public int getGuestCount() { return guestCount; }
     public String getStatus() { return status; }
+    public String getNotes() { return notes; }
 }

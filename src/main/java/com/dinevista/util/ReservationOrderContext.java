@@ -31,10 +31,8 @@ public final class ReservationOrderContext {
                         repository = new JdbcReservationOrderRepository(config);
                         context.setAttribute("reservationOrderStorageMode", "mysql");
                     } catch (Exception ex) {
-                        repository = new InMemoryReservationOrderRepository();
-                        context.setAttribute("reservationOrderStorageMode", "memory-fallback");
-                        context.setAttribute("reservationOrderStorageWarning",
-                                "MySQL was unavailable, so the module started in memory mode: " + ex.getMessage());
+                        throw new IllegalStateException(
+                                "Reservations and Orders require MySQL, but persistence could not start.", ex);
                     }
                 } else {
                     repository = new InMemoryReservationOrderRepository();

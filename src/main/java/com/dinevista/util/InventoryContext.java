@@ -31,10 +31,8 @@ public final class InventoryContext {
                         repository = new JdbcInventoryRepository(config);
                         context.setAttribute("inventoryStorageMode", "mysql");
                     } catch (Exception ex) {
-                        repository = new InMemoryInventoryRepository();
-                        context.setAttribute("inventoryStorageMode", "memory-fallback");
-                        context.setAttribute("inventoryStorageWarning",
-                                "MySQL was unavailable, so Inventory started in memory mode: " + ex.getMessage());
+                        throw new IllegalStateException(
+                                "Inventory requires MySQL, but persistence could not start.", ex);
                     }
                 } else {
                     repository = new InMemoryInventoryRepository();

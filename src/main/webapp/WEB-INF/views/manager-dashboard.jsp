@@ -31,6 +31,7 @@
                 <div class="operations-launch-grid">
                     <a class="operations-launch" href="<%= ctx %>/staff/reservations"><span class="launch-icon">R</span><div><strong>Reservation operations</strong><p>Assign tables, confirm requests, seat guests, complete visits, or reject invalid requests.</p></div><span>Open</span></a>
                     <a class="operations-launch" href="<%= ctx %>/staff/orders"><span class="launch-icon green">O</span><div><strong>Kitchen food orders</strong><p>Accept orders, start preparation, mark ready, serve, complete, or reject with a reason.</p></div><span>Open</span></a>
+                    <a class="operations-launch" href="<%= ctx %>/staff/inventory"><span class="launch-icon">I</span><div><strong>Inventory management</strong><p>Track ingredients, reorder levels, and an auditable purchase, usage, and waste history.</p></div><span>Open</span></a>
                 </div>
             </section>
             <aside class="panel">

@@ -29,12 +29,15 @@ public class EventBookingServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        if (requireSignIn(request, response)) return;
         request.getRequestDispatcher("/WEB-INF/views/event-booking.jsp").forward(request, response);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        if (requireSignIn(request, response)) return;
+
         String customerName = clean(request.getParameter("customerName"));
         String email = clean(request.getParameter("email"));
         String phone = clean(request.getParameter("phone"));
@@ -97,6 +100,18 @@ public class EventBookingServlet extends HttpServlet {
         request.setAttribute("latestEventBooking", record);
         request.setAttribute("successMessage", "Your event consultation request was submitted successfully.");
         request.getRequestDispatcher("/WEB-INF/views/event-booking.jsp").forward(request, response);
+    }
+
+    /** Returns true (and sends redirect) when the user is not signed in. */
+    private boolean requireSignIn(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        HttpSession session = request.getSession(false);
+        boolean loggedIn = session != null && session.getAttribute("userId") != null;
+        if (!loggedIn) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return true;
+        }
+        return false;
     }
 
     private static String clean(String value) {

@@ -31,6 +31,7 @@ public class FoodOrderServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        if (requireSignIn(request, response)) return;
         FlashUtil.expose(request);
         String path = path(request);
         if ("/view".equals(path)) {
@@ -47,6 +48,7 @@ public class FoodOrderServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        if (requireSignIn(request, response)) return;
         switch (path(request)) {
             case "/cart/add":
                 addToCart(request, response);
@@ -75,6 +77,16 @@ public class FoodOrderServlet extends HttpServlet {
             default:
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
         }
+    }
+
+    /** Returns true (and sends redirect) when the user is not signed in. */
+    private boolean requireSignIn(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        if (!ReservationOrderContext.isSignedIn(request)) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return true;
+        }
+        return false;
     }
 
     private void renderMain(HttpServletRequest request, HttpServletResponse response)

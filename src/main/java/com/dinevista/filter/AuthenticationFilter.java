@@ -36,14 +36,26 @@ public class AuthenticationFilter implements Filter {
         
         HttpServletRequest req = (HttpServletRequest) request;
         HttpServletResponse res = (HttpServletResponse) response;
-        String path = req.getServletPath();
-        
-        if (req.getPathInfo() != null) {
-            path += req.getPathInfo();
+
+        // Derive path relative to the context root reliably across all containers
+        String contextPath = req.getContextPath();
+        String requestUri = req.getRequestURI();
+        String path = requestUri.startsWith(contextPath)
+                ? requestUri.substring(contextPath.length())
+                : requestUri;
+
+        // Normalise — remove trailing slash except bare "/"
+        if (path.length() > 1 && path.endsWith("/")) {
+            path = path.substring(0, path.length() - 1);
+        }
+        if (path.isEmpty()) {
+            path = "/";
         }
 
+        // Allow public paths
         boolean isPublic = PUBLIC_PATHS.contains(path);
-        
+
+        // Allow static assets
         if (!isPublic) {
             for (String prefix : ASSET_PREFIXES) {
                 if (path.startsWith(prefix)) {
@@ -58,6 +70,7 @@ public class AuthenticationFilter implements Filter {
             return;
         }
 
+        // Require an authenticated session for everything else
         HttpSession session = req.getSession(false);
         boolean loggedIn = session != null && session.getAttribute("userId") != null;
 
@@ -65,9 +78,9 @@ public class AuthenticationFilter implements Filter {
             chain.doFilter(request, response);
         } else {
             if (path.startsWith("/staff/") || path.startsWith("/manager/")) {
-                res.sendRedirect(req.getContextPath() + "/manager/login");
+                res.sendRedirect(contextPath + "/manager/login");
             } else {
-                res.sendRedirect(req.getContextPath() + "/login");
+                res.sendRedirect(contextPath + "/login");
             }
         }
     }

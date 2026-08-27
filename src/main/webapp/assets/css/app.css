@@ -820,6 +820,31 @@ h3 { font-size: clamp(1.2rem, 2vw, 1.55rem); }
 }
 textarea.form-control { min-height: 118px; resize: vertical; }
 .form-control:focus { border-color: var(--brand); background: var(--panel); box-shadow: 0 0 0 4px var(--brand-soft); }
+.password-field { position: relative; display: block; }
+.password-field .form-control { padding-right: 50px; }
+.password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 7px;
+    display: grid;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    place-items: center;
+    color: var(--ink-soft);
+    border: 0;
+    background: transparent;
+    border-radius: 9px;
+    cursor: pointer;
+    transform: translateY(-50%);
+    transition: color .18s ease, background .18s ease;
+}
+.password-toggle:hover { color: var(--brand-strong); background: var(--brand-soft); }
+.password-toggle:focus-visible { outline: 3px solid var(--brand-soft); outline-offset: 1px; }
+.password-toggle svg { width: 20px; height: 20px; pointer-events: none; }
+.password-toggle .password-eye-hide { display: none; }
+.password-toggle[aria-pressed="true"] .password-eye-show { display: none; }
+.password-toggle[aria-pressed="true"] .password-eye-hide { display: block; }
 .form-note { color: var(--ink-soft); font-size: .78rem; }
 .form-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
 .alert {

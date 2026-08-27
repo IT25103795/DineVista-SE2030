@@ -74,6 +74,43 @@
         menuToggle?.setAttribute('aria-expanded', 'false');
     }));
 
+    qa('input[type="password"]').forEach(input => {
+        if (input.dataset.passwordToggleReady === 'true') return;
+        input.dataset.passwordToggleReady = 'true';
+
+        const wrapper = document.createElement('span');
+        wrapper.className = 'password-field';
+        input.parentNode.insertBefore(wrapper, input);
+        wrapper.appendChild(input);
+
+        const toggle = document.createElement('button');
+        toggle.className = 'password-toggle';
+        toggle.type = 'button';
+        toggle.setAttribute('aria-label', 'Show password');
+        toggle.setAttribute('aria-pressed', 'false');
+        toggle.setAttribute('title', 'Show password');
+        toggle.innerHTML =
+            '<svg class="password-eye-show" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+            'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+            '<path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/>' +
+            '<circle cx="12" cy="12" r="2.7"/></svg>' +
+            '<svg class="password-eye-hide" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+            'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+            '<path d="m3 3 18 18"/>' +
+            '<path d="M10.6 6.2A10.7 10.7 0 0 1 12 6c6 0 9.5 6 9.5 6a16.2 16.2 0 0 1-2.1 2.8M6.1 6.1C3.8 7.8 2.5 12 2.5 12s3.5 6 9.5 6a9.8 9.8 0 0 0 3.1-.5"/>' +
+            '<path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
+        wrapper.appendChild(toggle);
+
+        toggle.addEventListener('click', () => {
+            const show = input.type === 'password';
+            input.type = show ? 'text' : 'password';
+            const label = show ? 'Hide password' : 'Show password';
+            toggle.setAttribute('aria-pressed', String(show));
+            toggle.setAttribute('aria-label', label);
+            toggle.setAttribute('title', label);
+        });
+    });
+
     const notificationMenus = qa('[data-notification-menu]');
     document.addEventListener('click', event => {
         notificationMenus.forEach(menu => {

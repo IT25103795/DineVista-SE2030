@@ -5,14 +5,14 @@
 <%@ page import="com.dinevista.util.HtmlUtil" %>
 <%
     request.setAttribute("pageTitle", "Operations Dashboard");
-    request.setAttribute("activeNav", "");
+    request.setAttribute("activeNav", "managerDashboard");
     List<TableReservationRecord> managerReservations = (List<TableReservationRecord>) request.getAttribute("managerReservations");
     List<FoodOrderRecord> managerOrders = (List<FoodOrderRecord>) request.getAttribute("managerOrders");
     long activeReservationCount = request.getAttribute("activeReservationCount") == null ? 0L : (Long) request.getAttribute("activeReservationCount");
     long activeOrderCount = request.getAttribute("activeOrderCount") == null ? 0L : (Long) request.getAttribute("activeOrderCount");
 %>
 <%@ include file="fragments/header.jspf" %>
-<section class="dashboard-page">
+<section class="dashboard-page manager-dashboard-page">
     <div class="container">
         <div class="dashboard-header">
             <div><span class="eyebrow">Operations centre</span><h1>DineVista restaurant overview</h1><p>Monitor table reservations, food-order demand, kitchen status, and operational priorities.</p></div>
@@ -22,7 +22,7 @@
             <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span><span class="trend">Live operations</span></div><strong><%= activeReservationCount %></strong><span>Active reservations</span></article>
             <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4h2l2 10h10l2-7H7"/></svg></span><span class="trend">Kitchen queue</span></div><strong><%= activeOrderCount %></strong><span>Active food orders</span></article>
             <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M3 12h18"/></svg></span><span class="trend">Validation</span></div><strong>90m</strong><span>Reservation slot protection</span></article>
-            <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg></span><span class="trend">Complete flow</span></div><strong>CRUD</strong><span>Reservation and order management</span></article>
+            <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg></span><span class="trend">Connected control</span></div><strong>3</strong><span>Operational workspaces</span></article>
         </div>
 
         <div class="dashboard-grid">

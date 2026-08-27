@@ -13,7 +13,13 @@
     String currentName = session.getAttribute("displayName") == null ? "" : session.getAttribute("displayName").toString();
     boolean signedIn = !currentRole.isEmpty();
     boolean managerNav = "manager".equalsIgnoreCase(currentRole);
-    int serverCartCount = ReservationOrderContext.cartQuantity(request);
+    Object forwardedPath = request.getAttribute(javax.servlet.RequestDispatcher.FORWARD_SERVLET_PATH);
+    String currentPath = forwardedPath == null
+            ? (request.getServletPath() == null ? "" : request.getServletPath())
+            : forwardedPath.toString();
+    boolean managerInterface = managerNav
+            && ("/dashboard".equals(currentPath) || currentPath.startsWith("/staff/"));
+    int serverCartCount = managerInterface ? 0 : ReservationOrderContext.cartQuantity(request);
     List<NotificationRecord> headerNotifications = Collections.emptyList();
     long headerUnreadCount = 0;
     if (signedIn) {
@@ -49,27 +55,29 @@
             }
         })();
     </script>
-    <title><%= pageTitle %> | DineVista</title>
+    <title><%= pageTitle %> | DineVista<%= managerInterface ? " Operations" : "" %></title>
     <link rel="icon" type="image/svg+xml" href="<%= ctx %>/assets/images/logo.svg">
     <link rel="stylesheet" href="<%= ctx %>/assets/css/app.css">
 </head>
-<body>
+<body class="<%= managerInterface ? "manager-interface" : "customer-interface" %>">
 <a class="skip-link" href="#main-content">Skip to content</a>
 <header class="site-header">
     <div class="nav-shell">
-        <a class="brand brand-animated" href="<%= ctx %>/" aria-label="DineVista home">
+        <a class="brand brand-animated" href="<%= ctx %>/<%= managerInterface ? "dashboard" : "" %>" aria-label="<%= managerInterface ? "DineVista operations dashboard" : "DineVista home" %>">
             <span class="brand-mark" aria-hidden="true"><img src="<%= ctx %>/assets/images/logo.svg" alt=""></span>
             <span class="brand-wordmark">Dine<em>Vista</em></span>
+            <% if (managerInterface) { %><span class="operations-brand-badge">Operations</span><% } %>
         </a>
 
         <nav class="main-nav" data-main-nav aria-label="Primary navigation">
-            <a class="<%= "home".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/">Home</a>
-            <a class="<%= "menu".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/menu">Menu</a>
-            <% if (managerNav) { %>
+            <% if (managerInterface) { %>
+                <a class="<%= "managerDashboard".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/dashboard">Overview</a>
                 <a class="<%= "staffReservations".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/staff/reservations">Reservations</a>
-                <a class="<%= "staffOrders".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/staff/orders">Kitchen Orders</a>
+                <a class="<%= "staffOrders".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/staff/orders">Kitchen</a>
                 <a class="<%= "staffInventory".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/staff/inventory">Inventory</a>
             <% } else { %>
+                <a class="<%= "home".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/">Home</a>
+                <a class="<%= "menu".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/menu">Menu</a>
                 <a class="<%= "orders".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/orders">Order Food</a>
                 <a class="<%= "reservations".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/reservations">Reserve a Table</a>
                 <a class="<%= "events".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/events">Events</a>
@@ -147,14 +155,24 @@
                     </section>
                 </details>
             <% } %>
-            <a class="nav-cart" href="<%= ctx %>/orders#order-cart" aria-label="Open food cart" data-cart-open>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                    <path d="M3 4h2l2.2 10.1a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 2-1.6L20.5 8H7"/>
-                    <circle cx="10" cy="20" r="1.2"/><circle cx="18" cy="20" r="1.2"/>
-                </svg>
-                <span class="cart-count"><%= serverCartCount %></span>
-            </a>
-            <% if (signedIn) { %>
+            <% if (!managerInterface) { %>
+                <a class="nav-cart" href="<%= ctx %>/orders#order-cart" aria-label="Open food cart" data-cart-open>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                        <path d="M3 4h2l2.2 10.1a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 2-1.6L20.5 8H7"/>
+                        <circle cx="10" cy="20" r="1.2"/><circle cx="18" cy="20" r="1.2"/>
+                    </svg>
+                    <span class="cart-count"><%= serverCartCount %></span>
+                </a>
+            <% } else { %>
+                <a class="manager-public-link" href="<%= ctx %>/" title="Open the public DineVista website">View website</a>
+            <% } %>
+            <% if (managerInterface) { %>
+                <a class="account-pill manager-account-pill" href="<%= ctx %>/dashboard" title="Open operations dashboard">
+                    <span class="account-avatar"><%= currentName.isEmpty() ? "DV" : currentName.substring(0, Math.min(2, currentName.length())).toUpperCase() %></span>
+                    <span class="manager-account-copy"><span class="account-name"><%= com.dinevista.util.HtmlUtil.escape(currentName) %></span><small>Manager</small></span>
+                </a>
+                <a class="manager-signout" href="<%= ctx %>/logout">Sign out</a>
+            <% } else if (signedIn) { %>
                 <a class="account-pill" href="<%= ctx %>/dashboard" title="Open dashboard">
                     <span class="account-avatar"><%= currentName.isEmpty() ? "DV" : currentName.substring(0, Math.min(2, currentName.length())).toUpperCase() %></span>
                     <span class="account-name"><%= com.dinevista.util.HtmlUtil.escape(currentName) %></span>
@@ -162,7 +180,7 @@
             <% } else { %>
                 <a class="btn btn-secondary btn-sm" href="<%= ctx %>/login">Sign in</a>
             <% } %>
-            <a class="btn btn-primary btn-sm" href="<%= ctx %>/reservations">Book now</a>
+            <% if (!managerInterface) { %><a class="btn btn-primary btn-sm" href="<%= ctx %>/reservations">Book now</a><% } %>
             <button class="menu-toggle" type="button" data-menu-toggle aria-label="Toggle navigation" aria-expanded="false">
                 <span></span>
             </button>

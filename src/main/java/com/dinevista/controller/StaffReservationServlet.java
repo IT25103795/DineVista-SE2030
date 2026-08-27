@@ -92,7 +92,7 @@ public class StaffReservationServlet extends HttpServlet {
     private boolean requireManager(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         if (ReservationOrderContext.isManager(request)) return true;
-        response.sendRedirect(request.getContextPath() + "/login?required=manager");
+        response.sendRedirect(request.getContextPath() + "/manager/login?required=manager");
         return false;
     }
 

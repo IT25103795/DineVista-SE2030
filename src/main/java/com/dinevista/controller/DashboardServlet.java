@@ -22,18 +22,26 @@ public class DashboardServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        Object role = request.getSession().getAttribute("demoRole");
+        javax.servlet.http.HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("demoRole") == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+        Object role = session.getAttribute("demoRole");
         if ("manager".equals(role)) {
             request.setAttribute("managerReservations", service.allReservations("", ""));
             request.setAttribute("managerOrders", service.allOrders("", ""));
             request.setAttribute("activeReservationCount", service.countActiveReservations());
             request.setAttribute("activeOrderCount", service.countActiveOrders());
             request.getRequestDispatcher("/WEB-INF/views/manager-dashboard.jsp").forward(request, response);
-        } else {
+        } else if ("customer".equals(role)) {
             String customerKey = ReservationOrderContext.customerKey(request);
             request.setAttribute("customerReservations", service.reservationsForCustomer(customerKey));
             request.setAttribute("customerOrders", service.ordersForCustomer(customerKey));
             request.getRequestDispatcher("/WEB-INF/views/customer-dashboard.jsp").forward(request, response);
+        } else {
+            session.invalidate();
+            response.sendRedirect(request.getContextPath() + "/login");
         }
     }
 }

@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-@WebServlet(urlPatterns = {"/menu", "/events", "/register", "/about"})
+@WebServlet(urlPatterns = {"/menu", "/events", "/about"})
 public class PageServlet extends HttpServlet {
     private final Map<String, String> views = new HashMap<>();
     private ReservationOrderService reservationOrderService;
@@ -22,7 +22,6 @@ public class PageServlet extends HttpServlet {
     public void init() {
         views.put("/menu", "/WEB-INF/views/menu.jsp");
         views.put("/events", "/WEB-INF/views/events.jsp");
-        views.put("/register", "/WEB-INF/views/register.jsp");
         views.put("/about", "/WEB-INF/views/about.jsp");
         reservationOrderService = ReservationOrderContext.service(getServletContext());
     }

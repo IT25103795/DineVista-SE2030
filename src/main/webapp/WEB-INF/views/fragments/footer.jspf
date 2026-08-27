@@ -34,6 +34,7 @@
                 <div class="footer-links">
                     <a href="<%= ctx %>/login">Sign in</a>
                     <a href="<%= ctx %>/register">Create account</a>
+                    <a href="<%= ctx %>/manager/login">Manager portal</a>
                     <a href="<%= ctx %>/dashboard">Dashboard</a>
                     <a href="<%= ctx %>/event-booking">Event inquiry</a>
                 </div>

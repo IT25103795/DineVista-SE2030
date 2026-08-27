@@ -104,6 +104,6 @@
     </a>
 </nav>
 <% } %>
-<script src="<%= ctx %>/assets/js/app.js"></script>
+<script src="<%= ctx %>/assets/js/app.js?v=20260827-manager-nav-2"></script>
 </body>
 </html>

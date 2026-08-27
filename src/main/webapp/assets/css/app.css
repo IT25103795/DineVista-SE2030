@@ -3648,6 +3648,21 @@ body.manager-interface .main-nav a.active {
 }
 body.manager-interface .main-nav a.active::after { background: #63ccb6; }
 
+html[data-theme="light"] body.manager-interface .site-header .main-nav {
+    color: #b8c7d1;
+    background: transparent;
+    box-shadow: none;
+}
+html[data-theme="light"] body.manager-interface .site-header .main-nav a {
+    color: #b8c7d1;
+    background: transparent;
+}
+html[data-theme="light"] body.manager-interface .site-header .main-nav a:hover,
+html[data-theme="light"] body.manager-interface .site-header .main-nav a.active {
+    color: #f8fbfd;
+    background: rgba(91, 205, 182, .12);
+}
+
 body.manager-interface .theme-toggle,
 body.manager-interface .notification-bell,
 body.manager-interface .menu-toggle,
@@ -3796,6 +3811,10 @@ html[data-theme="dark"] body.manager-interface .data-table th { color: #8da4b1; 
         border-radius: 18px;
         box-shadow: 0 22px 55px rgba(4, 12, 18, .28);
         flex-direction: column;
+    }
+    html[data-theme="light"] body.manager-interface .site-header .main-nav {
+        background: #14232d;
+        box-shadow: 0 22px 55px rgba(4, 12, 18, .28);
     }
     body.manager-interface .main-nav.open { display: flex; }
     body.manager-interface .main-nav a {

@@ -57,7 +57,7 @@
     </script>
     <title><%= pageTitle %> | DineVista<%= managerInterface ? " Operations" : "" %></title>
     <link rel="icon" type="image/svg+xml" href="<%= ctx %>/assets/images/logo.svg">
-    <link rel="stylesheet" href="<%= ctx %>/assets/css/app.css">
+    <link rel="stylesheet" href="<%= ctx %>/assets/css/app.css?v=20260827-manager-nav-2">
 </head>
 <body class="<%= managerInterface ? "manager-interface" : "customer-interface" %>">
 <a class="skip-link" href="#main-content">Skip to content</a>

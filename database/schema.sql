@@ -134,6 +134,7 @@ CREATE TABLE stock_transaction (
     quantity DECIMAL(12,3) NOT NULL,
     reference_note VARCHAR(255),
     performed_by BIGINT,
+    performed_by_name VARCHAR(160),
     transaction_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_stock_ingredient FOREIGN KEY (ingredient_id) REFERENCES ingredient(ingredient_id),
     CONSTRAINT fk_stock_user FOREIGN KEY (performed_by) REFERENCES user_account(user_id)

@@ -68,7 +68,7 @@
                 <p>Only available items can be added. Each item quantity is validated from 1 to 10.</p>
             </div>
             <div class="menu-heading-actions">
-                <span class="module-badge">Server-side cart</span>
+                <span class="module-badge">Your order basket</span>
                 <a class="btn btn-secondary btn-sm" href="#order-cart" data-cart-open>
                     View cart · <%= cartLines == null ? 0 : cartLines.stream().mapToInt(CartLineRecord::getQuantity).sum() %> item(s)
                 </a>

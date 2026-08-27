@@ -24,10 +24,10 @@
         </div>
 
         <div class="kpi-grid">
-            <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span><span class="trend">Reservation module</span></div><strong><%= reservationCount %></strong><span>Table reservations</span></article>
-            <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4h2l2 10h10l2-7H7"/></svg></span><span class="trend">Food-order module</span></div><strong><%= orderCount %></strong><span>Food orders</span></article>
-            <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l2.5 5.1L20 9l-4 4 1 5.6-5-2.6-5 2.6 1-5.6-4-4 5.5-.9z"/></svg></span><span class="trend">Member level</span></div><strong>Silver</strong><span>Loyalty status demo</span></article>
-            <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h16M6 20V10l6-6 6 6v10"/></svg></span><span class="trend">Event module</span></div><strong>0</strong><span>Event inquiries</span></article>
+            <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span><span class="trend">My visits</span></div><strong><%= reservationCount %></strong><span>Table reservations</span></article>
+            <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4h2l2 10h10l2-7H7"/></svg></span><span class="trend">My favourites</span></div><strong><%= orderCount %></strong><span>Food orders</span></article>
+            <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l2.5 5.1L20 9l-4 4 1 5.6-5-2.6-5 2.6 1-5.6-4-4 5.5-.9z"/></svg></span><span class="trend">DineVista rewards</span></div><strong>Silver</strong><span>Loyalty membership</span></article>
+            <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h16M6 20V10l6-6 6 6v10"/></svg></span><span class="trend">Celebrations</span></div><strong>0</strong><span>Event inquiries</span></article>
         </div>
 
         <div class="dashboard-grid">

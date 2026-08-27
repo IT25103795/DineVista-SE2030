@@ -38,7 +38,7 @@
         <div class="breadcrumbs"><a href="<%= ctx %>/">Home</a><span>/</span><span>Table Reservations</span></div>
         <span class="eyebrow">Complete reservation management</span>
         <h1>Find a table, reserve your time, and manage every visit.</h1>
-        <p>Check real-time demo availability, create a reservation request, update pending details, track staff confirmation, or cancel an eligible booking.</p>
+        <p>Check real-time availability, create a reservation request, update pending details, track confirmation, or cancel an eligible booking.</p>
         <div class="hero-actions">
             <a class="btn btn-primary" href="#create-reservation">Create reservation</a>
             <a class="btn btn-secondary" href="#my-reservations">My reservations</a>
@@ -83,7 +83,7 @@
                 <h2>Choose the best available table.</h2>
                 <p>Each reservation uses a 90-minute dining slot. Overlapping confirmed table allocations are automatically blocked.</p>
             </div>
-            <span class="module-badge">Live module demo</span>
+            <span class="module-badge">Live table availability</span>
         </div>
 
         <form class="availability-form" method="get" action="<%= ctx %>/reservations">

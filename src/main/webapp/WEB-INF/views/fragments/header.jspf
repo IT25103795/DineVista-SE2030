@@ -50,6 +50,36 @@
                 document.documentElement.dataset.theme = theme;
                 document.documentElement.style.colorScheme = theme;
                 document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#0b0d10' : '#fffdf9');
+    List<NotificationRecord> headerNotifications = Collections.emptyList();
+    long headerUnreadCount = 0;
+    if (signedIn) {
+        try {
+            String notificationKey = ReservationOrderContext.notificationRecipientKey(request);
+            headerNotifications = ReservationOrderContext.service(application)
+                    .notifications(notificationKey, 8);
+            headerUnreadCount = ReservationOrderContext.service(application)
+                    .unreadNotificationCount(notificationKey);
+        } catch (RuntimeException ignored) {
+            // Keep every page usable if notification storage is temporarily unavailable.
+        }
+    }
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="DineVista restaurant and event management system">
+    <meta name="theme-color" content="#fffdf9">
+    <script>
+        (() => {
+            try {
+                const savedTheme = localStorage.getItem('dinevista-theme');
+                const preferredTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                const theme = savedTheme === 'dark' || savedTheme === 'light' ? savedTheme : preferredTheme;
+                document.documentElement.dataset.theme = theme;
+                document.documentElement.style.colorScheme = theme;
+                document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#0b0d10' : '#fffdf9');
             } catch (error) {
                 document.documentElement.dataset.theme = 'light';
             }
@@ -57,7 +87,10 @@
     </script>
     <title><%= pageTitle %> | DineVista<%= managerInterface ? " Operations" : "" %></title>
     <link rel="icon" type="image/svg+xml" href="<%= ctx %>/assets/images/logo.svg">
-    <link rel="stylesheet" href="<%= ctx %>/assets/css/app.css?v=20260827-manager-nav-2">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="<%= ctx %>/assets/css/app.css?v=20260827-lp-v3">
 </head>
 <body class="<%= managerInterface ? "manager-interface" : "customer-interface" %>">
 <a class="skip-link" href="#main-content">Skip to content</a>

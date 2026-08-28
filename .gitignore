@@ -46,3 +46,5 @@ database.properties
 /.junie/memory/language.json
 /.junie/memory/feedback.md
 /.junie/memory/errors.md
+/docs/
+/docs/diagrams/

@@ -36,3 +36,13 @@ Thumbs.db
 
 # database
 database.properties
+/docs/CRUD_AUDIT_RESULTS.md
+/docs/DEVELOPMENT_GUIDE.md
+/docs/REQUIREMENTS_TRACEABILITY.md
+/docs/SETUP_AND_GIT.md
+/docs/TABLE_RESERVATION_AND_FOOD_ORDER_MODULE.md
+/.junie/memory/tasks.md
+/.junie/memory/memory.version
+/.junie/memory/language.json
+/.junie/memory/feedback.md
+/.junie/memory/errors.md

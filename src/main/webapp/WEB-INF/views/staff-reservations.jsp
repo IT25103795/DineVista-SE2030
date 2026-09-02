@@ -17,7 +17,7 @@
             <h1>Table reservation control centre.</h1>
             <p>Review requests, assign suitable tables, confirm or reject reservations, seat guests, complete visits, and prevent overlapping table allocations.</p>
         </div>
-        <div class="hero-actions"><a class="btn btn-secondary" href="<%= ctx %>/dashboard">Operations dashboard</a><a class="btn btn-primary" href="<%= ctx %>/reservations">Create customer reservation</a></div>
+        <div class="hero-actions"><a class="btn btn-secondary" href="<%= ctx %>/dashboard">Operations dashboard</a></div>
     </div>
 </section>
 

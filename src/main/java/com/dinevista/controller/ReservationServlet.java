@@ -44,6 +44,11 @@ public class ReservationServlet extends HttpServlet {
             return;
         }
         if (path.isEmpty()) {
+            if (ReservationOrderContext.isManager(request)) {
+                response.sendRedirect(request.getContextPath() + "/staff/reservations");
+                return;
+            }
+            if (rejectNonCustomer(request, response)) return;
             renderMain(request, response);
             return;
         }
@@ -57,6 +62,7 @@ public class ReservationServlet extends HttpServlet {
         String path = path(request);
         switch (path) {
             case "/create":
+                if (rejectNonCustomer(request, response)) return;
                 create(request, response);
                 break;
             case "/update":
@@ -75,6 +81,18 @@ public class ReservationServlet extends HttpServlet {
             throws IOException {
         if (!ReservationOrderContext.isSignedIn(request)) {
             response.sendRedirect(request.getContextPath() + "/login");
+            return true;
+        }
+        return false;
+    }
+
+    /** Reservation creation is a customer action, including direct POST requests. */
+    private boolean rejectNonCustomer(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        if (request.getSession(false) == null
+                || !"customer".equalsIgnoreCase(
+                        String.valueOf(request.getSession(false).getAttribute("demoRole")))) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
             return true;
         }
         return false;

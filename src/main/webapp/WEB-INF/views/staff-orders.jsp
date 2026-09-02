@@ -13,7 +13,7 @@
 <section class="operations-hero">
     <div class="container">
         <div><span class="eyebrow">Kitchen and order operations</span><h1>Food order control centre.</h1><p>Accept customer orders, move them into the kitchen queue, update preparation status, and maintain a complete service timeline.</p></div>
-        <div class="hero-actions"><a class="btn btn-secondary" href="<%= ctx %>/dashboard">Operations dashboard</a><a class="btn btn-primary" href="<%= ctx %>/orders">Create customer order</a></div>
+        <div class="hero-actions"><a class="btn btn-secondary" href="<%= ctx %>/dashboard">Operations dashboard</a></div>
     </div>
 </section>
 

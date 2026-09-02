@@ -39,6 +39,11 @@ public class FoodOrderServlet extends HttpServlet {
             return;
         }
         if (path.isEmpty()) {
+            if (ReservationOrderContext.isManager(request)) {
+                response.sendRedirect(request.getContextPath() + "/staff/orders");
+                return;
+            }
+            if (rejectNonCustomer(request, response)) return;
             renderMain(request, response);
             return;
         }
@@ -49,6 +54,7 @@ public class FoodOrderServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         if (requireSignIn(request, response)) return;
+        if (rejectNonCustomer(request, response)) return;
         switch (path(request)) {
             case "/cart/add":
                 addToCart(request, response);
@@ -84,6 +90,18 @@ public class FoodOrderServlet extends HttpServlet {
             throws IOException {
         if (!ReservationOrderContext.isSignedIn(request)) {
             response.sendRedirect(request.getContextPath() + "/login");
+            return true;
+        }
+        return false;
+    }
+
+    /** Customer cart and order actions must not be performed by staff accounts. */
+    private boolean rejectNonCustomer(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        if (request.getSession(false) == null
+                || !"customer".equalsIgnoreCase(
+                        String.valueOf(request.getSession(false).getAttribute("demoRole")))) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
             return true;
         }
         return false;

@@ -2,6 +2,7 @@ package com.dinevista.controller;
 
 import com.dinevista.repository.InMemoryReservationOrderRepository;
 import com.dinevista.service.ReservationOrderService;
+import com.dinevista.util.ReservationOrderContext;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.http.HttpServletRequest;
@@ -58,7 +59,74 @@ public final class ReservationAccessSelfTest {
         check(service.reservationsForCustomer(customer.email).size() == 1,
                 "customer reservation is saved");
 
-        System.out.println("DineVista reservation access self-test passed: " + checks + " checks.");
+        orderAccess();
+
+        System.out.println("DineVista reservation/order access self-test passed: " + checks + " checks.");
+    }
+
+    private static void orderAccess() throws Exception {
+        FoodOrderServlet servlet = new FoodOrderServlet();
+        ReservationOrderService service = new ReservationOrderService(
+                new InMemoryReservationOrderRepository());
+        Field field = FoodOrderServlet.class.getDeclaredField("service");
+        field.setAccessible(true);
+        field.set(servlet, service);
+        long menuItemId = service.menuItems().get(0).getId();
+
+        Exchange managerPage = new Exchange("manager", null);
+        servlet.doGet(managerPage.request, managerPage.response);
+        check("/DineVista/staff/orders".equals(managerPage.redirect),
+                "manager opening customer ordering returns to kitchen operations");
+        check(managerPage.forward == null, "manager never receives customer order form");
+
+        for (String role : new String[]{"manager", "MANAGER", "staff", "unexpected-role"}) {
+            for (String path : new String[]{"/cart/add", "/cart/update", "/cart/remove",
+                    "/checkout", "/items/add", "/items/update", "/items/remove", "/cancel"}) {
+                Exchange attempt = new Exchange(role, path);
+                attempt.validOrder(menuItemId);
+                attempt.parameters.put("role", "customer");
+                servlet.doPost(attempt.request, attempt.response);
+                check(attempt.status == 403, role + " cannot POST " + path);
+                check(service.ordersForCustomer(attempt.email).isEmpty(),
+                        role + " cannot create an order through " + path);
+                check(ReservationOrderContext.cart(attempt.request).get(menuItemId) == 1,
+                        role + " cannot change the cart through " + path);
+            }
+        }
+
+        Exchange guest = new Exchange(null, "/checkout");
+        servlet.doPost(guest.request, guest.response);
+        check("/DineVista/login".equals(guest.redirect), "guest checkout requires sign-in");
+
+        Exchange customerPage = new Exchange("customer", null);
+        servlet.doGet(customerPage.request, customerPage.response);
+        check("/WEB-INF/views/orders.jsp".equals(customerPage.forward),
+                "customer can still open the order form");
+
+        Exchange customerCart = new Exchange("customer", "/cart/add");
+        customerCart.parameters.put("menuItemId", Long.toString(menuItemId));
+        customerCart.parameters.put("quantity", "2");
+        servlet.doPost(customerCart.request, customerCart.response);
+        check("/DineVista/orders#food-menu".equals(customerCart.redirect),
+                "customer can still add menu items");
+        check(ReservationOrderContext.cart(customerCart.request).get(menuItemId) == 2,
+                "customer cart quantity is saved");
+
+        Exchange customer = new Exchange("customer", "/checkout");
+        customer.validOrder(menuItemId);
+        servlet.doPost(customer.request, customer.response);
+        check(customer.redirect != null
+                        && customer.redirect.startsWith("/DineVista/orders/view?reference="),
+                "customer can still check out");
+        check(service.ordersForCustomer(customer.email).size() == 1,
+                "customer order is saved");
+
+        Exchange managerReview = new Exchange("manager", "/view");
+        managerReview.parameters.put("reference",
+                service.ordersForCustomer(customer.email).get(0).getReference());
+        servlet.doGet(managerReview.request, managerReview.response);
+        check("/WEB-INF/views/order-detail.jsp".equals(managerReview.forward),
+                "manager can still review existing customer orders");
     }
 
     private static void check(boolean result, String message) {
@@ -135,6 +203,17 @@ public final class ReservationAccessSelfTest {
             parameters.put("time", "18:30");
             parameters.put("partySize", "2");
             parameters.put("seatingArea", "INDOOR");
+        }
+
+        void validOrder(long menuItemId) {
+            parameters.put("customerName", "Test Customer");
+            parameters.put("email", email);
+            parameters.put("phone", "0771234567");
+            parameters.put("orderType", "TAKEAWAY");
+            parameters.put("requestedFor", LocalDate.now().plusDays(10) + "T18:30");
+            parameters.put("menuItemId", Long.toString(menuItemId));
+            parameters.put("quantity", "2");
+            ReservationOrderContext.cart(request).put(menuItemId, 1);
         }
     }
 }

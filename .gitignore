@@ -21,7 +21,7 @@ bin/
 # Local configuration and secrets
 .env
 *.env
-src/main/resources/database.properties
+
 src/main/resources/application-local.properties
 secrets.properties
 
@@ -35,7 +35,7 @@ uploads/
 Thumbs.db
 
 # database
-database.properties
+
 /docs/CRUD_AUDIT_RESULTS.md
 /docs/DEVELOPMENT_GUIDE.md
 /docs/REQUIREMENTS_TRACEABILITY.md

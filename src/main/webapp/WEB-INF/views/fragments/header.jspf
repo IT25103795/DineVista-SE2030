@@ -216,19 +216,28 @@
                     <span class="cart-count"><%= serverCartCount %></span>
                 </a>
             <% } %>
+            <%
+                boolean onDashboard = "/dashboard".equals(currentPath)
+                        || "Customer Dashboard".equals(pageTitle)
+                        || "Operations Dashboard".equals(pageTitle);
+            %>
             <% if (managerInterface) { %>
                 <a class="account-pill manager-account-pill" href="<%= ctx %>/dashboard" title="Open operations dashboard">
                     <span class="account-avatar"><%= currentName.isEmpty() ? "DV" : currentName.substring(0, Math.min(2, currentName.length())).toUpperCase() %></span>
                     <span class="manager-account-copy"><span class="account-name"><%= com.dinevista.util.HtmlUtil.escape(currentName) %></span><small>Manager</small></span>
                 </a>
-                <button class="account-pill-edit" type="button" onclick="openProfileModal()" title="Edit profile">Edit</button>
+                <% if (onDashboard) { %>
+                    <button class="account-pill-edit" type="button" onclick="openProfileModal()" title="Edit profile">Edit</button>
+                <% } %>
                 <a class="manager-signout" href="<%= ctx %>/logout">Sign out</a>
             <% } else if (signedIn) { %>
                 <a class="account-pill" href="<%= ctx %>/dashboard" title="Open dashboard">
                     <span class="account-avatar"><%= currentName.isEmpty() ? "DV" : currentName.substring(0, Math.min(2, currentName.length())).toUpperCase() %></span>
                     <span class="account-name"><%= com.dinevista.util.HtmlUtil.escape(currentName) %></span>
                 </a>
-                <button class="account-pill-edit" type="button" onclick="openProfileModal()" title="Edit profile">Edit</button>
+                <% if (onDashboard) { %>
+                    <button class="account-pill-edit" type="button" onclick="openProfileModal()" title="Edit profile">Edit</button>
+                <% } %>
             <% } else { %>
                 <a class="btn btn-secondary btn-sm" href="<%= ctx %>/login">Sign in</a>
             <% } %>

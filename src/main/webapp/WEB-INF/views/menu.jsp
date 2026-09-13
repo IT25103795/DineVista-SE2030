@@ -98,22 +98,65 @@
 </section>
 
 <section class="section-sm section-soft">
-    <div class="container split-panel">
+    <div class="container menu-order-banner">
         <div>
             <span class="section-kicker">Flexible ordering</span>
             <h2>Dine in, pre-order for a reservation, or collect takeaway.</h2>
-            <p>All cart totals and business rules are validated by the Java service layer before an order is stored.</p>
-            <div class="feature-list compact">
-                <div><strong>Dine-in</strong><span>Link an order to a confirmed table reservation.</span></div>
-                <div><strong>Pre-order</strong><span>Schedule food for the reservation time.</span></div>
-                <div><strong>Takeaway</strong><span>Select a collection time at least 30 minutes ahead.</span></div>
+            <p class="banner-desc">All cart totals and business rules are validated by the Java service layer before an order is stored.</p>
+            <div class="order-modes-grid">
+                <div class="order-mode-item">
+                    <div class="order-mode-icon">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4h2l2 10h10l2-7H7"/><circle cx="9" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/></svg>
+                    </div>
+                    <div class="order-mode-text">
+                        <strong>Dine-in</strong>
+                        <span>Link an order to a confirmed table reservation when seated.</span>
+                    </div>
+                </div>
+                <div class="order-mode-item">
+                    <div class="order-mode-icon">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+                    </div>
+                    <div class="order-mode-text">
+                        <strong>Pre-order</strong>
+                        <span>Schedule your dishes prepared fresh for the reservation time.</span>
+                    </div>
+                </div>
+                <div class="order-mode-item">
+                    <div class="order-mode-icon">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="15" rx="3"/><path d="M8 5V3a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    </div>
+                    <div class="order-mode-text">
+                        <strong>Takeaway</strong>
+                        <span>Select a collection time at least 30 minutes ahead.</span>
+                    </div>
+                </div>
             </div>
         </div>
-        <aside class="cta-card">
-            <span class="section-kicker">Ready to order?</span>
-            <h3>Review your cart and complete checkout.</h3>
-            <p>Your selected dishes stay in the server-side session cart until checkout or removal.</p>
-            <a class="btn btn-primary btn-block" href="<%= ctx %>/orders#order-cart">Open food cart</a>
+        <aside class="order-checkout-card">
+            <div>
+                <span class="section-kicker">Ready to order?</span>
+                <h3>Review your cart and complete checkout.</h3>
+            </div>
+            <ul class="order-perks">
+                <li>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span>Instant real-time cart synchronization</span>
+                </li>
+                <li>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span>Pre-orders linked to your table booking</span>
+                </li>
+                <li>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span>Modify or cancel before kitchen prep starts</span>
+                </li>
+            </ul>
+            <a class="btn btn-primary btn-block" href="<%= ctx %>/orders#order-cart">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:-2px;margin-right:6px"><path d="M3 4h2l2 10h10l2-7H7"/><circle cx="9" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/></svg>
+                Open food cart
+            </a>
+            <p class="muted small" style="margin:0;text-align:center">Selected dishes stay saved in your session until checkout.</p>
         </aside>
     </div>
 </section>

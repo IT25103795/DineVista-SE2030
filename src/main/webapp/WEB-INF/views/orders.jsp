@@ -129,18 +129,30 @@
 
 <div class="cart-drawer-backdrop" data-cart-backdrop aria-hidden="true"></div>
 <section class="section-sm section-soft cart-drawer" id="order-cart" data-order-cart-drawer data-cart-has-errors="<%= checkoutHasErrors %>">
-    <button class="icon-btn cart-drawer-close" type="button" data-cart-close aria-label="Close food cart">×</button>
+    <div class="cart-drawer-header">
+        <div class="cart-drawer-title-group">
+            <span class="section-kicker">Order cart</span>
+            <h2 id="order-cart-title">Your food order</h2>
+        </div>
+        <div class="cart-drawer-header-actions">
+            <span class="cart-total-badge"><%= cartLines == null ? 0 : cartLines.stream().mapToInt(CartLineRecord::getQuantity).sum() %> item(s)</span>
+            <button class="cart-drawer-close-btn" type="button" data-cart-close aria-label="Close food cart">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+    </div>
     <div class="container order-workspace">
         <section class="cart-panel cart-panel-static">
-            <div class="cart-header">
-                <div><span class="section-kicker">Current cart</span><h2 id="order-cart-title">Your food order.</h2></div>
-                <span class="cart-total-items"><%= cartLines == null ? 0 : cartLines.stream().mapToInt(CartLineRecord::getQuantity).sum() %> item(s)</span>
-            </div>
-
             <% if (cartLines == null || cartLines.isEmpty()) { %>
-                <div class="empty-module-state compact">
-                    <strong>Your cart is waiting for something delicious.</strong>
-                    <p>Add a dish from the menu to begin.</p>
+                <div class="cart-empty-visual">
+                    <div class="empty-cart-badge">
+                        <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 4h2l2.2 10.1a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 2-1.6L20.5 8H7"/><circle cx="10" cy="20" r="1.2"/><circle cx="18" cy="20" r="1.2"/></svg>
+                    </div>
+                    <h3>Your cart is empty</h3>
+                    <p>Explore our chef-crafted menu and add your favorite dishes to begin your order.</p>
+                    <button class="btn btn-primary btn-sm" type="button" data-cart-close>
+                        Browse menu &rarr;
+                    </button>
                 </div>
             <% } else { %>
                 <div class="server-cart-list">
@@ -173,7 +185,7 @@
             <% } %>
         </section>
 
-        <section class="form-card checkout-card">
+        <section class="form-card checkout-card" <%= cartHasItems ? "" : "style=\"display:none\"" %>>
             <span class="section-kicker">Confirm food order</span>
             <h2>Order details and fulfilment.</h2>
             <p>Pre-order before arrival, order dine-in after staff seat your table, or choose takeaway without a reservation.</p>

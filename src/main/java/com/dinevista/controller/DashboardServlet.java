@@ -1,6 +1,8 @@
 package com.dinevista.controller;
 
+import com.dinevista.service.AccountService;
 import com.dinevista.service.ReservationOrderService;
+import com.dinevista.util.AccountContext;
 import com.dinevista.util.ReservationOrderContext;
 
 import javax.servlet.ServletException;
@@ -8,25 +10,36 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 
 @WebServlet("/dashboard")
 public class DashboardServlet extends HttpServlet {
     private ReservationOrderService service;
+    private AccountService accountService;
 
     @Override
     public void init() {
         service = ReservationOrderContext.service(getServletContext());
+        accountService = AccountContext.service(getServletContext());
     }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        javax.servlet.http.HttpSession session = request.getSession(false);
+        HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("demoRole") == null) {
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
+
+        // Load the current user's profile for the My Account panel
+        Object userIdObj = session.getAttribute("userId");
+        if (userIdObj instanceof Long) {
+            accountService.findById((Long) userIdObj)
+                    .ifPresent(u -> request.setAttribute("currentUser", u));
+        }
+
         Object role = session.getAttribute("demoRole");
         if ("manager".equals(role)) {
             request.setAttribute("managerReservations", service.allReservations("", ""));

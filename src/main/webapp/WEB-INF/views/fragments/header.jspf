@@ -25,43 +25,9 @@
     if (signedIn) {
         try {
             String notificationKey = ReservationOrderContext.notificationRecipientKey(request);
-            headerNotifications = ReservationOrderContext.service(application)
-                    .notifications(notificationKey, 8);
-            headerUnreadCount = ReservationOrderContext.service(application)
-                    .unreadNotificationCount(notificationKey);
-        } catch (RuntimeException ignored) {
-            // Keep every page usable if notification storage is temporarily unavailable.
-        }
-    }
-%>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="DineVista restaurant and event management system">
-    <meta name="theme-color" content="#fffdf9">
-    <script>
-        (() => {
-            try {
-                const savedTheme = localStorage.getItem('dinevista-theme');
-                const preferredTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-                const theme = savedTheme === 'dark' || savedTheme === 'light' ? savedTheme : preferredTheme;
-                document.documentElement.dataset.theme = theme;
-                document.documentElement.style.colorScheme = theme;
-                document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#0b0d10' : '#fffdf9');
-    List<NotificationRecord> headerNotifications = Collections.emptyList();
-    long headerUnreadCount = 0;
-    if (signedIn) {
-        try {
-            String notificationKey = ReservationOrderContext.notificationRecipientKey(request);
-            headerNotifications = ReservationOrderContext.service(application)
-                    .notifications(notificationKey, 8);
-            headerUnreadCount = ReservationOrderContext.service(application)
-                    .unreadNotificationCount(notificationKey);
-        } catch (RuntimeException ignored) {
-            // Keep every page usable if notification storage is temporarily unavailable.
-        }
+            headerNotifications = ReservationOrderContext.service(application).notifications(notificationKey, 8);
+            headerUnreadCount = ReservationOrderContext.service(application).unreadNotificationCount(notificationKey);
+        } catch (RuntimeException ignored) {}
     }
 %>
 <!DOCTYPE html>
@@ -91,6 +57,61 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="<%= ctx %>/assets/css/app.css?v=20260827-lp-v3">
+    <style>
+        /* ── Base canvas background to prevent white flash during initial paint ── */
+        html {
+            background-color: #fffdf9;
+        }
+        html[data-theme="dark"] {
+            background-color: #0b0d10;
+        }
+
+        .account-pill-edit {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: .8rem;
+            font-weight: 600;
+            color: inherit;
+            opacity: .7;
+            padding: 0 6px;
+            transition: opacity .15s;
+        }
+        .account-pill-edit:hover { opacity: 1; }
+        .account-pill-edit::before { content: "| "; opacity: .4; }
+
+        /* ── Seamless Cross-Document View Transitions (No white flash) ── */
+        @view-transition {
+            navigation: auto;
+        }
+
+        .site-header {
+            view-transition-name: site-header;
+        }
+
+        @keyframes dvFadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to   { opacity: 1; transform: translateY(0);   }
+        }
+        @keyframes dvFadeOut {
+            from { opacity: 1; }
+            to   { opacity: 0; }
+        }
+
+        ::view-transition-old(root) {
+            animation: 120ms ease-out both dvFadeOut;
+        }
+        ::view-transition-new(root) {
+            animation: 200ms ease-in both dvFadeIn;
+        }
+
+        /* Fallback for browsers without View Transitions: gentle content fade-in */
+        @supports not (view-transition-name: root) {
+            #main-content {
+                animation: dvFadeIn 0.2s ease-out;
+            }
+        }
+    </style>
 </head>
 <body class="<%= managerInterface ? "manager-interface" : "customer-interface" %>">
 <a class="skip-link" href="#main-content">Skip to content</a>
@@ -156,8 +177,7 @@
                                     </form>
                                 <% } %>
                                 <% if (!headerNotifications.isEmpty()) { %>
-                                    <form method="post" action="<%= ctx %>/notifications/clear-all"
-                                          data-clear-notifications-form>
+                                    <form method="post" action="<%= ctx %>/notifications/clear-all" data-clear-notifications-form>
                                         <button class="notification-clear" type="submit">Clear all</button>
                                     </form>
                                 <% } %>
@@ -166,25 +186,23 @@
                         <div class="notification-list">
                             <% if (headerNotifications.isEmpty()) { %>
                                 <div class="notification-empty">
-                                    <span aria-hidden="true">✓</span>
+                                    <span aria-hidden="true">&#10003;</span>
                                     <strong>You are all caught up</strong>
                                     <p>New reservation and order activity will appear here.</p>
                                 </div>
-                            <% } else {
-                                for (NotificationRecord notification : headerNotifications) { %>
-                                    <a class="notification-item <%= notification.isRead() ? "" : "unread" %>"
-                                       href="<%= ctx %>/notifications/open?id=<%= notification.getId() %>">
-                                        <span class="notification-item-icon" aria-hidden="true">
-                                            <%= "ORDER".equals(notification.getReferenceType()) ? "O" : "R" %>
-                                        </span>
-                                        <span class="notification-item-copy">
-                                            <strong><%= com.dinevista.util.HtmlUtil.escape(notification.getTitle()) %></strong>
-                                            <span><%= com.dinevista.util.HtmlUtil.escape(notification.getMessage()) %></span>
-                                            <small><%= com.dinevista.util.HtmlUtil.escape(notification.getCreatedAtDisplay()) %></small>
-                                        </span>
-                                    </a>
-                            <%  }
-                               } %>
+                            <% } else { for (NotificationRecord notification : headerNotifications) { %>
+                                <a class="notification-item <%= notification.isRead() ? "" : "unread" %>"
+                                   href="<%= ctx %>/notifications/open?id=<%= notification.getId() %>">
+                                    <span class="notification-item-icon" aria-hidden="true">
+                                        <%= "ORDER".equals(notification.getReferenceType()) ? "O" : "R" %>
+                                    </span>
+                                    <span class="notification-item-copy">
+                                        <strong><%= com.dinevista.util.HtmlUtil.escape(notification.getTitle()) %></strong>
+                                        <span><%= com.dinevista.util.HtmlUtil.escape(notification.getMessage()) %></span>
+                                        <small><%= com.dinevista.util.HtmlUtil.escape(notification.getCreatedAtDisplay()) %></small>
+                                    </span>
+                                </a>
+                            <% }} %>
                         </div>
                     </section>
                 </details>
@@ -203,12 +221,14 @@
                     <span class="account-avatar"><%= currentName.isEmpty() ? "DV" : currentName.substring(0, Math.min(2, currentName.length())).toUpperCase() %></span>
                     <span class="manager-account-copy"><span class="account-name"><%= com.dinevista.util.HtmlUtil.escape(currentName) %></span><small>Manager</small></span>
                 </a>
+                <button class="account-pill-edit" type="button" onclick="openProfileModal()" title="Edit profile">Edit</button>
                 <a class="manager-signout" href="<%= ctx %>/logout">Sign out</a>
             <% } else if (signedIn) { %>
                 <a class="account-pill" href="<%= ctx %>/dashboard" title="Open dashboard">
                     <span class="account-avatar"><%= currentName.isEmpty() ? "DV" : currentName.substring(0, Math.min(2, currentName.length())).toUpperCase() %></span>
                     <span class="account-name"><%= com.dinevista.util.HtmlUtil.escape(currentName) %></span>
                 </a>
+                <button class="account-pill-edit" type="button" onclick="openProfileModal()" title="Edit profile">Edit</button>
             <% } else { %>
                 <a class="btn btn-secondary btn-sm" href="<%= ctx %>/login">Sign in</a>
             <% } %>
@@ -219,4 +239,123 @@
         </div>
     </div>
 </header>
+
+
+<% if (signedIn) { %>
+<%-- ===== PROFILE MODAL ===== --%>
+<%
+    String _email = session.getAttribute("demoEmail") == null ? "" : session.getAttribute("demoEmail").toString();
+    String _dn    = session.getAttribute("displayName") == null ? "" : session.getAttribute("displayName").toString();
+    String _first = _dn.contains(" ") ? _dn.substring(0, _dn.indexOf(" ")) : _dn;
+    String _last  = _dn.contains(" ") ? _dn.substring(_dn.indexOf(" ") + 1) : "";
+%>
+<div id="profileModal" role="dialog" aria-modal="true" aria-labelledby="profileModalTitle"
+     style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.55);overflow-y:auto;padding:40px 16px">
+    <div style="background:var(--surface,#fff);border-radius:16px;max-width:680px;margin:0 auto;padding:32px;position:relative;box-shadow:0 8px 40px rgba(0,0,0,.22)">
+
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
+            <h2 id="profileModalTitle" style="margin:0;font-size:1.25rem">My account</h2>
+            <button type="button" onclick="closeProfileModal()"
+                    style="background:none;border:none;cursor:pointer;font-size:1.6rem;line-height:1;color:inherit;padding:4px 8px"
+                    aria-label="Close">&times;</button>
+        </div>
+
+        <div id="profileModalFlash" style="margin-bottom:12px"></div>
+
+        <p style="margin:0 0 20px;font-size:.875rem;color:var(--muted,#666)">
+            Email: <strong><%= com.dinevista.util.HtmlUtil.escape(_email) %></strong>
+        </p>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start">
+            <div>
+                <h3 style="font-size:1rem;margin:0 0 14px">Edit profile</h3>
+                <form method="post" action="<%= ctx %>/profile/edit">
+                    <div style="margin-bottom:10px">
+                        <label style="display:block;font-size:.85rem;font-weight:600;margin-bottom:4px" for="mfFirst">First name</label>
+                        <input class="form-control" id="mfFirst" name="firstName" required minlength="2" maxlength="80"
+                               style="width:100%;box-sizing:border-box" value="<%= com.dinevista.util.HtmlUtil.escape(_first) %>">
+                    </div>
+                    <div style="margin-bottom:10px">
+                        <label style="display:block;font-size:.85rem;font-weight:600;margin-bottom:4px" for="mfLast">Last name</label>
+                        <input class="form-control" id="mfLast" name="lastName" required minlength="2" maxlength="80"
+                               style="width:100%;box-sizing:border-box" value="<%= com.dinevista.util.HtmlUtil.escape(_last) %>">
+                    </div>
+                    <div style="margin-bottom:18px">
+                        <label style="display:block;font-size:.85rem;font-weight:600;margin-bottom:4px" for="mfPhone">Mobile number</label>
+                        <input class="form-control" id="mfPhone" name="phone" required
+                               pattern="(?:\+94|0)7[0-9]{8}" placeholder="0771234567"
+                               style="width:100%;box-sizing:border-box">
+                    </div>
+                    <button class="btn btn-primary" type="submit">Save changes</button>
+                </form>
+            </div>
+            <div>
+                <h3 style="font-size:1rem;margin:0 0 14px">Change password</h3>
+                <form method="post" action="<%= ctx %>/profile/password">
+                    <div style="margin-bottom:10px">
+                        <label style="display:block;font-size:.85rem;font-weight:600;margin-bottom:4px" for="mfCurPwd">Current password</label>
+                        <input class="form-control" id="mfCurPwd" name="currentPassword" type="password" required minlength="4"
+                               autocomplete="current-password" style="width:100%;box-sizing:border-box">
+                    </div>
+                    <div style="margin-bottom:10px">
+                        <label style="display:block;font-size:.85rem;font-weight:600;margin-bottom:4px" for="mfNewPwd">New password</label>
+                        <input class="form-control" id="mfNewPwd" name="newPassword" type="password" required minlength="8" maxlength="128"
+                               autocomplete="new-password" style="width:100%;box-sizing:border-box">
+                    </div>
+                    <div style="margin-bottom:18px">
+                        <label style="display:block;font-size:.85rem;font-weight:600;margin-bottom:4px" for="mfConPwd">Confirm new password</label>
+                        <input class="form-control" id="mfConPwd" name="confirmPassword" type="password" required minlength="8" maxlength="128"
+                               autocomplete="new-password" style="width:100%;box-sizing:border-box">
+                    </div>
+                    <button class="btn btn-secondary" type="submit">Change password</button>
+                </form>
+            </div>
+        </div>
+
+        <div style="margin-top:28px;padding-top:20px;border-top:1px solid var(--border,#e5e5e5)">
+            <h3 style="font-size:1rem;margin:0 0 6px;color:#c0392b">Delete account</h3>
+            <p style="font-size:.85rem;color:var(--muted,#666);margin:0 0 14px">
+                This action is permanent. All your data will be removed and you will be signed out immediately.
+            </p>
+            <form method="post" action="<%= ctx %>/profile/delete"
+                  onsubmit="return confirm('Are you sure? This cannot be undone.')">
+                <button type="submit"
+                        style="background:#c0392b;color:#fff;border:none;padding:9px 20px;border-radius:8px;cursor:pointer;font-weight:600;font-size:.9rem">
+                    Delete my account
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    var modal = document.getElementById('profileModal');
+    window.openProfileModal = function () {
+        var params = new URLSearchParams(window.location.search);
+        var flash  = document.getElementById('profileModalFlash');
+        flash.innerHTML = '';
+        ['profileSuccess','passwordSuccess','deleteError'].forEach(function(k) {
+            if (params.get(k)) flash.innerHTML += '<div class="alert alert-success" style="margin-bottom:8px">' + params.get(k) + '</div>';
+        });
+        ['profileError','passwordError'].forEach(function(k) {
+            if (params.get(k)) flash.innerHTML += '<div class="alert alert-danger" style="margin-bottom:8px">' + params.get(k) + '</div>';
+        });
+        modal.style.display = 'block';
+        document.body.style.overflow = 'hidden';
+    };
+    window.closeProfileModal = function () {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+    };
+    modal.addEventListener('click', function(e){ if (e.target === modal) closeProfileModal(); });
+    document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && modal.style.display !== 'none') closeProfileModal(); });
+    var p = new URLSearchParams(window.location.search);
+    if (p.get('profileSuccess') || p.get('profileError') || p.get('passwordSuccess') || p.get('passwordError')) {
+        window.openProfileModal();
+    }
+})();
+</script>
+<% } %>
+
 <main id="main-content">

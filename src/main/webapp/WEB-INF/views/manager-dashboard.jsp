@@ -60,7 +60,7 @@
                 <div class="activity-list">
                     <% if (managerOrders == null || managerOrders.isEmpty()) { %><p class="muted small">No food orders available.</p>
                     <% } else { int shown = 0; for (FoodOrderRecord order : managerOrders) { if (shown++ >= 5) break; %>
-                        <a class="activity-item" href="<%= ctx %>/staff/orders/view?reference=<%= order.getReference() %>"><span class="activity-dot"></span><span><strong><%= HtmlUtil.escape(order.getReference()) %> — <%= order.getStatus() %></strong><span><%= HtmlUtil.escape(order.getCustomerName()) %> · <%= order.getTotalQuantity() %> item(s)</span></span></a>
+                        <a class="activity-item" href="<%= ctx %>/staff/orders/view?reference=<%= order.getReference() %>"><span class="activity-dot"></span><span><strong><%= HtmlUtil.escape(order.getReference()) %> &mdash; <%= order.getStatus() %></strong><span><%= HtmlUtil.escape(order.getCustomerName()) %> &middot; <%= order.getTotalQuantity() %> item(s)</span></span></a>
                     <% }} %>
                 </div>
             </aside>
@@ -68,3 +68,4 @@
     </div>
 </section>
 <%@ include file="fragments/footer.jspf" %>
+

@@ -67,6 +67,49 @@ public class AccountService {
         }
     }
 
+    public Optional<UserAccountRecord> findById(long userId) {
+        return repository.findById(userId);
+    }
+
+    public OperationResult<UserAccountRecord> updateProfile(long userId, String firstName,
+                                                            String lastName, String phone) {
+        List<String> errors = new ArrayList<>();
+        validateName("First name", firstName, errors);
+        validateName("Last name", lastName, errors);
+        String cleanPhone = clean(phone);
+        if (!PHONE.matcher(cleanPhone).matches()) {
+            errors.add("Enter a valid Sri Lankan mobile number.");
+        }
+        if (!errors.isEmpty()) return OperationResult.failure(errors);
+        repository.updateProfile(userId, clean(firstName), clean(lastName), cleanPhone);
+        return repository.findById(userId)
+                .map(OperationResult::success)
+                .orElse(OperationResult.failure("Account not found."));
+    }
+
+    public OperationResult<Void> changePassword(long userId, String currentPassword,
+                                                String newPassword, String confirmPassword) {
+        Optional<UserAccountRecord> accountOpt = repository.findById(userId);
+        if (accountOpt.isEmpty()) return OperationResult.failure("Account not found.");
+        UserAccountRecord account = accountOpt.get();
+        if (!PasswordUtil.verify(currentPassword == null ? "" : currentPassword,
+                account.getPasswordHash())) {
+            return OperationResult.failure("Current password is incorrect.");
+        }
+        if (newPassword == null || newPassword.length() < 8 || newPassword.length() > 128) {
+            return OperationResult.failure("New password must be between 8 and 128 characters.");
+        }
+        if (!newPassword.equals(confirmPassword)) {
+            return OperationResult.failure("New passwords do not match.");
+        }
+        repository.updatePassword(userId, PasswordUtil.hash(newPassword));
+        return OperationResult.success(null);
+    }
+
+    public void deleteAccount(long userId) {
+        repository.deleteAccount(userId);
+    }
+
     private List<String> validate(String firstName, String lastName, String email, String phone,
                                   String password, String confirmPassword) {
         List<String> errors = new ArrayList<>();

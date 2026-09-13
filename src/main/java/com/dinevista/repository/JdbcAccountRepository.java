@@ -25,7 +25,7 @@ public class JdbcAccountRepository implements AccountRepository {
     @Override
     public Optional<UserAccountRecord> findByEmailAndRole(String email, String role) {
         String sql = "SELECT ua.user_id, r.role_name, ua.first_name, ua.last_name, ua.email, "
-                + "ua.password_hash, ua.account_status FROM user_account ua "
+                + "ua.phone, ua.password_hash, ua.account_status FROM user_account ua "
                 + "JOIN role r ON r.role_id = ua.role_id "
                 + "WHERE LOWER(ua.email) = LOWER(?) AND r.role_name = ? LIMIT 1";
         try (Connection connection = config.openConnection();
@@ -88,7 +88,7 @@ public class JdbcAccountRepository implements AccountRepository {
                 }
                 connection.commit();
                 return new UserAccountRecord(userId, role, firstName, lastName,
-                        email, passwordHash, "ACTIVE");
+                        email, phone, passwordHash, "ACTIVE");
             } catch (SQLException ex) {
                 connection.rollback();
                 if ("23000".equals(ex.getSQLState())) throw new DuplicateEmailException();
@@ -100,6 +100,62 @@ public class JdbcAccountRepository implements AccountRepository {
             throw ex;
         } catch (SQLException ex) {
             throw failure("Unable to create the account.", ex);
+        }
+    }
+
+    @Override
+    public Optional<UserAccountRecord> findById(long userId) {
+        String sql = "SELECT ua.user_id, r.role_name, ua.first_name, ua.last_name, ua.email, "
+                + "ua.phone, ua.password_hash, ua.account_status FROM user_account ua "
+                + "JOIN role r ON r.role_id = ua.role_id WHERE ua.user_id = ? LIMIT 1";
+        try (Connection connection = config.openConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, userId);
+            try (ResultSet rows = statement.executeQuery()) {
+                return rows.next() ? Optional.of(map(rows)) : Optional.empty();
+            }
+        } catch (SQLException ex) {
+            throw failure("Unable to read the account.", ex);
+        }
+    }
+
+    @Override
+    public void updateProfile(long userId, String firstName, String lastName, String phone) {
+        String sql = "UPDATE user_account SET first_name = ?, last_name = ?, phone = ? WHERE user_id = ?";
+        try (Connection connection = config.openConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, firstName);
+            statement.setString(2, lastName);
+            statement.setString(3, phone);
+            statement.setLong(4, userId);
+            statement.executeUpdate();
+        } catch (SQLException ex) {
+            throw failure("Unable to update the profile.", ex);
+        }
+    }
+
+    @Override
+    public void updatePassword(long userId, String newPasswordHash) {
+        String sql = "UPDATE user_account SET password_hash = ? WHERE user_id = ?";
+        try (Connection connection = config.openConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, newPasswordHash);
+            statement.setLong(2, userId);
+            statement.executeUpdate();
+        } catch (SQLException ex) {
+            throw failure("Unable to update the password.", ex);
+        }
+    }
+
+    @Override
+    public void deleteAccount(long userId) {
+        String sql = "DELETE FROM user_account WHERE user_id = ?";
+        try (Connection connection = config.openConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, userId);
+            statement.executeUpdate();
+        } catch (SQLException ex) {
+            throw failure("Unable to delete the account.", ex);
         }
     }
 
@@ -126,8 +182,8 @@ public class JdbcAccountRepository implements AccountRepository {
         return new UserAccountRecord(
                 rows.getLong("user_id"), rows.getString("role_name"),
                 rows.getString("first_name"), rows.getString("last_name"),
-                rows.getString("email"), rows.getString("password_hash"),
-                rows.getString("account_status"));
+                rows.getString("email"), rows.getString("phone"),
+                rows.getString("password_hash"), rows.getString("account_status"));
     }
 
     private static IllegalStateException failure(String message, SQLException ex) {

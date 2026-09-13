@@ -48,3 +48,4 @@ Thumbs.db
 /.junie/memory/errors.md
 /docs/
 /docs/diagrams/
+/src/main/resources/database.example.properties

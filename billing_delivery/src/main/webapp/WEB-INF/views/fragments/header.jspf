@@ -1,0 +1,222 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page import="com.dinevista.util.ReservationOrderContext" %>
+<%@ page import="com.dinevista.model.NotificationRecord" %>
+<%@ page import="java.util.Collections" %>
+<%@ page import="java.util.List" %>
+<%
+    String ctx = request.getContextPath();
+    String pageTitle = (String) request.getAttribute("pageTitle");
+    String activeNav = (String) request.getAttribute("activeNav");
+    if (pageTitle == null) pageTitle = "DineVista";
+    if (activeNav == null) activeNav = "";
+    String currentRole = session.getAttribute("demoRole") == null ? "" : session.getAttribute("demoRole").toString();
+    String currentName = session.getAttribute("displayName") == null ? "" : session.getAttribute("displayName").toString();
+    boolean signedIn = !currentRole.isEmpty();
+    boolean managerNav = "manager".equalsIgnoreCase(currentRole);
+    Object forwardedPath = request.getAttribute(javax.servlet.RequestDispatcher.FORWARD_SERVLET_PATH);
+    String currentPath = forwardedPath == null
+            ? (request.getServletPath() == null ? "" : request.getServletPath())
+            : forwardedPath.toString();
+    boolean managerInterface = managerNav
+            && ("/dashboard".equals(currentPath) || currentPath.startsWith("/staff/"));
+    int serverCartCount = managerInterface ? 0 : ReservationOrderContext.cartQuantity(request);
+    List<NotificationRecord> headerNotifications = Collections.emptyList();
+    long headerUnreadCount = 0;
+    if (signedIn) {
+        try {
+            String notificationKey = ReservationOrderContext.notificationRecipientKey(request);
+            headerNotifications = ReservationOrderContext.service(application)
+                    .notifications(notificationKey, 8);
+            headerUnreadCount = ReservationOrderContext.service(application)
+                    .unreadNotificationCount(notificationKey);
+        } catch (RuntimeException ignored) {
+            // Keep every page usable if notification storage is temporarily unavailable.
+        }
+    }
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="DineVista restaurant and event management system">
+    <meta name="theme-color" content="#fffdf9">
+    <script>
+        (() => {
+            try {
+                const savedTheme = localStorage.getItem('dinevista-theme');
+                const preferredTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                const theme = savedTheme === 'dark' || savedTheme === 'light' ? savedTheme : preferredTheme;
+                document.documentElement.dataset.theme = theme;
+                document.documentElement.style.colorScheme = theme;
+                document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#0b0d10' : '#fffdf9');
+    List<NotificationRecord> headerNotifications = Collections.emptyList();
+    long headerUnreadCount = 0;
+    if (signedIn) {
+        try {
+            String notificationKey = ReservationOrderContext.notificationRecipientKey(request);
+            headerNotifications = ReservationOrderContext.service(application)
+                    .notifications(notificationKey, 8);
+            headerUnreadCount = ReservationOrderContext.service(application)
+                    .unreadNotificationCount(notificationKey);
+        } catch (RuntimeException ignored) {
+            // Keep every page usable if notification storage is temporarily unavailable.
+        }
+    }
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="DineVista restaurant and event management system">
+    <meta name="theme-color" content="#fffdf9">
+    <script>
+        (() => {
+            try {
+                const savedTheme = localStorage.getItem('dinevista-theme');
+                const preferredTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                const theme = savedTheme === 'dark' || savedTheme === 'light' ? savedTheme : preferredTheme;
+                document.documentElement.dataset.theme = theme;
+                document.documentElement.style.colorScheme = theme;
+                document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#0b0d10' : '#fffdf9');
+            } catch (error) {
+                document.documentElement.dataset.theme = 'light';
+            }
+        })();
+    </script>
+    <title><%= pageTitle %> | DineVista<%= managerInterface ? " Operations" : "" %></title>
+    <link rel="icon" type="image/svg+xml" href="<%= ctx %>/assets/images/logo.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="<%= ctx %>/assets/css/app.css?v=20260827-lp-v3">
+</head>
+<body class="<%= managerInterface ? "manager-interface" : "customer-interface" %>">
+<a class="skip-link" href="#main-content">Skip to content</a>
+<header class="site-header">
+    <div class="nav-shell">
+        <a class="brand brand-animated" href="<%= ctx %>/<%= managerInterface ? "dashboard" : "" %>" aria-label="<%= managerInterface ? "DineVista operations dashboard" : "DineVista home" %>">
+            <span class="brand-mark" aria-hidden="true"><img src="<%= ctx %>/assets/images/logo.svg" alt=""></span>
+            <span class="brand-wordmark">Dine<em>Vista</em></span>
+            <% if (managerInterface) { %><span class="operations-brand-badge">Operations</span><% } %>
+        </a>
+
+        <nav class="main-nav" data-main-nav aria-label="Primary navigation">
+            <% if (managerInterface) { %>
+                <a class="<%= "managerDashboard".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/dashboard">Overview</a>
+                <a class="<%= "staffReservations".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/staff/reservations">Reservations</a>
+                <a class="<%= "staffOrders".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/staff/orders">Kitchen</a>
+                <a class="<%= "staffInventory".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/staff/inventory">Inventory</a>
+                <a class="<%= "staffBilling".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/staff/billing">Billing</a>
+            <% } else { %>
+                <a class="<%= "home".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/">Home</a>
+                <a class="<%= "menu".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/menu">Menu</a>
+                <a class="<%= "orders".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/orders">Order Food</a>
+                <a class="<%= "reservations".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/reservations">Reserve a Table</a>
+                <a class="<%= "events".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/events">Events</a>
+                <a class="<%= "about".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/about">About</a>
+            <% } %>
+        </nav>
+
+        <div class="nav-actions">
+            <button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch to dark mode" title="Switch to dark mode">
+                <span class="theme-toggle-track" aria-hidden="true">
+                    <span class="theme-toggle-icon theme-toggle-sun">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="3.7"/><path d="M12 2.2v2.1M12 19.7v2.1M4.1 4.1l1.5 1.5M18.4 18.4l1.5 1.5M2.2 12h2.1M19.7 12h2.1M4.1 19.9l1.5-1.5M18.4 5.6l1.5-1.5"/></svg>
+                    </span>
+                    <span class="theme-toggle-thumb"></span>
+                    <span class="theme-toggle-icon theme-toggle-moon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.2 15.2A8.2 8.2 0 0 1 8.8 3.8 8.2 8.2 0 1 0 20.2 15.2Z"/><path d="M16.8 4.5v2.4M15.6 5.7H18"/></svg>
+                    </span>
+                </span>
+                <span class="sr-only" data-theme-label>Dark mode</span>
+            </button>
+            <% if (signedIn) { %>
+                <details class="notification-menu" data-notification-menu>
+                    <summary class="notification-bell" aria-label="Open notifications" title="Notifications">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/>
+                            <path d="M10 21h4"/>
+                        </svg>
+                        <% if (headerUnreadCount > 0) { %>
+                            <span class="notification-count"><%= headerUnreadCount > 99 ? "99+" : headerUnreadCount %></span>
+                        <% } %>
+                    </summary>
+                    <section class="notification-dropdown" aria-label="Notifications">
+                        <div class="notification-dropdown-head">
+                            <div>
+                                <strong>Notifications</strong>
+                                <span><%= headerUnreadCount %> unread</span>
+                            </div>
+                            <div class="notification-head-actions">
+                                <% if (headerUnreadCount > 0) { %>
+                                    <form method="post" action="<%= ctx %>/notifications/read-all">
+                                        <button type="submit">Mark read</button>
+                                    </form>
+                                <% } %>
+                                <% if (!headerNotifications.isEmpty()) { %>
+                                    <form method="post" action="<%= ctx %>/notifications/clear-all"
+                                          data-clear-notifications-form>
+                                        <button class="notification-clear" type="submit">Clear all</button>
+                                    </form>
+                                <% } %>
+                            </div>
+                        </div>
+                        <div class="notification-list">
+                            <% if (headerNotifications.isEmpty()) { %>
+                                <div class="notification-empty">
+                                    <span aria-hidden="true">✓</span>
+                                    <strong>You are all caught up</strong>
+                                    <p>New reservation and order activity will appear here.</p>
+                                </div>
+                            <% } else {
+                                for (NotificationRecord notification : headerNotifications) { %>
+                                    <a class="notification-item <%= notification.isRead() ? "" : "unread" %>"
+                                       href="<%= ctx %>/notifications/open?id=<%= notification.getId() %>">
+                                        <span class="notification-item-icon" aria-hidden="true">
+                                            <%= "ORDER".equals(notification.getReferenceType()) ? "O" : "R" %>
+                                        </span>
+                                        <span class="notification-item-copy">
+                                            <strong><%= com.dinevista.util.HtmlUtil.escape(notification.getTitle()) %></strong>
+                                            <span><%= com.dinevista.util.HtmlUtil.escape(notification.getMessage()) %></span>
+                                            <small><%= com.dinevista.util.HtmlUtil.escape(notification.getCreatedAtDisplay()) %></small>
+                                        </span>
+                                    </a>
+                            <%  }
+                               } %>
+                        </div>
+                    </section>
+                </details>
+            <% } %>
+            <% if (!managerInterface) { %>
+                <a class="nav-cart" href="<%= ctx %>/orders#order-cart" aria-label="Open food cart" data-cart-open>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                        <path d="M3 4h2l2.2 10.1a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 2-1.6L20.5 8H7"/>
+                        <circle cx="10" cy="20" r="1.2"/><circle cx="18" cy="20" r="1.2"/>
+                    </svg>
+                    <span class="cart-count"><%= serverCartCount %></span>
+                </a>
+            <% } %>
+            <% if (managerInterface) { %>
+                <a class="account-pill manager-account-pill" href="<%= ctx %>/dashboard" title="Open operations dashboard">
+                    <span class="account-avatar"><%= currentName.isEmpty() ? "DV" : currentName.substring(0, Math.min(2, currentName.length())).toUpperCase() %></span>
+                    <span class="manager-account-copy"><span class="account-name"><%= com.dinevista.util.HtmlUtil.escape(currentName) %></span><small>Manager</small></span>
+                </a>
+                <a class="manager-signout" href="<%= ctx %>/logout">Sign out</a>
+            <% } else if (signedIn) { %>
+                <a class="account-pill" href="<%= ctx %>/dashboard" title="Open dashboard">
+                    <span class="account-avatar"><%= currentName.isEmpty() ? "DV" : currentName.substring(0, Math.min(2, currentName.length())).toUpperCase() %></span>
+                    <span class="account-name"><%= com.dinevista.util.HtmlUtil.escape(currentName) %></span>
+                </a>
+            <% } else { %>
+                <a class="btn btn-secondary btn-sm" href="<%= ctx %>/login">Sign in</a>
+            <% } %>
+            <% if (!managerInterface) { %><a class="btn btn-primary btn-sm" href="<%= ctx %>/reservations">Book now</a><% } %>
+            <button class="menu-toggle" type="button" data-menu-toggle aria-label="Toggle navigation" aria-expanded="false">
+                <span></span>
+            </button>
+        </div>
+    </div>
+</header>
+<main id="main-content">

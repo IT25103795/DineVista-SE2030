@@ -108,6 +108,7 @@
                 <a class="<%= "staffReservations".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/staff/reservations">Reservations</a>
                 <a class="<%= "staffOrders".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/staff/orders">Kitchen</a>
                 <a class="<%= "staffInventory".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/staff/inventory">Inventory</a>
+                <a class="<%= "staffBilling".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/staff/billing">Billing</a>
             <% } else { %>
                 <a class="<%= "home".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/">Home</a>
                 <a class="<%= "menu".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/menu">Menu</a>

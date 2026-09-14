@@ -210,6 +210,41 @@ public class JdbcBillingRepository implements BillingRepository {
         }
     }
 
+    @Override
+    public boolean deleteInvoice(long id) {
+        try (Connection connection = config.openConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                try (PreparedStatement statement = connection.prepareStatement(
+                        "DELETE FROM invoice_item WHERE invoice_id = ?")) {
+                    statement.setLong(1, id);
+                    statement.executeUpdate();
+                }
+
+                try (PreparedStatement statement = connection.prepareStatement(
+                        "DELETE FROM payment WHERE invoice_id = ?")) {
+                    statement.setLong(1, id);
+                    statement.executeUpdate();
+                }
+
+                int rowsDeleted;
+                try (PreparedStatement statement = connection.prepareStatement(
+                        "DELETE FROM invoice WHERE invoice_id = ?")) {
+                    statement.setLong(1, id);
+                    rowsDeleted = statement.executeUpdate();
+                }
+
+                connection.commit();
+                return rowsDeleted > 0;
+            } catch (SQLException ex) {
+                connection.rollback();
+                throw ex;
+            }
+        } catch (SQLException ex) {
+            throw repositoryFailure("Unable to delete invoice.", ex);
+        }
+    }
+
     private void insertInvoice(Connection connection, InvoiceRecord invoice) throws SQLException {
         String sql = "INSERT INTO invoice (invoice_id, invoice_number, invoice_type, source_reference, "
                 + "customer_key, customer_name, customer_email, issue_date, due_date, subtotal, tax_amount, "

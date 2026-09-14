@@ -183,6 +183,20 @@ public class BillingServlet extends HttpServlet {
             return;
         }
 
+        if ("/delete".equals(path)) {
+            long invoiceId = RequestUtil.longValue(request, "invoiceId", 0);
+            OperationResult<Void> result = billingService.deleteInvoice(
+                    invoiceId, RequestUtil.clean(request, "reason"), staffName);
+            if (result.isSuccess()) {
+                FlashUtil.success(request, "Invoice was permanently deleted from the database.");
+                response.sendRedirect(request.getContextPath() + "/staff/billing");
+            } else {
+                FlashUtil.errors(request, result.getErrors());
+                response.sendRedirect(request.getContextPath() + "/staff/billing/view?id=" + invoiceId);
+            }
+            return;
+        }
+
         if ("/promotions/save".equals(path)) {
             long id = RequestUtil.longValue(request, "id", 0);
             OperationResult<PromotionRecord> result = billingService.savePromotion(

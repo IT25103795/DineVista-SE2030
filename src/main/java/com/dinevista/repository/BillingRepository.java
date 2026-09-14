@@ -25,6 +25,7 @@ public interface BillingRepository {
     Optional<InvoiceRecord> findInvoiceBySource(String sourceType, String sourceReference);
     List<InvoiceRecord> findInvoicesForCustomer(String customerKey);
     InvoiceRecord saveInvoice(InvoiceRecord invoice);
+    boolean deleteInvoice(long id);
     long nextInvoiceId();
     long nextInvoiceItemId();
     String nextInvoiceNumber();

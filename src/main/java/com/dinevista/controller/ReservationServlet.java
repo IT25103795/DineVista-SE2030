@@ -71,6 +71,9 @@ public class ReservationServlet extends HttpServlet {
             case "/cancel":
                 cancel(request, response);
                 break;
+            case "/delete":
+                delete(request, response);
+                break;
             default:
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
         }
@@ -217,6 +220,25 @@ public class ReservationServlet extends HttpServlet {
             FlashUtil.errors(request, result.getErrors());
         }
         response.sendRedirect(request.getContextPath() + "/reservations/view?reference=" + reference);
+    }
+
+    private void delete(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        String customerKey = ReservationOrderContext.customerKey(request);
+        String reference = RequestUtil.clean(request, "reference");
+        String reason = RequestUtil.clean(request, "reason");
+        boolean manager = ReservationOrderContext.isManager(request);
+
+        OperationResult<Void> result = service.deleteReservation(
+                customerKey, reference, reason, manager);
+
+        if (result.isSuccess()) {
+            FlashUtil.success(request, "Reservation " + reference + " has been permanently deleted from the database.");
+            response.sendRedirect(request.getContextPath() + "/reservations");
+        } else {
+            FlashUtil.errors(request, result.getErrors());
+            response.sendRedirect(request.getContextPath() + "/reservations/view?reference=" + reference);
+        }
     }
 
     private void showDetails(HttpServletRequest request, HttpServletResponse response)

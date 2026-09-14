@@ -17,7 +17,7 @@ public class FoodOrderRecord implements Serializable {
     private final String email;
     private final String phone;
     private final String orderType;
-    private final String reservationReference;
+    private String reservationReference;
     private final LocalDateTime requestedFor;
     private final String orderNotes;
     private String status;
@@ -127,6 +127,10 @@ public class FoodOrderRecord implements Serializable {
         recalculateTotals();
         this.updatedAt = LocalDateTime.now();
         addHistory(status, note, changedBy);
+    }
+
+    public void clearReservationReference() {
+        this.reservationReference = "";
     }
 
     private void recalculateTotals() {

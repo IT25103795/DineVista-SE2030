@@ -72,9 +72,29 @@
             </article>
         </div>
         <aside class="detail-sidebar">
+            <article class="panel">
+                <span class="section-kicker">Manage order</span>
+                <form method="post" action="<%= ctx %>/staff/orders/delete" onsubmit="return promptStaffDeleteOrder(this);">
+                    <input type="hidden" name="reference" value="<%= HtmlUtil.escape(order.getReference()) %>">
+                    <input type="hidden" name="reason" class="staff-delete-order-reason">
+                    <button class="btn btn-danger btn-sm" style="width:100%" type="submit">Delete order</button>
+                </form>
+            </article>
             <article class="panel"><span class="section-kicker">Customer details</span><div class="contact-stack"><div><span>Name</span><strong><%= HtmlUtil.escape(order.getCustomerName()) %></strong></div><div><span>Email</span><strong><%= HtmlUtil.escape(order.getEmail()) %></strong></div><div><span>Phone</span><strong><%= HtmlUtil.escape(order.getPhone()) %></strong></div></div></article>
             <article class="panel"><span class="section-kicker">Order totals</span><div class="cart-summary"><div class="summary-row"><span>Subtotal</span><strong><%= order.getSubtotalDisplay() %></strong></div><div class="summary-row"><span>Service charge</span><strong><%= order.getServiceChargeDisplay() %></strong></div><div class="summary-row total"><span>Total</span><strong><%= order.getTotalAmountDisplay() %></strong></div></div></article>
         </aside>
     </div>
 </section>
+<script>
+function promptStaffDeleteOrder(form) {
+    if (!window.confirm('Are you sure you want to PERMANENTLY DELETE this order from the database?\nThis will completely erase the order record.')) return false;
+    var reason = window.prompt('Reason for permanently deleting this food order:');
+    if (!reason || !reason.trim()) {
+        alert('A deletion reason is required.');
+        return false;
+    }
+    form.querySelector('.staff-delete-order-reason').value = reason.trim();
+    return true;
+}
+</script>
 <%@ include file="fragments/footer.jspf" %>

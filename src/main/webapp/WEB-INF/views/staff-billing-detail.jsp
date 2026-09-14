@@ -146,14 +146,23 @@
         </div>
 
         <aside class="detail-sidebar">
-            <% if (!invoice.isCancelled() && invoice.getAmountPaid().signum() == 0) { %>
+            <% if (invoice.getAmountPaid().signum() == 0) { %>
             <article class="panel">
                 <span class="section-kicker">Manage this invoice</span>
-                <form method="post" action="<%= ctx %>/staff/billing/cancel" onsubmit="return promptCancelReason(this);">
-                    <input type="hidden" name="invoiceId" value="<%= invoice.getId() %>">
-                    <input type="hidden" name="reason" class="cancel-reason">
-                    <button class="btn btn-danger btn-sm" type="submit">Cancel invoice</button>
-                </form>
+                <div style="display:flex; flex-direction:column; gap:10px;">
+                    <% if (!invoice.isCancelled()) { %>
+                    <form method="post" action="<%= ctx %>/staff/billing/cancel" onsubmit="return promptCancelReason(this);">
+                        <input type="hidden" name="invoiceId" value="<%= invoice.getId() %>">
+                        <input type="hidden" name="reason" class="cancel-reason">
+                        <button class="btn btn-secondary btn-sm" style="width:100%" type="submit">Mark as Cancel</button>
+                    </form>
+                    <% } %>
+                    <form method="post" action="<%= ctx %>/staff/billing/delete" onsubmit="return promptDeleteReason(this);">
+                        <input type="hidden" name="invoiceId" value="<%= invoice.getId() %>">
+                        <input type="hidden" name="reason" class="delete-reason">
+                        <button class="btn btn-danger btn-sm" style="width:100%" type="submit">Delete invoice</button>
+                    </form>
+                </div>
             </article>
             <% } %>
             <article class="panel">
@@ -162,7 +171,7 @@
                     <li>A payment can never exceed the outstanding balance.</li>
                     <li>Duplicate payment references are blocked automatically.</li>
                     <li>Voids and refunds require a reason and stay visible in history.</li>
-                    <li>An invoice with recorded payments cannot be cancelled.</li>
+                    <li>An invoice with recorded payments cannot be cancelled or deleted.</li>
                 </ul>
             </article>
         </aside>
@@ -176,9 +185,19 @@ function promptVoidReason(form) {
     return true;
 }
 function promptCancelReason(form) {
-    if (!window.confirm('Cancel this invoice?')) return false;
+    if (!window.confirm('Mark this invoice as Cancelled?')) return false;
     var reason = window.prompt('Reason for cancelling this invoice:') || 'Cancelled by staff.';
     form.querySelector('.cancel-reason').value = reason;
+    return true;
+}
+function promptDeleteReason(form) {
+    if (!window.confirm('Are you sure you want to PERMANENTLY DELETE this invoice from the database?\nThis will completely erase the invoice record.')) return false;
+    var reason = window.prompt('Reason for permanently deleting this invoice:');
+    if (!reason || !reason.trim()) {
+        alert('A reason is required before deleting.');
+        return false;
+    }
+    form.querySelector('.delete-reason').value = reason.trim();
     return true;
 }
 </script>

@@ -80,6 +80,9 @@ public class FoodOrderServlet extends HttpServlet {
             case "/cancel":
                 cancel(request, response);
                 break;
+            case "/delete":
+                delete(request, response);
+                break;
             default:
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
         }
@@ -234,6 +237,24 @@ public class FoodOrderServlet extends HttpServlet {
             FlashUtil.errors(request, result.getErrors());
         }
         response.sendRedirect(request.getContextPath() + "/orders/view?reference=" + reference);
+    }
+
+    private void delete(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        String reference = RequestUtil.clean(request, "reference");
+        String reason = RequestUtil.clean(request, "reason");
+        boolean manager = ReservationOrderContext.isManager(request);
+        OperationResult<Void> result = service.deleteOrder(
+                ReservationOrderContext.customerKey(request), reference,
+                reason, manager);
+
+        if (result.isSuccess()) {
+            FlashUtil.success(request, "Order " + reference + " has been permanently deleted from the database.");
+            response.sendRedirect(request.getContextPath() + "/orders");
+        } else {
+            FlashUtil.errors(request, result.getErrors());
+            response.sendRedirect(request.getContextPath() + "/orders/view?reference=" + reference);
+        }
     }
 
     private void addPendingItem(HttpServletRequest request, HttpServletResponse response)

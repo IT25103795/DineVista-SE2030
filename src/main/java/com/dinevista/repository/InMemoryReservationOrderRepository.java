@@ -262,6 +262,33 @@ public class InMemoryReservationOrderRepository implements ReservationOrderRepos
     }
 
     @Override
+    public synchronized boolean deleteReservation(String reference) {
+        TableReservationRecord removed = reservations.remove(reference);
+        if (removed != null) {
+            orders.values().forEach(order -> {
+                if (reference.equals(order.getReservationReference())) {
+                    order.clearReservationReference();
+                }
+            });
+            notifications.entrySet().removeIf(e -> "RESERVATION".equals(e.getValue().getReferenceType())
+                    && reference.equals(e.getValue().getReferenceCode()));
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public synchronized boolean deleteOrder(String reference) {
+        FoodOrderRecord removed = orders.remove(reference);
+        if (removed != null) {
+            notifications.entrySet().removeIf(e -> "ORDER".equals(e.getValue().getReferenceType())
+                    && reference.equals(e.getValue().getReferenceCode()));
+            return true;
+        }
+        return false;
+    }
+
+    @Override
     public long nextReservationId() {
         return reservationIds.incrementAndGet();
     }

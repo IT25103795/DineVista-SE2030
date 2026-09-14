@@ -91,14 +91,39 @@
 
         <aside class="detail-sidebar">
             <article class="panel">
+                <span class="section-kicker">Manage reservation</span>
+                <form method="post" action="<%= ctx %>/staff/reservations/delete" onsubmit="return promptStaffDeleteReservation(this);">
+                    <input type="hidden" name="reference" value="<%= HtmlUtil.escape(reservation.getReference()) %>">
+                    <input type="hidden" name="reason" class="staff-delete-reason">
+                    <button class="btn btn-danger btn-sm" style="width:100%" type="submit">Delete reservation</button>
+                </form>
+            </article>
+            <article class="panel">
                 <span class="section-kicker">Customer details</span>
                 <div class="contact-stack"><div><span>Name</span><strong><%= HtmlUtil.escape(reservation.getGuestName()) %></strong></div><div><span>Email</span><strong><%= HtmlUtil.escape(reservation.getEmail()) %></strong></div><div><span>Phone</span><strong><%= HtmlUtil.escape(reservation.getPhone()) %></strong></div></div>
             </article>
             <article class="panel">
                 <span class="section-kicker">Business checks</span>
-                <ul class="check-list operational-checks"><li>Capacity must support the party size.</li><li>Table must be available for the 90-minute slot.</li><li>Reject or cancel actions require a reason.</li><li>Closed records cannot be changed.</li></ul>
+                <ul class="check-list operational-checks">
+                    <li>Capacity must support the party size.</li>
+                    <li>Table must be available for the 90-minute slot.</li>
+                    <li>Reject or cancel actions require a reason.</li>
+                    <li>Closed records cannot be changed.</li>
+                </ul>
             </article>
         </aside>
     </div>
 </section>
+<script>
+function promptStaffDeleteReservation(form) {
+    if (!window.confirm('Are you sure you want to PERMANENTLY DELETE this reservation from the database?\nThis will completely erase the reservation record.')) return false;
+    var reason = window.prompt('Reason for permanently deleting this reservation:');
+    if (!reason || !reason.trim()) {
+        alert('A deletion reason is required.');
+        return false;
+    }
+    form.querySelector('.staff-delete-reason').value = reason.trim();
+    return true;
+}
+</script>
 <%@ include file="fragments/footer.jspf" %>

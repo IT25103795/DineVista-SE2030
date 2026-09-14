@@ -729,6 +729,124 @@ public class JdbcReservationOrderRepository implements ReservationOrderRepositor
     }
 
     @Override
+    public boolean deleteReservation(String reference) {
+        String findIdSql = "SELECT reservation_id FROM table_reservation WHERE reservation_reference = ?";
+        try (Connection connection = config.openConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                Long reservationId = null;
+                try (PreparedStatement statement = connection.prepareStatement(findIdSql)) {
+                    statement.setString(1, reference);
+                    try (ResultSet rows = statement.executeQuery()) {
+                        if (rows.next()) {
+                            reservationId = rows.getLong("reservation_id");
+                        }
+                    }
+                }
+                if (reservationId == null) {
+                    connection.rollback();
+                    return false;
+                }
+
+                try (PreparedStatement statement = connection.prepareStatement(
+                        "UPDATE food_order SET reservation_id = NULL WHERE reservation_id = ?")) {
+                    statement.setLong(1, reservationId);
+                    statement.executeUpdate();
+                }
+
+                try (PreparedStatement statement = connection.prepareStatement(
+                        "DELETE FROM workflow_notification WHERE reference_code = ? AND reference_type = 'RESERVATION'")) {
+                    statement.setString(1, reference);
+                    statement.executeUpdate();
+                }
+
+                try (PreparedStatement statement = connection.prepareStatement(
+                        "DELETE FROM reservation_status_history WHERE reservation_id = ?")) {
+                    statement.setLong(1, reservationId);
+                    statement.executeUpdate();
+                }
+
+                int rowsDeleted;
+                try (PreparedStatement statement = connection.prepareStatement(
+                        "DELETE FROM table_reservation WHERE reservation_id = ?")) {
+                    statement.setLong(1, reservationId);
+                    rowsDeleted = statement.executeUpdate();
+                }
+
+                connection.commit();
+                return rowsDeleted > 0;
+            } catch (SQLException ex) {
+                connection.rollback();
+                throw ex;
+            }
+        } catch (SQLException ex) {
+            throw repositoryFailure("Unable to delete reservation.", ex);
+        }
+    }
+
+    @Override
+    public boolean deleteOrder(String reference) {
+        String findIdSql = "SELECT order_id FROM food_order WHERE order_reference = ?";
+        try (Connection connection = config.openConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                Long orderId = null;
+                try (PreparedStatement statement = connection.prepareStatement(findIdSql)) {
+                    statement.setString(1, reference);
+                    try (ResultSet rows = statement.executeQuery()) {
+                        if (rows.next()) {
+                            orderId = rows.getLong("order_id");
+                        }
+                    }
+                }
+                if (orderId == null) {
+                    connection.rollback();
+                    return false;
+                }
+
+                try (PreparedStatement statement = connection.prepareStatement(
+                        "UPDATE invoice SET order_id = NULL WHERE order_id = ?")) {
+                    statement.setLong(1, orderId);
+                    statement.executeUpdate();
+                }
+
+                try (PreparedStatement statement = connection.prepareStatement(
+                        "DELETE FROM workflow_notification WHERE reference_code = ? AND reference_type = 'ORDER'")) {
+                    statement.setString(1, reference);
+                    statement.executeUpdate();
+                }
+
+                try (PreparedStatement statement = connection.prepareStatement(
+                        "DELETE FROM order_item WHERE order_id = ?")) {
+                    statement.setLong(1, orderId);
+                    statement.executeUpdate();
+                }
+
+                try (PreparedStatement statement = connection.prepareStatement(
+                        "DELETE FROM order_status_history WHERE order_id = ?")) {
+                    statement.setLong(1, orderId);
+                    statement.executeUpdate();
+                }
+
+                int rowsDeleted;
+                try (PreparedStatement statement = connection.prepareStatement(
+                        "DELETE FROM food_order WHERE order_id = ?")) {
+                    statement.setLong(1, orderId);
+                    rowsDeleted = statement.executeUpdate();
+                }
+
+                connection.commit();
+                return rowsDeleted > 0;
+            } catch (SQLException ex) {
+                connection.rollback();
+                throw ex;
+            }
+        } catch (SQLException ex) {
+            throw repositoryFailure("Unable to delete food order.", ex);
+        }
+    }
+
+    @Override
     public long nextOrderId() {
         return nextId("food_order", "order_id");
     }

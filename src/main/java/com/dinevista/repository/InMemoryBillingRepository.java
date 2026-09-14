@@ -97,6 +97,16 @@ public class InMemoryBillingRepository implements BillingRepository {
     }
 
     @Override
+    public boolean deleteInvoice(long id) {
+        InvoiceRecord removed = invoices.remove(id);
+        if (removed != null) {
+            payments.entrySet().removeIf(e -> e.getValue().getInvoiceId() == id);
+            return true;
+        }
+        return false;
+    }
+
+    @Override
     public long nextInvoiceId() { return invoiceSequence.incrementAndGet(); }
 
     @Override

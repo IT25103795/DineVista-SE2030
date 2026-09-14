@@ -37,6 +37,9 @@ public interface ReservationOrderRepository {
     void markAllNotificationsRead(String recipientKey);
     void deleteNotifications(String recipientKey);
 
+    boolean deleteReservation(String reference);
+    boolean deleteOrder(String reference);
+
     long nextReservationId();
     long nextOrderId();
 }

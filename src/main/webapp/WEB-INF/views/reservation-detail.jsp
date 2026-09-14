@@ -94,7 +94,10 @@
                         <a class="btn btn-secondary" href="<%= ctx %>/reservations/edit?reference=<%= reservation.getReference() %>">Edit pending reservation</a>
                     <% } %>
                     <% if (!managerView && ("PENDING".equals(reservation.getStatus()) || "CONFIRMED".equals(reservation.getStatus()))) { %>
-                        <button class="btn btn-danger" type="button" data-dialog-open="cancel-reservation-dialog">Cancel reservation</button>
+                        <button class="btn btn-secondary" type="button" data-dialog-open="cancel-reservation-dialog">Mark as Cancel</button>
+                    <% } %>
+                    <% if (!managerView && ("PENDING".equals(reservation.getStatus()) || "CANCELLED".equals(reservation.getStatus()) || "REJECTED".equals(reservation.getStatus()))) { %>
+                        <button class="btn btn-danger" type="button" data-dialog-open="delete-reservation-dialog">Delete reservation</button>
                     <% } %>
                     <% if (!managerView) { %><a class="btn btn-ghost" href="<%= ctx %>/orders">Create linked food order</a><% } %>
                 </div>
@@ -126,10 +129,6 @@
                     <div><span>Reference</span><strong class="mono"><%= HtmlUtil.escape(reservation.getReference()) %></strong></div>
                 </div>
             </article>
-            <article class="panel policy-panel">
-                <h3>Cancellation policy</h3>
-                <p>Customers may cancel pending or confirmed reservations at least two hours before the reserved time.</p>
-            </article>
         </aside>
     </div>
 </section>
@@ -137,13 +136,27 @@
 <div class="dialog-backdrop" id="cancel-reservation-dialog" data-dialog>
     <div class="dialog-card" role="dialog" aria-modal="true" aria-labelledby="cancel-reservation-title">
         <button class="icon-btn dialog-close" type="button" data-dialog-close aria-label="Close">×</button>
-        <span class="section-kicker">Cancel reservation</span>
-        <h3 id="cancel-reservation-title">Tell us why you are cancelling.</h3>
-        <p class="muted">The reason is stored in the reservation history.</p>
+        <span class="section-kicker">Mark as Cancel</span>
+        <h3 id="cancel-reservation-title">Update status to Cancelled.</h3>
+        <p class="muted">The reason is stored in the reservation history (UPDATE operation).</p>
         <form method="post" action="<%= ctx %>/reservations/cancel">
             <input type="hidden" name="reference" value="<%= HtmlUtil.escape(reservation.getReference()) %>">
             <div class="form-group"><label for="cancelReason">Cancellation reason</label><textarea class="form-control" id="cancelReason" name="reason" minlength="5" maxlength="500" required placeholder="Enter a short reason"></textarea></div>
-            <div class="form-actions"><button class="btn btn-danger" type="submit">Confirm cancellation</button><button class="btn btn-secondary" type="button" data-dialog-close>Keep reservation</button></div>
+            <div class="form-actions"><button class="btn btn-secondary" type="submit">Mark as Cancelled</button><button class="btn btn-ghost" type="button" data-dialog-close>Keep reservation</button></div>
+        </form>
+    </div>
+</div>
+
+<div class="dialog-backdrop" id="delete-reservation-dialog" data-dialog>
+    <div class="dialog-card" role="dialog" aria-modal="true" aria-labelledby="delete-reservation-title">
+        <button class="icon-btn dialog-close" type="button" data-dialog-close aria-label="Close">×</button>
+        <span class="section-kicker">Permanent Deletion</span>
+        <h3 id="delete-reservation-title">Permanently delete reservation.</h3>
+        <p class="muted">This record will be completely erased from the database (Pure SQL DELETE).</p>
+        <form method="post" action="<%= ctx %>/reservations/delete">
+            <input type="hidden" name="reference" value="<%= HtmlUtil.escape(reservation.getReference()) %>">
+            <div class="form-group"><label for="deleteReason">Reason for deletion</label><textarea class="form-control" id="deleteReason" name="reason" minlength="3" maxlength="500" required placeholder="Enter deletion reason (e.g. Duplicate test, customer requested removal)"></textarea></div>
+            <div class="form-actions"><button class="btn btn-danger" type="submit">Permanently delete</button><button class="btn btn-secondary" type="button" data-dialog-close>Cancel</button></div>
         </form>
     </div>
 </div>

@@ -87,6 +87,11 @@ public final class ReservationOrderServiceSelfTest {
                 "customer-a", reference, "Plans changed");
         ok(cancelled.isSuccess(), "reservation controlled delete/cancel");
         ok("CANCELLED".equals(cancelled.getValue().getStatus()), "reservation cancellation persisted");
+
+        OperationResult<Void> deleted = service.deleteReservation(
+                "customer-a", reference, "Customer decided to purge booking", false);
+        ok(deleted.isSuccess(), "pure reservation deletion");
+        ok(service.reservation(reference).isEmpty(), "deleted reservation removed from repository");
     }
 
     private static void reservationStaffWorkflow(ReservationOrderService service, LocalDate base) {
@@ -253,6 +258,11 @@ public final class ReservationOrderServiceSelfTest {
         ok(service.allOrders("CANCELLED", "TAKEAWAY").stream()
                 .anyMatch(order -> order.getReference().equals(cancellable.getValue().getReference())),
                 "staff order status/type filters");
+
+        OperationResult<Void> deletedOrder = service.deleteOrder(
+                "cancel-customer", cancellable.getValue().getReference(), "Purging mistake order", false);
+        ok(deletedOrder.isSuccess(), "pure food order deletion");
+        ok(service.order(cancellable.getValue().getReference()).isEmpty(), "deleted order removed from repository");
     }
 
     private static void linkedOrderRules(ReservationOrderService service, LocalDate base) {

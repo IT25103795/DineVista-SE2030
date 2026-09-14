@@ -313,6 +313,44 @@ public class ReservationOrderService {
         return OperationResult.success(record);
     }
 
+    public synchronized OperationResult<Void> deleteReservation(
+            String customerKey, String reference, String reason, boolean isStaffOrManager) {
+        Optional<TableReservationRecord> optional = repository.findReservationByReference(reference);
+        if (optional.isEmpty()) return OperationResult.failure("Reservation was not found.");
+
+        TableReservationRecord record = optional.get();
+        if (!isStaffOrManager && (customerKey == null || !record.getCustomerKey().equals(customerKey))) {
+            return OperationResult.failure("You are not authorized to delete this reservation.");
+        }
+
+        String cleanReason = clean(reason);
+        if (cleanReason.isEmpty()) {
+            return OperationResult.failure("A reason is required before deleting this reservation.");
+        }
+        if (cleanReason.length() < 3 || cleanReason.length() > 500) {
+            return OperationResult.failure("Deletion reason must be between 3 and 500 characters.");
+        }
+
+        if (hasActiveLinkedOrders(reference)) {
+            return OperationResult.failure("Cancel or complete linked food orders before deleting this reservation.");
+        }
+
+        boolean deleted = repository.deleteReservation(reference);
+        if (!deleted) {
+            return OperationResult.failure("Failed to delete reservation from the database.");
+        }
+
+        if (!isStaffOrManager) {
+            createNotification(
+                    MANAGER_NOTIFICATION_KEY, "MANAGER", "RESERVATION_DELETED",
+                    "Reservation deleted by customer",
+                    record.getGuestName() + " permanently deleted reservation " + record.getReference() + ". Reason: " + cleanReason,
+                    "RESERVATION", record.getReference(),
+                    "/staff/reservations");
+        }
+        return OperationResult.success(null);
+    }
+
     public synchronized OperationResult<TableReservationRecord> staffUpdateReservation(
             String reference, long tableId, String newStatus, String note, String staffName) {
 
@@ -577,6 +615,44 @@ public class ReservationOrderService {
                 "ORDER", order.getReference(),
                 "/staff/orders/view?reference=" + order.getReference());
         return OperationResult.success(order);
+    }
+
+    public synchronized OperationResult<Void> deleteOrder(
+            String customerKey, String reference, String reason, boolean isStaffOrManager) {
+        Optional<FoodOrderRecord> optional = repository.findOrderByReference(reference);
+        if (optional.isEmpty()) return OperationResult.failure("Food order was not found.");
+
+        FoodOrderRecord order = optional.get();
+        if (!isStaffOrManager && (customerKey == null || !order.getCustomerKey().equals(customerKey))) {
+            return OperationResult.failure("You are not authorized to delete this order.");
+        }
+
+        if (!isStaffOrManager && !Arrays.asList("PENDING", "CONFIRMED", "CANCELLED", "REJECTED").contains(order.getStatus())) {
+            return OperationResult.failure("Orders in preparation or completed cannot be deleted.");
+        }
+
+        String cleanReason = clean(reason);
+        if (cleanReason.isEmpty()) {
+            return OperationResult.failure("A reason is required before deleting this order.");
+        }
+        if (cleanReason.length() < 3 || cleanReason.length() > 255) {
+            return OperationResult.failure("Deletion reason must be between 3 and 255 characters.");
+        }
+
+        boolean deleted = repository.deleteOrder(reference);
+        if (!deleted) {
+            return OperationResult.failure("Failed to delete food order from the database.");
+        }
+
+        if (!isStaffOrManager) {
+            createNotification(
+                    MANAGER_NOTIFICATION_KEY, "MANAGER", "ORDER_DELETED",
+                    "Food order deleted by customer",
+                    order.getCustomerName() + " permanently deleted order " + order.getReference() + ". Reason: " + cleanReason,
+                    "ORDER", order.getReference(),
+                    "/staff/orders");
+        }
+        return OperationResult.success(null);
     }
 
     public synchronized OperationResult<FoodOrderRecord> staffUpdateOrder(

@@ -190,6 +190,31 @@ public class BillingService {
         return OperationResult.success(null);
     }
 
+    public synchronized OperationResult<Void> deleteInvoice(long invoiceId, String reason, String actor) {
+        Optional<InvoiceRecord> invoiceOpt = repository.findInvoice(invoiceId);
+        if (invoiceOpt.isEmpty()) return OperationResult.failure("Invoice could not be found.");
+        InvoiceRecord invoice = invoiceOpt.get();
+
+        String cleanReason = reason == null ? "" : reason.trim();
+        if (cleanReason.isEmpty()) {
+            return OperationResult.failure("A reason is required before deleting this invoice.");
+        }
+        if (cleanReason.length() < 3 || cleanReason.length() > 255) {
+            return OperationResult.failure("Deletion reason must be between 3 and 255 characters.");
+        }
+
+        if (invoice.getAmountPaid().compareTo(BigDecimal.ZERO) > 0) {
+            return OperationResult.failure(
+                    "This invoice has recorded payments and cannot be deleted; void or refund the payments first.");
+        }
+
+        boolean deleted = repository.deleteInvoice(invoiceId);
+        if (!deleted) {
+            return OperationResult.failure("Failed to delete invoice from the database.");
+        }
+        return OperationResult.success(null);
+    }
+
     // --------------------------------------------------------------- payments
 
     /**

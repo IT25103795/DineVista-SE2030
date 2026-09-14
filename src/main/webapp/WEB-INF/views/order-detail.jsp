@@ -142,7 +142,10 @@
                 <% if (!order.getStaffNote().isEmpty()) { %><div class="note-box staff"><span>Latest staff note</span><p><%= HtmlUtil.escape(order.getStaffNote()) %></p></div><% } %>
                 <div class="record-actions">
                     <% if (!managerView && ("PENDING".equals(order.getStatus()) || "CONFIRMED".equals(order.getStatus()))) { %>
-                        <button class="btn btn-danger" type="button" data-dialog-open="cancel-order-dialog">Cancel order</button>
+                        <button class="btn btn-secondary" type="button" data-dialog-open="cancel-order-dialog">Mark as Cancel</button>
+                    <% } %>
+                    <% if (!managerView && ("PENDING".equals(order.getStatus()) || "CONFIRMED".equals(order.getStatus()) || "CANCELLED".equals(order.getStatus()) || "REJECTED".equals(order.getStatus()))) { %>
+                        <button class="btn btn-danger" type="button" data-dialog-open="delete-order-dialog">Delete order</button>
                     <% } %>
                     <a class="btn btn-secondary" href="<%= ctx %>/orders">Back to food ordering</a>
                 </div>
@@ -173,7 +176,6 @@
                     <div><span>Reference</span><strong class="mono"><%= HtmlUtil.escape(order.getReference()) %></strong></div>
                 </div>
             </article>
-            <article class="panel policy-panel"><h3>Order cancellation</h3><p>Customers may cancel pending or confirmed orders. Cancellation is blocked after preparation begins.</p></article>
         </aside>
     </div>
 </section>
@@ -181,13 +183,27 @@
 <div class="dialog-backdrop" id="cancel-order-dialog" data-dialog>
     <div class="dialog-card" role="dialog" aria-modal="true" aria-labelledby="cancel-order-title">
         <button class="icon-btn dialog-close" type="button" data-dialog-close aria-label="Close">×</button>
-        <span class="section-kicker">Cancel food order</span>
-        <h3 id="cancel-order-title">Confirm order cancellation.</h3>
-        <p class="muted">The reason is stored in the order status history.</p>
+        <span class="section-kicker">Mark as Cancel</span>
+        <h3 id="cancel-order-title">Update status to Cancelled.</h3>
+        <p class="muted">The reason is stored in the order status history (UPDATE operation).</p>
         <form method="post" action="<%= ctx %>/orders/cancel">
             <input type="hidden" name="reference" value="<%= HtmlUtil.escape(order.getReference()) %>">
             <div class="form-group"><label for="orderCancelReason">Cancellation reason</label><textarea class="form-control" id="orderCancelReason" name="reason" minlength="5" maxlength="255" required placeholder="Enter a short reason"></textarea></div>
-            <div class="form-actions"><button class="btn btn-danger" type="submit">Cancel order</button><button class="btn btn-secondary" type="button" data-dialog-close>Keep order</button></div>
+            <div class="form-actions"><button class="btn btn-secondary" type="submit">Mark as Cancelled</button><button class="btn btn-ghost" type="button" data-dialog-close>Keep order</button></div>
+        </form>
+    </div>
+</div>
+
+<div class="dialog-backdrop" id="delete-order-dialog" data-dialog>
+    <div class="dialog-card" role="dialog" aria-modal="true" aria-labelledby="delete-order-title">
+        <button class="icon-btn dialog-close" type="button" data-dialog-close aria-label="Close">×</button>
+        <span class="section-kicker">Permanent Deletion</span>
+        <h3 id="delete-order-title">Permanently delete food order.</h3>
+        <p class="muted">This order will be completely erased from the database (Pure SQL DELETE).</p>
+        <form method="post" action="<%= ctx %>/orders/delete">
+            <input type="hidden" name="reference" value="<%= HtmlUtil.escape(order.getReference()) %>">
+            <div class="form-group"><label for="orderDeleteReason">Reason for deletion</label><textarea class="form-control" id="orderDeleteReason" name="reason" minlength="3" maxlength="255" required placeholder="Enter deletion reason (e.g. Duplicate order, testing order, customer requested removal)"></textarea></div>
+            <div class="form-actions"><button class="btn btn-danger" type="submit">Permanently delete</button><button class="btn btn-secondary" type="button" data-dialog-close>Cancel</button></div>
         </form>
     </div>
 </div>

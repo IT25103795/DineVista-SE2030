@@ -15,11 +15,12 @@ public class EventBookingServlet extends HttpServlet {
     private EventBookingService service;
     @Override public void init(){service=EventBookingContext.service(getServletContext());}
     @Override protected void doGet(HttpServletRequest req,HttpServletResponse res)throws ServletException,IOException{
-        if(!ReservationOrderContext.isSignedIn(req)){res.sendRedirect(req.getContextPath()+"/login");return;}
-        boolean manager=ReservationOrderContext.isManager(req);
         String servlet=req.getServletPath(), path=path(req);
-        if(servlet.startsWith("/staff/")&&!manager){res.sendError(403);return;}
-        if("/staff/event-bookings".equals(servlet)){
+        boolean isStaff = servlet != null && servlet.startsWith("/staff/");
+        if(!ReservationOrderContext.isSignedIn(req)){res.sendRedirect(req.getContextPath()+(isStaff?"/manager/login":"/login"));return;}
+        boolean manager=ReservationOrderContext.isManager(req);
+        if(isStaff&&!manager){res.sendError(403);return;}
+        if(isStaff){
             if("/view".equals(path)){view(req,res,true);return;}
             if("/edit".equals(path)){edit(req,res,true);return;}
             req.setAttribute("eventBookings",service.allBookings(RequestUtil.clean(req,"search")));req.setAttribute("managerView",true);
@@ -30,10 +31,12 @@ public class EventBookingServlet extends HttpServlet {
         renderCustomer(req,res,null); 
     }
     @Override protected void doPost(HttpServletRequest req,HttpServletResponse res)throws ServletException,IOException{
-        if(!ReservationOrderContext.isSignedIn(req)){res.sendRedirect(req.getContextPath()+"/login");return;}
-        boolean manager=ReservationOrderContext.isManager(req);String servlet=req.getServletPath(),path=path(req);
-        if(servlet.startsWith("/staff/")&&!manager){res.sendError(403);return;}
-        if("/staff/event-bookings".equals(servlet)){
+        String servlet=req.getServletPath(),path=path(req);
+        boolean isStaff = servlet != null && servlet.startsWith("/staff/");
+        if(!ReservationOrderContext.isSignedIn(req)){res.sendRedirect(req.getContextPath()+(isStaff?"/manager/login":"/login"));return;}
+        boolean manager=ReservationOrderContext.isManager(req);
+        if(isStaff&&!manager){res.sendError(403);return;}
+        if(isStaff){
             if("/update".equals(path)){managerUpdate(req,res);return;}
             if("/delete".equals(path)){OperationResult<Void> r=service.delete(RequestUtil.clean(req,"reference"));res.sendRedirect(req.getContextPath()+"/staff/event-bookings?deleted="+r.isSuccess());return;}
         } else {
@@ -91,5 +94,5 @@ public class EventBookingServlet extends HttpServlet {
     private long longValue(HttpServletRequest r,String n){try{return Long.parseLong(RequestUtil.clean(r,n));}catch(Exception e){return -1;}}
     private LocalDate date(HttpServletRequest r,String n){try{return LocalDate.parse(RequestUtil.clean(r,n));}catch(Exception e){return null;}}
     private LocalTime time(HttpServletRequest r,String n){try{return LocalTime.parse(RequestUtil.clean(r,n));}catch(Exception e){return null;}}
-    private String path(HttpServletRequest r){String p=r.getPathInfo();return p==null||"/".equals(p)?"":p;}
+    private String path(HttpServletRequest r){String p=r.getPathInfo();if(p==null||"/".equals(p))return "";if(p.endsWith("/"))p=p.substring(0,p.length()-1);return p;}
 }

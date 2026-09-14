@@ -1,6 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="com.dinevista.model.EventBookingRecord" %>
-<% request.setAttribute("pageTitle","Event Booking Details"); request.setAttribute("activeNav","events"); EventBookingRecord b=(EventBookingRecord)request.getAttribute("booking"); String ctx=request.getContextPath(); %>
+<% request.setAttribute("pageTitle","Event Booking Details"); request.setAttribute("activeNav","events"); EventBookingRecord b=(EventBookingRecord)request.getAttribute("booking"); %>
 <%@ include file="fragments/header.jspf" %>
 <section class="section-sm"><div class="container">
 <div class="section-heading"><div><span class="section-kicker">Booking reference</span><h1><%=b.getReference()%></h1></div><span class="status-badge"><%=b.getStatus()%></span></div>

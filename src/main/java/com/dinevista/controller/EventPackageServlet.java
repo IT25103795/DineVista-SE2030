@@ -49,6 +49,6 @@ public class EventPackageServlet extends HttpServlet {
     private void forwardForm(HttpServletRequest req,HttpServletResponse res)throws ServletException,IOException{req.getRequestDispatcher("/WEB-INF/views/staff-event-package-form.jsp").forward(req,res);}
     private void copy(HttpServletRequest r){r.setAttribute("formName",RequestUtil.clean(r,"name"));r.setAttribute("formCategory",RequestUtil.clean(r,"category"));r.setAttribute("formDescription",RequestUtil.clean(r,"description"));r.setAttribute("formPrice",RequestUtil.clean(r,"price"));r.setAttribute("formMinimumGuests",RequestUtil.clean(r,"minimumGuests"));r.setAttribute("formMaximumGuests",RequestUtil.clean(r,"maximumGuests"));r.setAttribute("formDurationMinutes",RequestUtil.clean(r,"durationMinutes"));r.setAttribute("formInclusions",RequestUtil.clean(r,"inclusions"));}
     private long id(HttpServletRequest r){try{return Long.parseLong(RequestUtil.clean(r,"id"));}catch(Exception e){return -1;}}
-    private String path(HttpServletRequest r){String p=r.getPathInfo();return p==null||"/".equals(p)?"":p;}
+    private String path(HttpServletRequest r){String p=r.getPathInfo();if(p==null||"/".equals(p))return "";if(p.endsWith("/"))p=p.substring(0,p.length()-1);return p;}
     private boolean manager(HttpServletRequest r,HttpServletResponse s)throws IOException{if(!ReservationOrderContext.isSignedIn(r)){s.sendRedirect(r.getContextPath()+"/manager/login");return false;}if(!ReservationOrderContext.isManager(r)){s.sendError(403);return false;}return true;}
 }

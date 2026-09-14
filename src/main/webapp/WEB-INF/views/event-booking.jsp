@@ -1,6 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="com.dinevista.model.*,java.util.*" %>
-<% request.setAttribute("pageTitle","Event Bookings"); request.setAttribute("activeNav","events"); String ctx=request.getContextPath(); List<EventPackageRecord> packages=(List<EventPackageRecord>)request.getAttribute("packages"); List<EventVenueRecord> venues=(List<EventVenueRecord>)request.getAttribute("venues"); List<EventBookingRecord> bookings=(List<EventBookingRecord>)request.getAttribute("customerBookings"); %>
+<% request.setAttribute("pageTitle","Event Bookings"); request.setAttribute("activeNav","events"); List<EventPackageRecord> packages=(List<EventPackageRecord>)request.getAttribute("packages"); List<EventVenueRecord> venues=(List<EventVenueRecord>)request.getAttribute("venues"); List<EventBookingRecord> bookings=(List<EventBookingRecord>)request.getAttribute("customerBookings"); %>
 <%@ include file="fragments/header.jspf" %>
 <section class="section-sm"><div class="container">
 <div class="section-heading"><div><span class="section-kicker">Event booking</span><h1>Plan your event with DineVista.</h1></div><p>Requests are reviewed by the event team before confirmation.</p></div>

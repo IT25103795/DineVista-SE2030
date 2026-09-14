@@ -14,6 +14,10 @@ public final class FlashUtil {
         request.getSession().setAttribute(SUCCESS, message);
     }
 
+    public static void error(HttpServletRequest request, String message) {
+        request.getSession().setAttribute(ERRORS, List.of(message));
+    }
+
     public static void errors(HttpServletRequest request, List<String> errors) {
         request.getSession().setAttribute(ERRORS, errors);
     }

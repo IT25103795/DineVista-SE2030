@@ -126,6 +126,7 @@
         <nav class="main-nav" data-main-nav aria-label="Primary navigation">
             <% if (managerInterface) { %>
                 <a class="<%= "managerDashboard".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/dashboard">Overview</a>
+                <a class="<%= "staffMenu".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/staff/menu">Menu</a>
                 <a class="<%= "staffReservations".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/staff/reservations">Reservations</a>
                 <a class="<%= "staffOrders".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/staff/orders">Kitchen</a>
                 <a class="<%= "staffInventory".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/staff/inventory">Inventory</a>

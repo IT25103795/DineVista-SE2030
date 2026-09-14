@@ -21,16 +21,18 @@
             <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span><span class="trend">Live operations</span></div><strong><%= activeReservationCount %></strong><span>Active reservations</span></article>
             <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4h2l2 10h10l2-7H7"/></svg></span><span class="trend">Kitchen queue</span></div><strong><%= activeOrderCount %></strong><span>Active food orders</span></article>
             <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M3 12h18"/></svg></span><span class="trend">Validation</span></div><strong>90m</strong><span>Reservation slot protection</span></article>
-            <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg></span><span class="trend">Connected control</span></div><strong>3</strong><span>Operational workspaces</span></article>
+            <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg></span><span class="trend">Connected control</span></div><strong>5</strong><span>Operational workspaces</span></article>
         </div>
 
         <div class="dashboard-grid">
             <section class="panel">
                 <div class="panel-header"><div><h3>Restaurant operations</h3><span class="muted small">Open the complete management workspaces.</span></div></div>
                 <div class="operations-launch-grid">
+                    <a class="operations-launch" href="<%= ctx %>/staff/menu"><span class="launch-icon green">M</span><div><strong>Menu management</strong><p>Maintain dishes, categories, pricing, dietary tags, and live order availability.</p></div><span>Open</span></a>
                     <a class="operations-launch" href="<%= ctx %>/staff/reservations"><span class="launch-icon">R</span><div><strong>Reservation operations</strong><p>Assign tables, confirm requests, seat guests, complete visits, or reject invalid requests.</p></div><span>Open</span></a>
                     <a class="operations-launch" href="<%= ctx %>/staff/orders"><span class="launch-icon green">O</span><div><strong>Kitchen food orders</strong><p>Accept orders, start preparation, mark ready, serve, complete, or reject with a reason.</p></div><span>Open</span></a>
                     <a class="operations-launch" href="<%= ctx %>/staff/inventory"><span class="launch-icon">I</span><div><strong>Inventory management</strong><p>Track ingredients, reorder levels, and an auditable purchase, usage, and waste history.</p></div><span>Open</span></a>
+                    <a class="operations-launch" href="<%= ctx %>/staff/billing"><span class="launch-icon">B</span><div><strong>Billing &amp; promotions</strong><p>Generate invoices, apply discounts and promotions, and record payments.</p></div><span>Open</span></a>
                 </div>
             </section>
             <aside class="panel">

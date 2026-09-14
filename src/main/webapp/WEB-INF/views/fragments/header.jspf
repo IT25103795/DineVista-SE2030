@@ -63,7 +63,7 @@
             background-color: #fffdf9;
         }
         html[data-theme="dark"] {
-            background-color: #0b0d10;
+            background-color: #0e091b;
         }
 
         .account-pill-edit {

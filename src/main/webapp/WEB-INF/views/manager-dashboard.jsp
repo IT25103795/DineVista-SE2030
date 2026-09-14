@@ -116,18 +116,18 @@
         <div class="dashboard-grid" style="margin-top:22px">
             <section class="panel">
                 <div class="panel-header"><h3>Upcoming reservation schedule</h3><a class="btn btn-ghost btn-sm" href="<%= ctx %>/staff/reservations">Manage all</a></div>
-                <div class="table-wrap"><table class="data-table"><thead><tr><th>Reference</th><th>Date and time</th><th>Guest</th><th>Party</th><th>Table</th><th>Status</th></tr></thead><tbody>
+                <div class="table-wrap scrollable-dashboard-table"><table class="data-table"><thead><tr><th>Reference</th><th>Date and time</th><th>Guest</th><th>Party</th><th>Table</th><th>Status</th></tr></thead><tbody>
                     <% if (managerReservations == null || managerReservations.isEmpty()) { %><tr><td colspan="6">No reservations available.</td></tr>
-                    <% } else { int shown = 0; for (TableReservationRecord item : managerReservations) { if (shown++ >= 6) break; %>
+                    <% } else { for (TableReservationRecord item : managerReservations) { %>
                         <tr><td><a class="table-link" href="<%= ctx %>/staff/reservations/view?reference=<%= item.getReference() %>"><%= HtmlUtil.escape(item.getReference()) %></a></td><td><%= item.getDateDisplay() %><span class="table-subtext"><%= item.getTimeDisplay() %></span></td><td><%= HtmlUtil.escape(item.getGuestName()) %></td><td><%= item.getPartySize() %></td><td><%= item.getTableCode() == null ? "Unassigned" : HtmlUtil.escape(item.getTableCode()) %></td><td><span class="status <%= item.getStatusCss() %>"><%= HtmlUtil.escape(item.getStatus()) %></span></td></tr>
                     <% }} %>
                 </tbody></table></div>
             </section>
             <aside class="panel">
                 <div class="panel-header"><h3>Current kitchen queue</h3><a class="btn btn-ghost btn-sm" href="<%= ctx %>/staff/orders">Manage all</a></div>
-                <div class="activity-list">
+                <div class="activity-list scrollable-dashboard-queue">
                     <% if (managerOrders == null || managerOrders.isEmpty()) { %><p class="muted small">No food orders available.</p>
-                    <% } else { int shown = 0; for (FoodOrderRecord order : managerOrders) { if (shown++ >= 5) break; %>
+                    <% } else { for (FoodOrderRecord order : managerOrders) { %>
                         <a class="activity-item" href="<%= ctx %>/staff/orders/view?reference=<%= order.getReference() %>"><span class="activity-dot"></span><span><strong><%= HtmlUtil.escape(order.getReference()) %> &mdash; <%= order.getStatus() %></strong><span><%= HtmlUtil.escape(order.getCustomerName()) %> &middot; <%= order.getTotalQuantity() %> item(s)</span></span></a>
                     <% }} %>
                 </div>

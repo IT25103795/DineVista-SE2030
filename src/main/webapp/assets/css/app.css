@@ -2833,6 +2833,54 @@ html[data-theme="dark"] .menu-edit-modal-footer {
     transform: scale(1.08);
 }
 
+/* ═══════════════════════════════════════════════
+   SCROLLABLE DASHBOARD QUEUES & TABLES (MAX 3 ITEMS VISIBLE)
+   ═══════════════════════════════════════════════ */
+.scrollable-dashboard-table {
+    max-height: 206px;
+    overflow-y: auto;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(168, 85, 247, 0.4) transparent;
+}
+
+.scrollable-dashboard-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+.scrollable-dashboard-queue {
+    max-height: 206px;
+    overflow-y: auto;
+    padding-right: 8px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(168, 85, 247, 0.4) transparent;
+}
+
+.scrollable-dashboard-table::-webkit-scrollbar,
+.scrollable-dashboard-queue::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.scrollable-dashboard-table::-webkit-scrollbar-track,
+.scrollable-dashboard-queue::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.scrollable-dashboard-table::-webkit-scrollbar-thumb,
+.scrollable-dashboard-queue::-webkit-scrollbar-thumb {
+    background: rgba(168, 85, 247, 0.35);
+    border-radius: 99px;
+}
+
+.scrollable-dashboard-table::-webkit-scrollbar-thumb:hover,
+.scrollable-dashboard-queue::-webkit-scrollbar-thumb:hover {
+    background: rgba(168, 85, 247, 0.65);
+}
+
 .kitchen-ticket {
     padding: 18px;
     border: 1px dashed #d5b79f;

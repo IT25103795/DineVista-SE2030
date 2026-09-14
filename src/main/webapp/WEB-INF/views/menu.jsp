@@ -8,9 +8,19 @@
     request.setAttribute("pageTitle", "Restaurant Menu");
     request.setAttribute("activeNav", "menu");
     List<MenuItemRecord> menuItems = (List<MenuItemRecord>) request.getAttribute("menuItems");
+    List<com.dinevista.model.MenuCategoryRecord> dbCategories = (List<com.dinevista.model.MenuCategoryRecord>) request.getAttribute("menuCategories");
     Set<String> categories = new LinkedHashSet<>();
+    if (dbCategories != null) {
+        for (com.dinevista.model.MenuCategoryRecord cat : dbCategories) {
+            if (cat.isActive()) categories.add(cat.getName());
+        }
+    }
     if (menuItems != null) {
-        for (MenuItemRecord item : menuItems) categories.add(item.getCategory());
+        for (MenuItemRecord item : menuItems) {
+            if (item.getCategory() != null && !item.getCategory().isBlank()) {
+                categories.add(item.getCategory());
+            }
+        }
     }
 %>
 <%@ include file="fragments/header.jspf" %>
@@ -33,15 +43,20 @@
         <div class="filter-bar">
             <div class="search-control">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
-                <input type="search" data-menu-search placeholder="Search dishes, ingredients, or categories" aria-label="Search menu">
+                <input type="search" data-menu-search placeholder="Search dishes, ingredients, flavours, or dietary tags..." aria-label="Search menu">
             </div>
-            <div class="chip-row" aria-label="Menu categories">
-                <button class="chip active" type="button" data-menu-filter="all">All</button>
-                <% for (String category : categories) {
-                    String filterValue = category.toLowerCase().replace(' ', '-');
-                %>
-                    <button class="chip" type="button" data-menu-filter="<%= HtmlUtil.escape(filterValue) %>"><%= HtmlUtil.escape(category) %></button>
-                <% } %>
+            <div class="category-filter-control">
+                <select class="category-select" data-menu-category-select aria-label="Filter menu by category">
+                    <option value="all" selected>All Categories</option>
+                    <% for (String category : categories) {
+                        String filterValue = category.toLowerCase().replace(' ', '-');
+                    %>
+                        <option value="<%= HtmlUtil.escape(filterValue) %>"><%= HtmlUtil.escape(category) %></option>
+                    <% } %>
+                </select>
+                <span class="select-chevron" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+                </span>
             </div>
         </div>
 

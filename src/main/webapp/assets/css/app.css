@@ -943,11 +943,59 @@ html[data-theme="dark"] .split-panel:hover {
 }
 .search-control {
     position: relative;
-    flex: 1 1 280px;
+    flex: 1 1 360px;
 }
-.search-control svg { position: absolute; top: 50%; left: 15px; width: 19px; color: var(--ink-soft); transform: translateY(-50%); }
-.search-control input { width: 100%; min-height: 48px; padding: 11px 15px 11px 45px; border: 1px solid var(--line); border-radius: 13px; background: var(--surface); outline: none; }
+.search-control svg { position: absolute; top: 50%; left: 16px; width: 19px; color: var(--ink-soft); transform: translateY(-50%); pointer-events: none; }
+.search-control input {
+    width: 100%;
+    min-height: 50px;
+    padding: 12px 18px 12px 48px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--surface);
+    color: var(--ink);
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
 .search-control input:focus { border-color: var(--brand); box-shadow: 0 0 0 4px var(--brand-soft); }
+
+.category-filter-control {
+    position: relative;
+    flex: 0 0 240px;
+    min-width: 190px;
+}
+.category-select {
+    width: 100%;
+    min-height: 50px;
+    padding: 12px 38px 12px 16px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--surface);
+    color: var(--ink);
+    font-size: 0.93rem;
+    font-weight: 700;
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+.category-select:focus { border-color: var(--brand); box-shadow: 0 0 0 4px var(--brand-soft); }
+.select-chevron {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: var(--ink-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.select-chevron svg { width: 16px; height: 16px; }
+
 .chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip {
     min-height: 42px;

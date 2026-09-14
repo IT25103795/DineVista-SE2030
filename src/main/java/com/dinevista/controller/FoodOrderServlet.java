@@ -115,6 +115,7 @@ public class FoodOrderServlet extends HttpServlet {
         BigDecimal subtotal = service.cartSubtotal(cart);
 
         request.setAttribute("menuItems", service.menuItems());
+        request.setAttribute("menuCategories", com.dinevista.util.MenuContext.service(getServletContext()).activeCategories());
         request.setAttribute("cartLines", cartLines);
         request.setAttribute("cartSubtotal", subtotal);
         request.setAttribute("cartServiceCharge", subtotal.multiply(new BigDecimal("0.05")));

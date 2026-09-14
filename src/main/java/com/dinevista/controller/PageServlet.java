@@ -38,6 +38,7 @@ public class PageServlet extends HttpServlet {
 
         if ("/menu".equals(servletPath)) {
             request.setAttribute("menuItems", reservationOrderService.menuItems());
+            request.setAttribute("menuCategories", com.dinevista.util.MenuContext.service(getServletContext()).activeCategories());
         }
 
         RequestDispatcher dispatcher = request.getRequestDispatcher(view);

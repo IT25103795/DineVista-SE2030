@@ -170,6 +170,7 @@
     };
 
     const menuSearch = q('[data-menu-search]');
+    const categorySelect = q('[data-menu-category-select]');
     const filterButtons = qa('[data-menu-filter]');
     const menuItems = qa('[data-menu-item]');
     const emptyState = q('[data-menu-empty]');
@@ -180,7 +181,7 @@
         const term = (menuSearch?.value || '').trim().toLowerCase();
         let visible = 0;
         menuItems.forEach(item => {
-            const category = item.dataset.category || '';
+            const category = (item.dataset.category || '').toLowerCase();
             const text = item.textContent.toLowerCase();
             const matchesCategory = activeCategory === 'all' || category === activeCategory;
             const matchesSearch = !term || text.includes(term);
@@ -191,10 +192,18 @@
         if (emptyState) emptyState.style.display = visible ? 'none' : 'block';
     };
 
+    if (categorySelect) {
+        categorySelect.addEventListener('change', () => {
+            activeCategory = (categorySelect.value || 'all').toLowerCase();
+            filterMenu();
+        });
+    }
+
     filterButtons.forEach(button => {
         button.addEventListener('click', () => {
-            activeCategory = button.dataset.menuFilter || 'all';
+            activeCategory = (button.dataset.menuFilter || 'all').toLowerCase();
             filterButtons.forEach(item => item.classList.toggle('active', item === button));
+            if (categorySelect) categorySelect.value = activeCategory;
             filterMenu();
         });
     });

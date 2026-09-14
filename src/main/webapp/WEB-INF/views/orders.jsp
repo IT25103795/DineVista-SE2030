@@ -13,6 +13,20 @@
 <%@ include file="fragments/header.jspf" %>
 <%
     List<MenuItemRecord> menuItems = (List<MenuItemRecord>) request.getAttribute("menuItems");
+    List<com.dinevista.model.MenuCategoryRecord> dbCategories = (List<com.dinevista.model.MenuCategoryRecord>) request.getAttribute("menuCategories");
+    java.util.Set<String> orderCategories = new java.util.LinkedHashSet<>();
+    if (dbCategories != null) {
+        for (com.dinevista.model.MenuCategoryRecord cat : dbCategories) {
+            if (cat.isActive()) orderCategories.add(cat.getName());
+        }
+    }
+    if (menuItems != null) {
+        for (MenuItemRecord item : menuItems) {
+            if (item.getCategory() != null && !item.getCategory().isBlank()) {
+                orderCategories.add(item.getCategory());
+            }
+        }
+    }
     List<CartLineRecord> cartLines = (List<CartLineRecord>) request.getAttribute("cartLines");
     List<FoodOrderRecord> customerOrders = (List<FoodOrderRecord>) request.getAttribute("customerOrders");
     List<TableReservationRecord> preOrderReservations = (List<TableReservationRecord>) request.getAttribute("preOrderReservations");
@@ -78,15 +92,20 @@
         <div class="filter-bar">
             <div class="search-control">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
-                <input type="search" data-menu-search placeholder="Search dishes, categories, or dietary types" aria-label="Search order menu">
+                <input type="search" data-menu-search placeholder="Search dishes, categories, flavours, or dietary tags..." aria-label="Search order menu">
             </div>
-            <div class="chip-row">
-                <button class="chip active" type="button" data-menu-filter="all">All</button>
-                <button class="chip" type="button" data-menu-filter="signature">Signature</button>
-                <button class="chip" type="button" data-menu-filter="sri-lankan">Sri Lankan</button>
-                <button class="chip" type="button" data-menu-filter="seafood">Seafood</button>
-                <button class="chip" type="button" data-menu-filter="vegetarian">Vegetarian</button>
-                <button class="chip" type="button" data-menu-filter="desserts">Desserts</button>
+            <div class="category-filter-control">
+                <select class="category-select" data-menu-category-select aria-label="Filter order menu by category">
+                    <option value="all" selected>All Categories</option>
+                    <% for (String category : orderCategories) {
+                        String filterValue = category.toLowerCase().replace(' ', '-');
+                    %>
+                        <option value="<%= HtmlUtil.escape(filterValue) %>"><%= HtmlUtil.escape(category) %></option>
+                    <% } %>
+                </select>
+                <span class="select-chevron" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+                </span>
             </div>
         </div>
 

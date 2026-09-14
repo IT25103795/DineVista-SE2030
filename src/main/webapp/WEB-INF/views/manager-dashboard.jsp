@@ -28,11 +28,77 @@
             <section class="panel">
                 <div class="panel-header"><div><h3>Restaurant operations</h3><span class="muted small">Open the complete management workspaces.</span></div></div>
                 <div class="operations-launch-grid">
-                    <a class="operations-launch" href="<%= ctx %>/staff/menu"><span class="launch-icon green">M</span><div><strong>Menu management</strong><p>Maintain dishes, categories, pricing, dietary tags, and live order availability.</p></div><span>Open</span></a>
-                    <a class="operations-launch" href="<%= ctx %>/staff/reservations"><span class="launch-icon">R</span><div><strong>Reservation operations</strong><p>Assign tables, confirm requests, seat guests, complete visits, or reject invalid requests.</p></div><span>Open</span></a>
-                    <a class="operations-launch" href="<%= ctx %>/staff/orders"><span class="launch-icon green">O</span><div><strong>Kitchen food orders</strong><p>Accept orders, start preparation, mark ready, serve, complete, or reject with a reason.</p></div><span>Open</span></a>
-                    <a class="operations-launch" href="<%= ctx %>/staff/inventory"><span class="launch-icon">I</span><div><strong>Inventory management</strong><p>Track ingredients, reorder levels, and an auditable purchase, usage, and waste history.</p></div><span>Open</span></a>
-                    <a class="operations-launch" href="<%= ctx %>/staff/billing"><span class="launch-icon">B</span><div><strong>Billing &amp; promotions</strong><p>Generate invoices, apply discounts and promotions, and record payments.</p></div><span>Open</span></a>
+                    <a class="operations-launch" href="<%= ctx %>/staff/menu">
+                        <span class="launch-icon green" title="Menu management">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                                <line x1="9" y1="7" x2="15" y2="7"/>
+                                <line x1="9" y1="11" x2="15" y2="11"/>
+                            </svg>
+                        </span>
+                        <div>
+                            <strong>Menu management</strong>
+                            <p>Maintain dishes, categories, pricing, dietary tags, and live order availability.</p>
+                        </div>
+                        <span>Open</span>
+                    </a>
+                    <a class="operations-launch" href="<%= ctx %>/staff/reservations">
+                        <span class="launch-icon" title="Reservation operations">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                <line x1="16" y1="2" x2="16" y2="6"/>
+                                <line x1="8" y1="2" x2="8" y2="6"/>
+                                <line x1="3" y1="10" x2="21" y2="10"/>
+                            </svg>
+                        </span>
+                        <div>
+                            <strong>Reservation operations</strong>
+                            <p>Assign tables, confirm requests, seat guests, complete visits, or reject invalid requests.</p>
+                        </div>
+                        <span>Open</span>
+                    </a>
+                    <a class="operations-launch" href="<%= ctx %>/staff/orders">
+                        <span class="launch-icon green" title="Kitchen food orders">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8zM6 1v3M10 1v3M14 1v3"/>
+                            </svg>
+                        </span>
+                        <div>
+                            <strong>Kitchen food orders</strong>
+                            <p>Accept orders, start preparation, mark ready, serve, complete, or reject with a reason.</p>
+                        </div>
+                        <span>Open</span>
+                    </a>
+                    <a class="operations-launch" href="<%= ctx %>/staff/inventory">
+                        <span class="launch-icon" title="Inventory management">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                                <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                                <line x1="12" y1="22.08" x2="12" y2="12"/>
+                            </svg>
+                        </span>
+                        <div>
+                            <strong>Inventory management</strong>
+                            <p>Track ingredients, reorder levels, and an auditable purchase, usage, and waste history.</p>
+                        </div>
+                        <span>Open</span>
+                    </a>
+                    <a class="operations-launch" href="<%= ctx %>/staff/billing">
+                        <span class="launch-icon" title="Billing & promotions">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1z"/>
+                                <line x1="8" y1="7" x2="16" y2="7"/>
+                                <line x1="8" y1="11" x2="16" y2="11"/>
+                                <line x1="8" y1="15" x2="13" y2="15"/>
+                            </svg>
+                        </span>
+                        <div>
+                            <strong>Billing &amp; promotions</strong>
+                            <p>Generate invoices, apply discounts and promotions, and record payments.</p>
+                        </div>
+                        <span>Open</span>
+                    </a>
                 </div>
             </section>
             <aside class="panel">

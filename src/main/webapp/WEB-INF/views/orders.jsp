@@ -150,9 +150,9 @@
                     </div>
                     <h3>Your cart is empty</h3>
                     <p>Explore our chef-crafted menu and add your favorite dishes to begin your order.</p>
-                    <button class="btn btn-primary btn-sm" type="button" data-cart-close>
+                    <a class="btn btn-primary btn-sm" href="<%= ctx %>/menu">
                         Browse menu &rarr;
-                    </button>
+                    </a>
                 </div>
             <% } else { %>
                 <div class="server-cart-list">

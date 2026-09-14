@@ -14,8 +14,7 @@ INSERT INTO menu_category (category_name, description, display_order) VALUES
 ('Desserts', 'Sweet finishes and pastries', 5);
 
 INSERT INTO menu_item
-(category_id, item_name, description, price, image_path, preparation_minutes, dietary_type, spice_level, availability_status)
-VALUES
+(category_id, item_name, description, price, image_path, preparation_minutes, dietary_type, spice_level, availability_status)VALUES
 (1, 'Fire-Roasted Chicken', 'Herb-marinated chicken with coconut pepper sauce.', 2450.00, 'dish-signature.svg', 28, 'REGULAR', 'MEDIUM', 'AVAILABLE'),
 (2, 'Island Curry Collection', 'Chicken curry, dhal, vegetables, rice, and sambols.', 2150.00, 'dish-curry.svg', 25, 'REGULAR', 'MEDIUM', 'AVAILABLE'),
 (3, 'Lagoon Grilled Fish', 'Daily catch with lime butter and herb rice.', 2850.00, 'dish-seafood.svg', 30, 'GLUTEN_AWARE', 'MILD', 'AVAILABLE'),
@@ -36,8 +35,7 @@ INSERT INTO restaurant_table (table_code, seating_area, capacity, table_status) 
 ('C-02', 'CHEF_COUNTER', 4, 'AVAILABLE');
 
 INSERT INTO event_package
-(package_name, event_category, description, base_price_per_guest, minimum_guests, maximum_guests, inclusions)
-VALUES
+(package_name, event_category, description, base_price_per_guest, minimum_guests, maximum_guests, inclusions)VALUES
 ('Joyful Gatherings', 'BIRTHDAY', 'Birthday and family celebration package.', 4500.00, 20, 180, 'Buffet or set menu, basic styling, welcome beverage, service staff'),
 ('Everlasting Elegance', 'WEDDING', 'Premium wedding reception package.', 7900.00, 50, 350, 'Premium menu, venue styling, coordinator, bridal table, cake service'),
 ('Professional Impact', 'CORPORATE', 'Corporate meeting and launch package.', 5800.00, 20, 300, 'Meeting setup, food service, audio-visual essentials, registration support');

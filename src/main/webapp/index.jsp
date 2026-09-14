@@ -71,7 +71,7 @@
                 <div class="lp-hero-plate-ring lp-ring-2"></div>
                 <div class="lp-hero-plate-ring lp-ring-3"></div>
                 <div class="lp-hero-plate-center">
-                    <img src="<%= ctx %>/assets/images/hero-dining.svg" alt="">
+                    <img src="<%= ctx %>/assets/images/hero-dish.jpg" alt="Chef's signature dish at DineVista" class="lp-hero-real-img">
                 </div>
             </div>
 

@@ -236,19 +236,10 @@ public class MenuService {
         }
 
         MenuItemAdminRecord item = existing.get();
-        if (repository.itemReferencedByOrders(id)) {
-            // BR-MEN-03: Soft archive
-            item.setAvailabilityStatus("UNAVAILABLE");
-            repository.saveItem(item);
-            return new DeleteOutcome(true, true,
-                    "'" + item.getName() + "' is linked to past order records. It was safely archived as 'Unavailable' instead of deleted (BR-MEN-03).");
-        }
-
-        // Safe to hard delete
         boolean deleted = repository.deleteItem(id);
         if (deleted) {
             return new DeleteOutcome(true, false,
-                    "'" + item.getName() + "' was permanently removed from the menu.");
+                    "'" + item.getName() + "' was permanently deleted from the database.");
         } else {
             return new DeleteOutcome(false, false, "Failed to remove menu item.");
         }

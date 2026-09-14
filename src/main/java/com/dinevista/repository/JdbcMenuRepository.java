@@ -291,11 +291,33 @@ public class JdbcMenuRepository implements MenuRepository {
 
     @Override
     public boolean deleteItem(long id) {
-        String sql = "DELETE FROM menu_item WHERE menu_item_id = ?";
-        try (Connection connection = config.openConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setLong(1, id);
-            return statement.executeUpdate() > 0;
+        try (Connection connection = config.openConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                try (PreparedStatement s1 = connection.prepareStatement(
+                        "DELETE FROM menu_item_ingredient WHERE menu_item_id = ?")) {
+                    s1.setLong(1, id);
+                    s1.executeUpdate();
+                }
+                try (PreparedStatement s2 = connection.prepareStatement(
+                        "DELETE FROM order_item WHERE menu_item_id = ?")) {
+                    s2.setLong(1, id);
+                    s2.executeUpdate();
+                }
+                int rows;
+                try (PreparedStatement s3 = connection.prepareStatement(
+                        "DELETE FROM menu_item WHERE menu_item_id = ?")) {
+                    s3.setLong(1, id);
+                    rows = s3.executeUpdate();
+                }
+                connection.commit();
+                return rows > 0;
+            } catch (SQLException ex) {
+                connection.rollback();
+                throw ex;
+            } finally {
+                connection.setAutoCommit(true);
+            }
         } catch (SQLException ex) {
             throw repositoryFailure("Unable to delete menu item.", ex);
         }

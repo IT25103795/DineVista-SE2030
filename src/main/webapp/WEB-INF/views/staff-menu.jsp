@@ -210,10 +210,10 @@
                                         Edit
                                     </button>
 
-                                    <!-- Delete / Archive Item -->
-                                    <form method="post" action="<%= ctx %>/staff/menu/delete" style="display:inline; margin:0;" onsubmit="return confirm('Are you sure you want to remove \'<%= HtmlUtil.escape(item.getName()) %>\'? If it has linked orders, it will be safely archived.');">
+                                    <!-- Delete Item from Database -->
+                                    <form method="post" action="<%= ctx %>/staff/menu/delete" style="display:inline; margin:0;" onsubmit="return confirm('Are you sure you want to permanently delete \'<%= HtmlUtil.escape(item.getName()) %>\' from the database?');">
                                         <input type="hidden" name="id" value="<%= item.getId() %>">
-                                        <button class="btn btn-sm" style="white-space: nowrap; font-weight: 600; color: #b3261e; background: rgba(179,38,30,.08); border: 1px solid rgba(179,38,30,.2);" type="submit" title="Delete or Archive">
+                                        <button class="btn btn-sm" style="white-space: nowrap; font-weight: 600; color: #b3261e; background: rgba(179,38,30,.08); border: 1px solid rgba(179,38,30,.2);" type="submit" title="Delete from database">
                                             Delete
                                         </button>
                                     </form>

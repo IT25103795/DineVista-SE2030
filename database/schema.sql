@@ -224,7 +224,7 @@ CREATE TABLE order_item (
     item_notes VARCHAR(255),
     line_total DECIMAL(12,2) NOT NULL,
     CONSTRAINT fk_order_item_order FOREIGN KEY (order_id) REFERENCES food_order(order_id) ON DELETE CASCADE,
-    CONSTRAINT fk_order_item_menu FOREIGN KEY (menu_item_id) REFERENCES menu_item(menu_item_id)
+    CONSTRAINT fk_order_item_menu FOREIGN KEY (menu_item_id) REFERENCES menu_item(menu_item_id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 CREATE TABLE order_status_history (

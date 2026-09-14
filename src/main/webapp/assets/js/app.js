@@ -209,6 +209,131 @@
     });
     menuSearch?.addEventListener('input', filterMenu);
 
+    // ═══════════════════════════════════════════════
+    // FOOD ITEM DETAIL MODAL
+    // ═══════════════════════════════════════════════
+    const foodModal = q('#foodDetailModal');
+    if (foodModal) {
+        let currentUnitPrice = 0;
+        const modalImg = q('#foodModalImg');
+        const modalBadge = q('#foodModalBadge');
+        const modalCategory = q('#foodModalCategory');
+        const modalDietary = q('#foodModalDietary');
+        const modalSpice = q('#foodModalSpice');
+        const modalTitle = q('#foodModalTitle');
+        const modalPrice = q('#foodModalPrice');
+        const modalDesc = q('#foodModalDesc');
+        const specDietary = q('#foodSpecDietary');
+        const specSpice = q('#foodSpecSpice');
+        const specPrep = q('#foodSpecPrep');
+        const specStatus = q('#foodSpecStatus');
+        const modalItemId = q('#foodModalItemId');
+        const modalQty = q('#foodModalQty');
+        const modalCalcTotal = q('#foodModalCalculatedTotal');
+        const modalSubmitBtn = q('#foodModalSubmitBtn');
+        const modalBtnText = q('#foodModalBtnText');
+
+        const updateModalSubtotal = () => {
+            const qty = parseInt(modalQty?.value || '1', 10) || 1;
+            const total = currentUnitPrice * qty;
+            if (modalCalcTotal) {
+                modalCalcTotal.textContent = 'LKR ' + Math.round(total).toLocaleString();
+            }
+        };
+
+        const openFoodModal = (card) => {
+            const ds = card.dataset;
+            const imgEl = card.querySelector('.menu-item-media img');
+            const imgSrc = imgEl ? imgEl.src : '';
+            const isAvailable = ds.available !== 'false';
+
+            currentUnitPrice = parseFloat(ds.price) || 0;
+
+            if (modalImg) modalImg.src = imgSrc;
+            if (modalTitle) modalTitle.textContent = ds.name || '';
+            if (modalPrice) modalPrice.textContent = ds.priceDisplay || ('LKR ' + Math.round(currentUnitPrice).toLocaleString());
+            if (modalDesc) modalDesc.textContent = ds.description || 'Crafted with premium ingredients and cooked to perfection by our culinary team.';
+
+            if (modalCategory) modalCategory.textContent = ds.categoryName || 'DineVista';
+            if (modalDietary) modalDietary.textContent = ds.dietary || 'Regular';
+            if (modalSpice) {
+                const spice = ds.spice || 'NONE';
+                modalSpice.textContent = spice !== 'NONE' ? spice + ' spice' : 'No spice';
+            }
+
+            if (specDietary) specDietary.textContent = ds.dietary || 'Regular';
+            if (specSpice) specSpice.textContent = ds.spice || 'None';
+            if (specPrep) specPrep.textContent = '~20-25 mins';
+
+            if (specStatus) {
+                specStatus.textContent = isAvailable ? 'Freshly Prepared' : 'Sold Out Today';
+                specStatus.style.color = isAvailable ? '#2b7f68' : '#e96f3d';
+            }
+
+            if (modalBadge) {
+                modalBadge.textContent = isAvailable ? 'Available' : 'Sold Out';
+                modalBadge.className = 'food-modal-status-pill ' + (isAvailable ? 'available' : 'sold-out');
+            }
+
+            if (modalItemId) modalItemId.value = ds.id || '';
+            if (modalQty) modalQty.value = '1';
+
+            if (modalSubmitBtn) {
+                modalSubmitBtn.disabled = !isAvailable;
+                if (modalBtnText) modalBtnText.textContent = isAvailable ? 'Add to Order' : 'Sold Out';
+            }
+
+            updateModalSubtotal();
+
+            foodModal.style.display = 'grid';
+            setTimeout(() => foodModal.classList.add('open'), 10);
+            document.body.style.overflow = 'hidden';
+        };
+
+        const closeFoodModal = () => {
+            foodModal.classList.remove('open');
+            setTimeout(() => {
+                foodModal.style.display = 'none';
+                document.body.style.overflow = '';
+            }, 200);
+        };
+
+        qa('[data-food-modal-trigger]').forEach(card => {
+            card.addEventListener('click', (e) => {
+                if (e.target.closest('button, a, input, form')) return;
+                openFoodModal(card);
+            });
+        });
+
+        foodModal.querySelectorAll('[data-food-modal-close]').forEach(btn => {
+            btn.addEventListener('click', closeFoodModal);
+        });
+
+        foodModal.addEventListener('click', (e) => {
+            if (e.target === foodModal) closeFoodModal();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && foodModal.classList.contains('open')) {
+                closeFoodModal();
+            }
+        });
+
+        foodModal.querySelectorAll('[data-stepper-action]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const action = btn.dataset.stepperAction;
+                let val = parseInt(modalQty?.value || '1', 10) || 1;
+                if (action === 'minus' && val > 1) {
+                    val -= 1;
+                } else if (action === 'plus' && val < 10) {
+                    val += 1;
+                }
+                if (modalQty) modalQty.value = val;
+                updateModalSubtotal();
+            });
+        });
+    }
+
     const reservationSummary = q('[data-reservation-summary]');
     const reservationFields = qa('[data-reservation-field]');
     const updateReservationSummary = () => {

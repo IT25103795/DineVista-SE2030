@@ -73,10 +73,25 @@
                             ? "dish-signature.svg" : item.getImagePath();
                 %>
                     <article class="menu-item <%= item.isAvailable() ? "" : "is-unavailable" %>"
-                             data-menu-item data-category="<%= HtmlUtil.escape(categoryValue) %>">
+                             data-menu-item
+                             data-category="<%= HtmlUtil.escape(categoryValue) %>"
+                             data-food-modal-trigger
+                             data-id="<%= item.getId() %>"
+                             data-name="<%= HtmlUtil.escape(item.getName()) %>"
+                             data-category-name="<%= HtmlUtil.escape(item.getCategory()) %>"
+                             data-description="<%= HtmlUtil.escape(item.getDescription()) %>"
+                             data-price="<%= item.getPrice().toPlainString() %>"
+                             data-price-display="<%= HtmlUtil.escape(item.getPriceDisplay()) %>"
+                             data-dietary="<%= HtmlUtil.escape(item.getDietaryType().replace('_', ' ')) %>"
+                             data-spice="<%= HtmlUtil.escape(item.getSpiceLevel()) %>"
+                             data-available="<%= item.isAvailable() %>">
                         <div class="menu-item-media">
                             <img src="<%= ctx %>/assets/images/<%= HtmlUtil.escape(image) %>" alt="<%= HtmlUtil.escape(item.getName()) %>">
                             <% if (!item.isAvailable()) { %><span class="availability-ribbon">Unavailable</span><% } %>
+                            <span class="card-details-hint" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                                View details
+                            </span>
                         </div>
                         <div class="menu-item-content">
                             <div class="menu-meta">
@@ -91,13 +106,13 @@
                             <div class="menu-item-footer">
                                 <span class="price"><%= HtmlUtil.escape(item.getPriceDisplay()) %></span>
                                 <% if (item.isAvailable()) { %>
-                                    <form method="post" action="<%= ctx %>/orders/cart/add" class="inline-order-form">
+                                    <form method="post" action="<%= ctx %>/orders/cart/add" class="inline-order-form" onclick="event.stopPropagation()">
                                         <input type="hidden" name="menuItemId" value="<%= item.getId() %>">
                                         <input type="hidden" name="quantity" value="1">
                                         <button class="btn btn-primary btn-sm" type="submit">Add to order</button>
                                     </form>
                                 <% } else { %>
-                                    <button class="btn btn-secondary btn-sm" type="button" disabled>Unavailable</button>
+                                    <button class="btn btn-secondary btn-sm" type="button" disabled onclick="event.stopPropagation()">Unavailable</button>
                                 <% } %>
                             </div>
                         </div>
@@ -176,4 +191,5 @@
         </aside>
     </div>
 </section>
+<%@ include file="fragments/food-modal.jspf" %>
 <%@ include file="fragments/footer.jspf" %>

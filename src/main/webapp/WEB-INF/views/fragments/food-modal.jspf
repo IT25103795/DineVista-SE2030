@@ -1,0 +1,59 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<!-- Food Item Detail Modal -->
+<div id="foodDetailModal" class="food-modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true" style="display:none;">
+    <div class="food-modal-card">
+        <button type="button" class="food-modal-close-btn" data-food-modal-close aria-label="Close dialog">&times;</button>
+        <div class="food-modal-media-wrap">
+            <img id="foodModalImg" class="food-modal-img" src="" alt="Dish preview">
+            <span id="foodModalBadge" class="food-modal-status-pill">Available</span>
+        </div>
+        <div class="food-modal-content">
+            <div class="food-modal-tags">
+                <span id="foodModalCategory" class="tag orange">Category</span>
+                <span id="foodModalDietary" class="tag">Dietary</span>
+                <span id="foodModalSpice" class="tag">Spice</span>
+            </div>
+            <h2 id="foodModalTitle" class="food-modal-title">Dish Title</h2>
+            <div id="foodModalPrice" class="food-modal-price">LKR 0</div>
+            <p id="foodModalDesc" class="food-modal-desc"></p>
+
+            <div class="food-modal-specs">
+                <div class="food-spec-item">
+                    <span class="food-spec-label">Dietary</span>
+                    <span id="foodSpecDietary" class="food-spec-value">Regular</span>
+                </div>
+                <div class="food-spec-item">
+                    <span class="food-spec-label">Spice Level</span>
+                    <span id="foodSpecSpice" class="food-spec-value">Mild</span>
+                </div>
+                <div class="food-spec-item">
+                    <span class="food-spec-label">Kitchen Prep</span>
+                    <span id="foodSpecPrep" class="food-spec-value">~20-25 mins</span>
+                </div>
+                <div class="food-spec-item">
+                    <span class="food-spec-label">Order Type</span>
+                    <span id="foodSpecStatus" class="food-spec-value" style="color: #2b7f68;">Dine-in &amp; Takeaway</span>
+                </div>
+            </div>
+
+            <div class="food-modal-order-box">
+                <form id="foodModalAddForm" method="post" action="<%= ctx %>/orders/cart/add" class="food-modal-form">
+                    <input type="hidden" id="foodModalItemId" name="menuItemId" value="">
+                    <div class="food-modal-stepper">
+                        <button type="button" class="stepper-btn" data-stepper-action="minus" aria-label="Decrease quantity">&minus;</button>
+                        <input type="number" id="foodModalQty" name="quantity" min="1" max="10" value="1" readonly>
+                        <button type="button" class="stepper-btn" data-stepper-action="plus" aria-label="Increase quantity">&plus;</button>
+                    </div>
+                    <div class="food-modal-total">
+                        <span class="muted small">Total</span>
+                        <strong id="foodModalCalculatedTotal" class="food-modal-calc-price">LKR 0</strong>
+                    </div>
+                    <button id="foodModalSubmitBtn" class="btn btn-primary food-modal-add-btn" type="submit">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px; height:18px;" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                        <span id="foodModalBtnText">Add to Order</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -67,44 +67,26 @@ public class StaffReservationServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         if (!requireManager(request, response)) return;
-        String path = path(request);
-        if ("/update".equals(path)) {
-            String reference = RequestUtil.clean(request, "reference");
-            OperationResult<TableReservationRecord> result = service.staffUpdateReservation(
-                    reference,
-                    RequestUtil.longValue(request, "tableId", 0),
-                    RequestUtil.clean(request, "status"),
-                    RequestUtil.clean(request, "note"),
-                    ReservationOrderContext.displayName(request));
-
-            if (result.isSuccess()) {
-                FlashUtil.success(request, "Reservation " + reference + " was updated.");
-            } else {
-                FlashUtil.errors(request, result.getErrors());
-            }
-            response.sendRedirect(request.getContextPath()
-                    + "/staff/reservations/view?reference=" + reference);
+        if (!"/update".equals(path(request))) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
 
-        if ("/delete".equals(path)) {
-            String reference = RequestUtil.clean(request, "reference");
-            String reason = RequestUtil.clean(request, "reason");
-            OperationResult<Void> result = service.deleteReservation(
-                    null, reference, reason, true);
+        String reference = RequestUtil.clean(request, "reference");
+        OperationResult<TableReservationRecord> result = service.staffUpdateReservation(
+                reference,
+                RequestUtil.longValue(request, "tableId", 0),
+                RequestUtil.clean(request, "status"),
+                RequestUtil.clean(request, "note"),
+                ReservationOrderContext.displayName(request));
 
-            if (result.isSuccess()) {
-                FlashUtil.success(request, "Reservation " + reference + " was permanently deleted from the database.");
-                response.sendRedirect(request.getContextPath() + "/staff/reservations");
-            } else {
-                FlashUtil.errors(request, result.getErrors());
-                response.sendRedirect(request.getContextPath()
-                        + "/staff/reservations/view?reference=" + reference);
-            }
-            return;
+        if (result.isSuccess()) {
+            FlashUtil.success(request, "Reservation " + reference + " was updated.");
+        } else {
+            FlashUtil.errors(request, result.getErrors());
         }
-
-        response.sendError(HttpServletResponse.SC_NOT_FOUND);
+        response.sendRedirect(request.getContextPath()
+                + "/staff/reservations/view?reference=" + reference);
     }
 
     private boolean requireManager(HttpServletRequest request, HttpServletResponse response)

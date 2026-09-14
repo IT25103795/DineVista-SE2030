@@ -60,43 +60,25 @@ public class StaffOrderServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         if (!requireManager(request, response)) return;
-        String path = path(request);
-        if ("/update".equals(path)) {
-            String reference = RequestUtil.clean(request, "reference");
-            OperationResult<FoodOrderRecord> result = service.staffUpdateOrder(
-                    reference,
-                    RequestUtil.clean(request, "status"),
-                    RequestUtil.clean(request, "note"),
-                    ReservationOrderContext.displayName(request));
-
-            if (result.isSuccess()) {
-                FlashUtil.success(request, "Order " + reference + " was updated.");
-            } else {
-                FlashUtil.errors(request, result.getErrors());
-            }
-            response.sendRedirect(request.getContextPath()
-                    + "/staff/orders/view?reference=" + reference);
+        if (!"/update".equals(path(request))) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
 
-        if ("/delete".equals(path)) {
-            String reference = RequestUtil.clean(request, "reference");
-            String reason = RequestUtil.clean(request, "reason");
-            OperationResult<Void> result = service.deleteOrder(
-                    null, reference, reason, true);
+        String reference = RequestUtil.clean(request, "reference");
+        OperationResult<FoodOrderRecord> result = service.staffUpdateOrder(
+                reference,
+                RequestUtil.clean(request, "status"),
+                RequestUtil.clean(request, "note"),
+                ReservationOrderContext.displayName(request));
 
-            if (result.isSuccess()) {
-                FlashUtil.success(request, "Order " + reference + " was permanently deleted from the database.");
-                response.sendRedirect(request.getContextPath() + "/staff/orders");
-            } else {
-                FlashUtil.errors(request, result.getErrors());
-                response.sendRedirect(request.getContextPath()
-                        + "/staff/orders/view?reference=" + reference);
-            }
-            return;
+        if (result.isSuccess()) {
+            FlashUtil.success(request, "Order " + reference + " was updated.");
+        } else {
+            FlashUtil.errors(request, result.getErrors());
         }
-
-        response.sendError(HttpServletResponse.SC_NOT_FOUND);
+        response.sendRedirect(request.getContextPath()
+                + "/staff/orders/view?reference=" + reference);
     }
 
     private boolean requireManager(HttpServletRequest request, HttpServletResponse response)

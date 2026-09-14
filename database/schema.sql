@@ -18,6 +18,7 @@ DROP TABLE IF EXISTS invoice;
 DROP TABLE IF EXISTS event_staff_assignment;
 DROP TABLE IF EXISTS staff_schedule;
 DROP TABLE IF EXISTS resource_booking;
+DROP TABLE IF EXISTS event_venue_booking;
 DROP TABLE IF EXISTS event_resource;
 DROP TABLE IF EXISTS event_requirement;
 DROP TABLE IF EXISTS event_booking_status_history;
@@ -182,9 +183,9 @@ CREATE TABLE reservation_status_history (
     note VARCHAR(500),
     changed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_reservation_history_reservation FOREIGN KEY (reservation_id)
-        REFERENCES table_reservation(reservation_id) ON DELETE CASCADE,
+    REFERENCES table_reservation(reservation_id) ON DELETE CASCADE,
     CONSTRAINT fk_reservation_history_user FOREIGN KEY (changed_by)
-        REFERENCES user_account(user_id)
+    REFERENCES user_account(user_id)
 ) ENGINE=InnoDB;
 
 CREATE TABLE food_order (
@@ -306,7 +307,7 @@ CREATE TABLE event_requirement (
 
 CREATE TABLE event_resource (
     resource_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    resource_name VARCHAR(160) NOT NULL,
+    resource_name VARCHAR(160) NOT NULL UNIQUE,
     resource_category ENUM('FURNITURE','AUDIO_VISUAL','DECOR','LIGHTING','KITCHEN','TRANSPORT','OTHER') NOT NULL,
     total_quantity INT NOT NULL,
     available_quantity INT NOT NULL,
@@ -314,16 +315,51 @@ CREATE TABLE event_resource (
     resource_status ENUM('AVAILABLE','MAINTENANCE','RETIRED') NOT NULL DEFAULT 'AVAILABLE'
 ) ENGINE=InnoDB;
 
+-- Owned by the Event Resource and Staff Scheduling module (Wijesuriya W. A. T. D. / IT25103799).
+
+-- event_booking_id is an optional link to a formal consultation booking; event_label always
+
+-- carries a human-readable name for the event so a venue can be scheduled even before (or
+
+-- without) a matching event_booking row.
+
+CREATE TABLE event_venue_booking (
+    venue_booking_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    venue_id BIGINT NOT NULL,
+    event_booking_id BIGINT,
+    event_label VARCHAR(180) NOT NULL,
+    event_date DATE NOT NULL,
+    start_time TIME NOT NULL,
+    end_time TIME NOT NULL,
+    guest_count INT,
+    booking_status ENUM('REQUESTED','CONFIRMED','CANCELLED') NOT NULL DEFAULT 'REQUESTED',
+    notes VARCHAR(500),
+    created_by_name VARCHAR(160),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_venue_booking_venue FOREIGN KEY (venue_id) REFERENCES event_venue(venue_id),
+    CONSTRAINT fk_venue_booking_event FOREIGN KEY (event_booking_id) REFERENCES event_booking(event_booking_id) ON DELETE SET NULL,
+    INDEX idx_venue_booking_slot (venue_id, event_date)
+) ENGINE=InnoDB;
+
+-- Owned by the Event Resource and Staff Scheduling module (Wijesuriya W. A. T. D. / IT25103799).
+
 CREATE TABLE resource_booking (
     resource_booking_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    event_booking_id BIGINT NOT NULL,
     resource_id BIGINT NOT NULL,
+    event_booking_id BIGINT,
+    event_label VARCHAR(180) NOT NULL,
+    event_date DATE NOT NULL,
     quantity_reserved INT NOT NULL,
-    booking_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     allocation_status ENUM('REQUESTED','ALLOCATED','RETURNED','CANCELLED') NOT NULL DEFAULT 'REQUESTED',
-    CONSTRAINT fk_resource_booking_event FOREIGN KEY (event_booking_id) REFERENCES event_booking(event_booking_id) ON DELETE CASCADE,
-    CONSTRAINT fk_resource_booking_resource FOREIGN KEY (resource_id) REFERENCES event_resource(resource_id)
+    requested_by_name VARCHAR(160),
+    notes VARCHAR(500),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_resource_booking_resource FOREIGN KEY (resource_id) REFERENCES event_resource(resource_id),
+    CONSTRAINT fk_resource_booking_event FOREIGN KEY (event_booking_id) REFERENCES event_booking(event_booking_id) ON DELETE SET NULL,
+    INDEX idx_resource_booking_slot (resource_id, event_date)
 ) ENGINE=InnoDB;
+
+-- Owned by the Event Resource and Staff Scheduling module (Wijesuriya W. A. T. D. / IT25103799).
 
 CREATE TABLE staff_schedule (
     schedule_id BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -333,20 +369,28 @@ CREATE TABLE staff_schedule (
     end_time TIME NOT NULL,
     shift_type ENUM('RESTAURANT','KITCHEN','EVENT','DELIVERY','ADMIN') NOT NULL,
     schedule_status ENUM('SCHEDULED','CONFIRMED','COMPLETED','ABSENT','CANCELLED') NOT NULL DEFAULT 'SCHEDULED',
+    notes VARCHAR(255),
     CONSTRAINT fk_schedule_staff FOREIGN KEY (staff_id) REFERENCES staff_profile(staff_id),
     UNIQUE KEY uq_staff_shift (staff_id, shift_date, start_time)
 ) ENGINE=InnoDB;
 
+-- Owned by the Event Resource and Staff Scheduling module (Wijesuriya W. A. T. D. / IT25103799).
+
 CREATE TABLE event_staff_assignment (
     assignment_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    event_booking_id BIGINT NOT NULL,
     staff_id BIGINT NOT NULL,
+    event_booking_id BIGINT,
+    event_label VARCHAR(180) NOT NULL,
     assignment_role VARCHAR(100) NOT NULL,
-    start_time DATETIME,
-    end_time DATETIME,
+    assignment_date DATE NOT NULL,
+    start_time TIME NOT NULL,
+    end_time TIME NOT NULL,
     assignment_status ENUM('ASSIGNED','CONFIRMED','COMPLETED','CANCELLED') NOT NULL DEFAULT 'ASSIGNED',
-    CONSTRAINT fk_assignment_event FOREIGN KEY (event_booking_id) REFERENCES event_booking(event_booking_id) ON DELETE CASCADE,
-    CONSTRAINT fk_assignment_staff FOREIGN KEY (staff_id) REFERENCES staff_profile(staff_id)
+    notes VARCHAR(500),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_assignment_staff FOREIGN KEY (staff_id) REFERENCES staff_profile(staff_id),
+    CONSTRAINT fk_assignment_event FOREIGN KEY (event_booking_id) REFERENCES event_booking(event_booking_id) ON DELETE SET NULL,
+    INDEX idx_assignment_staff_date (staff_id, assignment_date)
 ) ENGINE=InnoDB;
 
 CREATE TABLE invoice (
@@ -435,9 +479,15 @@ CREATE TABLE workflow_notification (
 ) ENGINE=InnoDB;
 
 CREATE INDEX idx_reservation_date_status ON table_reservation(reservation_date, reservation_status);
+
 CREATE INDEX idx_order_status_created ON food_order(order_status, created_at);
+
 CREATE INDEX idx_event_date_status ON event_booking(event_date, booking_status);
+
 CREATE INDEX idx_stock_reorder ON ingredient(current_quantity, reorder_level);
+
 CREATE INDEX idx_staff_schedule_date ON staff_schedule(shift_date, shift_type);
+
+CREATE INDEX idx_resource_reorder ON event_resource(resource_status, available_quantity);
 
 SET FOREIGN_KEY_CHECKS = 1;

@@ -15,6 +15,7 @@
 %>
 <%@ include file="fragments/header.jspf" %>
 <section class="page-hero menu-hero">
+    <div class="page-hero-orb" aria-hidden="true"></div>
     <div class="container">
         <div class="breadcrumbs"><a href="<%= ctx %>/">Home</a><span>/</span><span>Menu</span></div>
         <span class="eyebrow">Restaurant menu</span>

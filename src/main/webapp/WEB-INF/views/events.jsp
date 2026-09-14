@@ -2,6 +2,7 @@
 <% request.setAttribute("pageTitle", "Events and Packages"); request.setAttribute("activeNav", "events"); %>
 <%@ include file="fragments/header.jspf" %>
 <section class="page-hero events-hero">
+    <div class="page-hero-orb" aria-hidden="true"></div>
     <div class="container">
         <div class="breadcrumbs"><a href="<%= ctx %>/">Home</a><span>/</span><span>Events</span></div>
         <span class="eyebrow">DineVista events</span>

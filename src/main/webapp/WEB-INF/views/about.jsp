@@ -3,6 +3,7 @@
 <%@ include file="fragments/header.jspf" %>
 
 <section class="page-hero about-hero">
+    <div class="page-hero-orb" aria-hidden="true"></div>
     <div class="container">
         <div class="breadcrumbs"><a href="<%= ctx %>/">Home</a><span>/</span><span>About</span></div>
         <span class="eyebrow">The DineVista story</span>

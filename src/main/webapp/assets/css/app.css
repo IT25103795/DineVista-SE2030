@@ -217,36 +217,46 @@ h3 { font-size: clamp(1.2rem, 2vw, 1.55rem); }
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 3px;
+    gap: 2px;
+    padding: 4px;
+    background: rgba(243,183,78,.06);
+    border: 1px solid rgba(243,183,78,.15);
+    border-radius: 50px;
+    backdrop-filter: blur(8px);
 }
 
 .main-nav a {
     position: relative;
-    padding: 10px 12px;
-    color: #55473f;
-    border-radius: 12px;
-    font-size: 0.93rem;
-    font-weight: 700;
+    padding: 8px 16px;
+    color: #6b5748;
+    border-radius: 40px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: .01em;
     white-space: nowrap;
-    transition: color .2s ease, background .2s ease;
+    transition: color .22s ease, background .22s ease, transform .18s ease, box-shadow .22s ease;
 }
 
-.main-nav a:hover,
+.main-nav a:hover {
+    color: var(--brand-strong, #b5451b);
+    background: rgba(243,183,78,.14);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(243,183,78,.18);
+}
+
 .main-nav a.active {
-    color: var(--ink);
-    background: var(--surface-alt);
+    color: #fff;
+    background: linear-gradient(135deg, var(--brand, #e96f3d) 0%, #c8531d 100%);
+    box-shadow:
+        0 4px 14px rgba(233,111,61,.40),
+        inset 0 1px 0 rgba(255,255,255,.2);
+    transform: translateY(-1px);
 }
 
 .main-nav a.active::after {
-    position: absolute;
-    right: 12px;
-    bottom: 4px;
-    left: 12px;
-    height: 2px;
-    content: "";
-    background: var(--brand);
-    border-radius: 10px;
+    display: none;
 }
+
 
 .nav-actions {
     display: flex;
@@ -732,26 +742,193 @@ html[data-theme="dark"] .split-panel:hover {
 .cta-actions { position: relative; z-index: 2; display: flex; flex-wrap: wrap; gap: 10px; }
 .cta-banner .btn-secondary { border-color: rgba(var(--panel-rgb),.5); }
 
+/* ═══════════════════════════════════════════════
+   PAGE HERO — CINEMATIC PHOTO BACKGROUNDS v2
+   ═══════════════════════════════════════════════ */
+
 .page-hero {
     position: relative;
-    padding: 76px 0 58px;
+    padding: 100px 0 80px;
     overflow: hidden;
-    background: linear-gradient(180deg, var(--surface-alt), transparent);
+    background-color: #0d0805;
+    background-size: cover;
+    background-position: center 40%;
+    background-repeat: no-repeat;
+    display: flex;
+    align-items: center;
 }
-.page-hero::after {
-    position: absolute;
-    z-index: -1;
-    top: -100px;
-    right: -50px;
-    width: 360px;
-    height: 360px;
+
+/* Dark cinematic overlay — left side darker for text readability */
+.page-hero::before {
     content: "";
-    background: radial-gradient(circle, rgba(233,111,61,.16), transparent 68%);
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background:
+        linear-gradient(105deg,
+            rgba(8,4,2,.92)  0%,
+            rgba(14,7,3,.80) 50%,
+            rgba(8,4,2,.65) 100%);
+    pointer-events: none;
 }
-.page-hero h1 { max-width: 850px; margin-bottom: 18px; font-size: clamp(2.5rem, 5vw, 4.7rem); }
-.page-hero p { max-width: 720px; color: var(--ink-soft); font-size: 1.05rem; }
-.breadcrumbs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; color: var(--ink-soft); font-size: .84rem; font-weight: 700; }
-.breadcrumbs span { color: var(--brand); }
+
+/* Subtle golden dot-mesh — same as homepage */
+.page-hero::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    opacity: .05;
+    background-image: radial-gradient(circle, rgba(243,183,78,.9) 1px, transparent 1px);
+    background-size: 36px 36px;
+}
+
+/* Content sits above all layers */
+.page-hero .container {
+    position: relative;
+    z-index: 3;
+}
+
+/* All text on dark photo bg */
+.page-hero h1 {
+    max-width: 850px;
+    margin-bottom: 18px;
+    font-size: clamp(2.4rem, 5vw, 4.5rem);
+    color: #fff;
+    line-height: 1.08;
+    letter-spacing: -.03em;
+}
+.page-hero > .container > p,
+.page-hero p {
+    max-width: 680px;
+    color: rgba(255,255,255,.72);
+    font-size: 1.05rem;
+}
+.page-hero .eyebrow {
+    display: inline-block;
+    margin-bottom: 14px;
+    padding: 5px 14px;
+    background: rgba(243,183,78,.15);
+    border: 1px solid rgba(243,183,78,.3);
+    border-radius: 50px;
+    color: #f3b74e;
+    font-size: .78rem;
+    font-weight: 800;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+}
+.page-hero .hero-actions {
+    margin-top: 28px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+/* Breadcrumbs on dark */
+.breadcrumbs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+    font-size: .82rem;
+    font-weight: 600;
+    color: rgba(255,255,255,.5);
+}
+.breadcrumbs a { color: rgba(255,255,255,.5); }
+.breadcrumbs a:hover { color: #f3b74e; }
+.breadcrumbs span { color: rgba(255,255,255,.85); }
+
+/* ── Per-page background images ── */
+
+/* Menu — gorgeous gourmet table spread */
+.menu-hero {
+    background-image: url("../images/hero-bg-menu.jpg");
+    background-position: center 35%;
+}
+.menu-hero::before {
+    background: linear-gradient(105deg,
+        rgba(6,3,1,.92) 0%,
+        rgba(18,9,2,.80) 50%,
+        rgba(6,3,1,.60) 100%);
+}
+
+/* Reservations — restaurant interior (same base, deep rose overlay) */
+.reservation-hero {
+    background-image: url("../images/hero-bg.jpg");
+    background-position: center 45%;
+}
+.reservation-hero::before {
+    background: linear-gradient(105deg,
+        rgba(12,4,6,.93) 0%,
+        rgba(25,8,12,.82) 50%,
+        rgba(8,3,5,.62) 100%);
+}
+
+/* Events — restaurant interior (deep purple-gold overlay) */
+.events-hero {
+    background-image: url("../images/hero-bg.jpg");
+    background-position: center 25%;
+}
+.events-hero::before {
+    background: linear-gradient(105deg,
+        rgba(8,4,14,.93) 0%,
+        rgba(20,10,30,.82) 50%,
+        rgba(6,3,10,.62) 100%);
+}
+
+/* About — restaurant interior (teal-warm overlay) */
+.about-hero {
+    background-image: url("../images/hero-bg.jpg");
+    background-position: center 55%;
+}
+.about-hero::before {
+    background: linear-gradient(105deg,
+        rgba(2,8,8,.93) 0%,
+        rgba(5,18,15,.82) 50%,
+        rgba(2,6,6,.62) 100%);
+}
+
+/* Each customer-facing tab has its own visual identity. Keep these explicit
+   so a missing page class can never fall back to the Home artwork. */
+.order-hero {
+    background-image: url('../images/hero-dish.jpg');
+    background-position: center 48%;
+}
+.order-hero::before {
+    background: linear-gradient(105deg,
+        rgba(10,4,2,.94) 0%,
+        rgba(26,10,3,.80) 50%,
+        rgba(8,3,1,.60) 100%);
+}
+.events-hero {
+    background-image: url('../images/event-corporate.svg');
+    background-position: center;
+    background-size: cover;
+}
+.about-hero {
+    background-image: url('../images/venue-garden.svg');
+    background-position: center;
+    background-size: cover;
+}
+
+/* Accent orb — warm glow top-right on every page hero */
+.page-hero-orb {
+    position: absolute;
+    z-index: 2;
+    top: -80px;
+    right: -60px;
+    width: 420px;
+    height: 420px;
+    border-radius: 50%;
+    pointer-events: none;
+    filter: blur(90px);
+    animation: lp-orb-drift 14s ease-in-out infinite alternate;
+}
+.menu-hero        .page-hero-orb { background: radial-gradient(circle, rgba(243,183,78,.45), transparent 65%); }
+.reservation-hero .page-hero-orb { background: radial-gradient(circle, rgba(220,60,80,.40), transparent 65%); }
+.events-hero      .page-hero-orb { background: radial-gradient(circle, rgba(160,90,230,.40), transparent 65%); }
+.about-hero       .page-hero-orb { background: radial-gradient(circle, rgba(43,160,130,.40), transparent 65%); }
 
 .filter-bar {
     display: flex;
@@ -2573,14 +2750,27 @@ html[data-theme="dark"] .site-header {
     }
 }
 
-html[data-theme="dark"] .main-nav a {
-    color: #c0b6af;
+html[data-theme="dark"] .main-nav {
+    background: rgba(255,255,255,.05);
+    border-color: rgba(255,255,255,.1);
 }
 
-html[data-theme="dark"] .main-nav a:hover,
+html[data-theme="dark"] .main-nav a {
+    color: #c8b8ae;
+}
+
+html[data-theme="dark"] .main-nav a:hover {
+    color: #ffe4cc;
+    background: rgba(243,183,78,.15);
+    box-shadow: 0 4px 14px rgba(243,183,78,.2);
+}
+
 html[data-theme="dark"] .main-nav a.active {
-    color: #fff7f2;
-    background: rgba(255, 125, 77, .11);
+    color: #fff;
+    background: linear-gradient(135deg, #e96f3d 0%, #c44e18 100%);
+    box-shadow:
+        0 4px 18px rgba(233,111,61,.50),
+        inset 0 1px 0 rgba(255,255,255,.25);
 }
 
 html[data-theme="dark"] .nav-cart,
@@ -2611,8 +2801,7 @@ html[data-theme="dark"] .btn-dark {
     background: #f7f1ec;
 }
 
-html[data-theme="dark"] .hero::before,
-html[data-theme="dark"] .page-hero::before {
+html[data-theme="dark"] .hero::before {
     opacity: .55;
 }
 
@@ -2872,34 +3061,64 @@ html[data-theme="dark"] {
 .hero .hero-visual > img { opacity: 0; }
 .hero .float-card { color: var(--ink); background: var(--panel); }
 
+/* ── Photo-based hero overrides (replaces old SVG system) ── */
 .page-hero {
-    color: var(--ink);
-    background-position: center;
-    background-size: cover;
+    /* base photo settings handled in our new block above — just keep isolation */
     isolation: isolate;
 }
-.page-hero::after { z-index: -1; }
-.page-hero p, .page-hero .breadcrumbs, .page-hero .breadcrumbs a { color: var(--ink-soft); }
-.page-hero .breadcrumbs span, .page-hero .eyebrow { color: var(--brand-strong); }
+/* Content text — always white on photo bg */
 .menu-hero, .order-hero, .reservation-hero, .events-hero, .about-hero { color: #fff; }
-.menu-hero { background-image: var(--hero-overlay), url('../images/bg-menu.svg'); }
-.order-hero { background-image: var(--hero-overlay), url('../images/bg-order.svg'); }
-.reservation-hero { background-image: var(--hero-overlay), url('../images/bg-reserve.svg'); }
-.events-hero { background-image: var(--hero-overlay), url('../images/bg-events.svg'); }
-.about-hero { background-image: var(--hero-overlay), url('../images/bg-about.svg'); }
+
+/* ── Per-page REAL PHOTO backgrounds ── */
+.menu-hero {
+    background-image: url('../images/hero-bg-menu.jpg');
+    background-position: center 35%;
+}
+.menu-hero::before {
+    background: linear-gradient(105deg, rgba(6,3,1,.92) 0%, rgba(18,9,2,.80) 50%, rgba(6,3,1,.60) 100%);
+}
+.reservation-hero {
+    background-image: url('../images/hero-bg.jpg');
+    background-position: center 45%;
+}
+.reservation-hero::before {
+    background: linear-gradient(105deg, rgba(12,4,6,.93) 0%, rgba(25,8,12,.82) 50%, rgba(8,3,5,.62) 100%);
+}
+.events-hero {
+    background-image: url('../images/hero-bg.jpg');
+    background-position: center 25%;
+}
+.events-hero::before {
+    background: linear-gradient(105deg, rgba(8,4,14,.93) 0%, rgba(20,10,30,.82) 50%, rgba(6,3,10,.62) 100%);
+}
+.about-hero {
+    background-image: url('../images/hero-bg.jpg');
+    background-position: center 55%;
+}
+.about-hero::before {
+    background: linear-gradient(105deg, rgba(2,8,8,.93) 0%, rgba(5,18,15,.82) 50%, rgba(2,6,6,.62) 100%);
+}
+
+/* White text on all photo heroes */
 .menu-hero p, .menu-hero .breadcrumbs, .menu-hero .breadcrumbs a,
 .order-hero p, .order-hero .breadcrumbs, .order-hero .breadcrumbs a,
 .reservation-hero p, .reservation-hero .breadcrumbs, .reservation-hero .breadcrumbs a,
 .events-hero p, .events-hero .breadcrumbs, .events-hero .breadcrumbs a,
-.about-hero p, .about-hero .breadcrumbs, .about-hero .breadcrumbs a { color: #e9dfd8; }
-.menu-hero .breadcrumbs span, .menu-hero .eyebrow,
-.order-hero .breadcrumbs span, .order-hero .eyebrow,
-.reservation-hero .breadcrumbs span, .reservation-hero .eyebrow,
-.events-hero .breadcrumbs span, .events-hero .eyebrow,
-.about-hero .breadcrumbs span, .about-hero .eyebrow { color: #ffb08e; }
+.about-hero p, .about-hero .breadcrumbs, .about-hero .breadcrumbs a { color: rgba(255,255,255,.72); }
+.menu-hero .breadcrumbs a:hover, .reservation-hero .breadcrumbs a:hover,
+.events-hero .breadcrumbs a:hover, .about-hero .breadcrumbs a:hover { color: #f3b74e; }
+.menu-hero .breadcrumbs span, .reservation-hero .breadcrumbs span,
+.events-hero .breadcrumbs span, .about-hero .breadcrumbs span { color: rgba(255,255,255,.9); }
+
+/* Ghost secondary button on dark photo bg */
 .menu-hero .btn-secondary, .order-hero .btn-secondary,
 .reservation-hero .btn-secondary, .events-hero .btn-secondary,
-.about-hero .btn-secondary { color: #fff; border-color: rgba(255,255,255,.5); background: rgba(12,12,12,.32); backdrop-filter: blur(8px); }
+.about-hero .btn-secondary {
+    color: #fff;
+    border-color: rgba(255,255,255,.5);
+    background: rgba(12,12,12,.32);
+    backdrop-filter: blur(8px);
+}
 .menu-hero .btn-secondary:hover, .order-hero .btn-secondary:hover,
 .reservation-hero .btn-secondary:hover, .events-hero .btn-secondary:hover,
 .about-hero .btn-secondary:hover { background: rgba(255,255,255,.16); }
@@ -5508,3 +5727,17 @@ html[data-theme="dark"] .order-checkout-card {
     }
 }
 
+/* Final route-specific hero assignments. These intentionally come last so
+   legacy theme overrides cannot restore the old shared SVG/photo fallback. */
+.order-hero {
+    background-image: url('../images/hero-dish.jpg');
+    background-position: center 48%;
+}
+.events-hero {
+    background-image: url('../images/event-corporate.svg');
+    background-position: center;
+}
+.about-hero {
+    background-image: url('../images/venue-garden.svg');
+    background-position: center;
+}

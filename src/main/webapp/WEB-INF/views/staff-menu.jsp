@@ -106,17 +106,17 @@
                     <a class="btn btn-secondary btn-sm" href="#categories-section">&darr; Manage categories</a>
                 </div>
             </div>
-            <div class="table-wrap">
-                <table class="data-table operations-table">
+            <div class="table-wrap" style="overflow-x: auto;">
+                <table class="data-table operations-table menu-admin-table" style="min-width: 980px; width: 100%;">
                     <thead>
                         <tr>
-                            <th>Dish name</th>
-                            <th>Category</th>
-                            <th>Price</th>
-                            <th>Prep time</th>
-                            <th>Dietary &amp; spice</th>
-                            <th>Status</th>
-                            <th style="text-align:right;">Actions</th>
+                            <th style="min-width: 220px; white-space: nowrap;">Dish name</th>
+                            <th style="min-width: 120px; white-space: nowrap;">Category</th>
+                            <th style="min-width: 95px; white-space: nowrap;">Price</th>
+                            <th style="min-width: 100px; white-space: nowrap;">Prep time</th>
+                            <th style="min-width: 140px; white-space: nowrap;">Dietary &amp; spice</th>
+                            <th style="min-width: 110px; white-space: nowrap;">Status</th>
+                            <th style="min-width: 260px; text-align:right; white-space: nowrap;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -133,7 +133,7 @@
                         <tr>
                             <td>
                                 <div>
-                                    <strong><%= HtmlUtil.escape(item.getName()) %></strong>
+                                    <strong style="display: block; font-size: 0.94rem;"><%= HtmlUtil.escape(item.getName()) %></strong>
                                     <% if (item.getDescription() != null && !item.getDescription().isEmpty()) { %>
                                         <div class="muted small" style="max-width: 320px; white-space: normal; line-height: 1.35; margin-top: 2px;">
                                             <%= HtmlUtil.escape(item.getDescription()) %>
@@ -141,51 +141,51 @@
                                     <% } %>
                                 </div>
                             </td>
-                            <td>
-                                <span class="badge badge-light" style="font-weight: 600;">
+                            <td style="white-space: nowrap;">
+                                <span class="badge badge-light" style="font-weight: 600; white-space: nowrap; display: inline-block;">
                                     <%= HtmlUtil.escape(item.getCategoryName()) %>
                                 </span>
                             </td>
-                            <td>
-                                <strong style="font-size: 0.98rem; color: var(--brand-strong);"><%= item.getPriceDisplay() %></strong>
+                            <td style="white-space: nowrap;">
+                                <strong style="font-size: 0.98rem; color: var(--brand-strong); white-space: nowrap;"><%= item.getPriceDisplay() %></strong>
                             </td>
-                            <td>
-                                <span><%= item.getPreparationMinutes() %> mins</span>
+                            <td style="white-space: nowrap;">
+                                <span style="white-space: nowrap;"><%= item.getPreparationMinutes() %> mins</span>
                             </td>
-                            <td>
-                                <div style="display:flex; gap:4px; flex-wrap:wrap;">
+                            <td style="white-space: nowrap;">
+                                <div style="display:flex; gap:4px; flex-wrap:nowrap; align-items:center;">
                                     <% if (!"REGULAR".equals(item.getDietaryType())) { %>
-                                        <span class="chip" style="font-size:0.75rem; padding:2px 8px; min-height:auto;"><%= item.getDietaryType() %></span>
+                                        <span class="chip" style="font-size:0.75rem; padding:2px 8px; min-height:auto; white-space: nowrap;"><%= item.getDietaryType() %></span>
                                     <% } %>
                                     <% if (!"NONE".equals(item.getSpiceLevel())) { %>
-                                        <span class="chip" style="font-size:0.75rem; padding:2px 8px; min-height:auto; color:#b5451b;"><%= item.getSpiceLevel() %></span>
+                                        <span class="chip" style="font-size:0.75rem; padding:2px 8px; min-height:auto; color:#b5451b; white-space: nowrap;"><%= item.getSpiceLevel() %></span>
                                     <% } %>
                                 </div>
                             </td>
-                            <td>
-                                <span class="status <%= item.getStatusCss() %>">
+                            <td style="white-space: nowrap;">
+                                <span class="status <%= item.getStatusCss() %>" style="white-space: nowrap; display: inline-block;">
                                     <%= item.getStatusLabel() %>
                                 </span>
                             </td>
-                            <td style="text-align:right;">
-                                <div style="display:inline-flex; gap:6px; align-items:center;">
+                            <td style="text-align:right; white-space: nowrap;">
+                                <div style="display:inline-flex; gap:8px; align-items:center; justify-content:flex-end; white-space:nowrap;">
                                     <!-- 1-Click Availability Toggle -->
-                                    <form method="post" action="<%= ctx %>/staff/menu/toggle-status" style="display:inline;">
+                                    <form method="post" action="<%= ctx %>/staff/menu/toggle-status" style="display:inline; margin:0;">
                                         <input type="hidden" name="id" value="<%= item.getId() %>">
-                                        <button class="btn btn-secondary btn-sm" type="submit" title="Toggle between Available and Sold Out">
+                                        <button class="btn btn-secondary btn-sm" style="white-space: nowrap; font-weight: 600;" type="submit" title="Toggle between Available and Sold Out">
                                             <%= item.isAvailable() ? "Mark Sold Out" : "Make Available" %>
                                         </button>
                                     </form>
 
                                     <!-- Edit Item -->
-                                    <a class="btn btn-secondary btn-sm" href="<%= ctx %>/staff/menu/edit?id=<%= item.getId() %>">
+                                    <a class="btn btn-secondary btn-sm" style="white-space: nowrap; font-weight: 600;" href="<%= ctx %>/staff/menu/edit?id=<%= item.getId() %>">
                                         Edit
                                     </a>
 
                                     <!-- Delete / Archive Item -->
-                                    <form method="post" action="<%= ctx %>/staff/menu/delete" style="display:inline;" onsubmit="return confirm('Are you sure you want to remove \'<%= HtmlUtil.escape(item.getName()) %>\'? If it has linked orders, it will be safely archived.');">
+                                    <form method="post" action="<%= ctx %>/staff/menu/delete" style="display:inline; margin:0;" onsubmit="return confirm('Are you sure you want to remove \'<%= HtmlUtil.escape(item.getName()) %>\'? If it has linked orders, it will be safely archived.');">
                                         <input type="hidden" name="id" value="<%= item.getId() %>">
-                                        <button class="btn btn-sm" style="color: #b3261e; background: rgba(179,38,30,.08); border: 1px solid rgba(179,38,30,.2);" type="submit" title="Delete or Archive">
+                                        <button class="btn btn-sm" style="white-space: nowrap; font-weight: 600; color: #b3261e; background: rgba(179,38,30,.08); border: 1px solid rgba(179,38,30,.2);" type="submit" title="Delete or Archive">
                                             Delete
                                         </button>
                                     </form>
@@ -228,28 +228,28 @@
                 </form>
             </div>
 
-            <div class="table-wrap">
-                <table class="data-table operations-table">
+            <div class="table-wrap" style="overflow-x: auto;">
+                <table class="data-table operations-table" style="min-width: 760px; width: 100%;">
                     <thead>
                         <tr>
-                            <th>Display order</th>
-                            <th>Category name</th>
-                            <th>Description</th>
-                            <th>Status</th>
-                            <th style="text-align:right;">Action</th>
+                            <th style="min-width: 120px; white-space: nowrap;">Display order</th>
+                            <th style="min-width: 180px; white-space: nowrap;">Category name</th>
+                            <th style="min-width: 260px;">Description</th>
+                            <th style="min-width: 110px; white-space: nowrap;">Status</th>
+                            <th style="min-width: 100px; text-align:right; white-space: nowrap;">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                     <% if (categories != null) { for (MenuCategoryRecord cat : categories) { %>
                         <tr>
-                            <td><strong>#<%= cat.getDisplayOrder() %></strong></td>
-                            <td><strong><%= HtmlUtil.escape(cat.getName()) %></strong></td>
+                            <td style="white-space: nowrap;"><strong>#<%= cat.getDisplayOrder() %></strong></td>
+                            <td style="white-space: nowrap;"><strong><%= HtmlUtil.escape(cat.getName()) %></strong></td>
                             <td><%= HtmlUtil.escape(cat.getDescription() == null || cat.getDescription().isEmpty() ? "—" : cat.getDescription()) %></td>
-                            <td><span class="status <%= cat.getStatusCss() %>"><%= cat.getStatusLabel() %></span></td>
-                            <td style="text-align:right;">
-                                <form method="post" action="<%= ctx %>/staff/menu/category/delete" style="display:inline;" onsubmit="return confirm('Delete category \'<%= HtmlUtil.escape(cat.getName()) %>\'? This is only allowed if it contains zero dishes.');">
+                            <td style="white-space: nowrap;"><span class="status <%= cat.getStatusCss() %>" style="white-space: nowrap;"><%= cat.getStatusLabel() %></span></td>
+                            <td style="text-align:right; white-space: nowrap;">
+                                <form method="post" action="<%= ctx %>/staff/menu/category/delete" style="display:inline; margin:0;" onsubmit="return confirm('Delete category \'<%= HtmlUtil.escape(cat.getName()) %>\'? This is only allowed if it contains zero dishes.');">
                                     <input type="hidden" name="categoryId" value="<%= cat.getId() %>">
-                                    <button class="btn btn-sm" style="color:#b3261e; background:rgba(179,38,30,.06); border:1px solid rgba(179,38,30,.2);" type="submit">
+                                    <button class="btn btn-sm" style="white-space: nowrap; font-weight: 600; color:#b3261e; background:rgba(179,38,30,.06); border:1px solid rgba(179,38,30,.2);" type="submit">
                                         Delete
                                     </button>
                                 </form>

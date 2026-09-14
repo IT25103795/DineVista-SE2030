@@ -123,13 +123,17 @@ public class StaffMenuServlet extends HttpServlet {
                         preparationMinutes, dietaryType, spiceLevel, availabilityStatus
                 );
 
+                String returnTo = RequestUtil.clean(request, "returnTo");
+
                 if (result.isSuccess()) {
                     String actionText = id > 0 ? "updated" : "added";
                     FlashUtil.success(request, "Menu item '" + result.getValue().getName() + "' was successfully " + actionText + ".");
-                    response.sendRedirect(request.getContextPath() + "/staff/menu");
+                    response.sendRedirect(request.getContextPath() + (returnTo != null && !returnTo.isBlank() ? returnTo : "/staff/menu"));
                 } else {
                     FlashUtil.errors(request, result.getErrors());
-                    if (id > 0) {
+                    if (returnTo != null && !returnTo.isBlank()) {
+                        response.sendRedirect(request.getContextPath() + returnTo);
+                    } else if (id > 0) {
                         response.sendRedirect(request.getContextPath() + "/staff/menu/edit?id=" + id);
                     } else {
                         response.sendRedirect(request.getContextPath() + "/staff/menu/new");

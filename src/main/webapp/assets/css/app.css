@@ -2631,6 +2631,140 @@ html[data-theme="dark"] .table-panel-highlight-header .table-main-title {
     font-size: .86rem;
 }
 
+/* ═══════════════════════════════════════════════
+   MENU ITEM EDIT DASHBOARD POPUP MODAL
+   ═══════════════════════════════════════════════ */
+.menu-edit-modal-backdrop {
+    position: fixed;
+    z-index: 9999;
+    inset: 0;
+    display: none;
+    padding: 24px 16px;
+    place-items: center;
+    background: rgba(10, 5, 20, 0.72);
+    backdrop-filter: blur(8px);
+    opacity: 0;
+    overflow-y: auto;
+    transition: opacity .2s ease;
+}
+.menu-edit-modal-backdrop.open {
+    display: flex;
+    opacity: 1;
+}
+.menu-edit-modal-card {
+    width: min(840px, 100%);
+    max-height: min(92vh, 860px);
+    margin: auto;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    background: var(--surface, #ffffff);
+    border: 1px solid rgba(168, 85, 247, 0.25);
+    border-top: 4px solid #9333ea;
+    border-radius: 24px;
+    box-shadow: 0 24px 60px rgba(18, 7, 36, 0.35);
+    position: relative;
+    transform: scale(0.96) translateY(16px);
+    transition: transform .22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.menu-edit-modal-backdrop.open .menu-edit-modal-card {
+    transform: scale(1) translateY(0);
+}
+.menu-edit-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 22px 28px 18px;
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.08) 0%, rgba(124, 58, 237, 0.02) 100%);
+    border-bottom: 1px solid rgba(168, 85, 247, 0.16);
+    flex-shrink: 0;
+}
+.menu-edit-icon-badge {
+    display: inline-grid;
+    width: 44px;
+    height: 44px;
+    place-items: center;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #a855f7, #7c3aed);
+    color: #ffffff;
+    box-shadow: 0 6px 16px rgba(168, 85, 247, 0.35);
+    flex-shrink: 0;
+}
+.menu-edit-modal-title {
+    margin: 0;
+    font-size: 1.28rem;
+    font-weight: 850;
+    letter-spacing: -0.01em;
+    color: var(--ink, #1f1433);
+}
+.menu-edit-modal-close {
+    display: inline-grid;
+    width: 38px;
+    height: 38px;
+    place-items: center;
+    border-radius: 50%;
+    border: 1px solid rgba(168, 85, 247, 0.22);
+    background: rgba(168, 85, 247, 0.08);
+    color: var(--ink, #333);
+    cursor: pointer;
+    transition: all 0.18s ease;
+    flex-shrink: 0;
+    padding: 0;
+}
+.menu-edit-modal-close:hover {
+    background: #e11d48;
+    color: #ffffff;
+    border-color: #e11d48;
+    transform: rotate(90deg) scale(1.05);
+}
+.menu-edit-modal-body {
+    padding: 24px 28px 28px;
+    overflow-y: auto;
+    flex: 1 1 auto;
+}
+.menu-edit-modal-footer {
+    margin-top: 24px;
+    padding-top: 18px;
+    border-top: 1px solid var(--line, rgba(0,0,0,0.08));
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* Dark theme for Menu Item Edit Modal */
+html[data-theme="dark"] .menu-edit-modal-backdrop {
+    background: rgba(6, 3, 14, 0.82);
+}
+html[data-theme="dark"] .menu-edit-modal-card {
+    background: #170f2b;
+    border-color: rgba(168, 85, 247, 0.38);
+    border-top-color: #c084fc;
+    box-shadow: 0 28px 70px rgba(0, 0, 0, 0.7);
+}
+html[data-theme="dark"] .menu-edit-modal-header {
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.16) 0%, rgba(26, 15, 46, 0.95) 100%);
+    border-bottom: 1px solid rgba(168, 85, 247, 0.28);
+}
+html[data-theme="dark"] .menu-edit-modal-title {
+    color: #f7efff;
+}
+html[data-theme="dark"] .menu-edit-modal-close {
+    background: rgba(168, 85, 247, 0.18);
+    color: #f3e8ff;
+    border-color: rgba(168, 85, 247, 0.35);
+}
+html[data-theme="dark"] .menu-edit-modal-close:hover {
+    background: #e11d48;
+    color: #ffffff;
+    border-color: #e11d48;
+}
+html[data-theme="dark"] .menu-edit-modal-footer {
+    border-top-color: rgba(168, 85, 247, 0.2);
+}
+
 .operations-launch-grid {
     display: grid;
     gap: 12px;

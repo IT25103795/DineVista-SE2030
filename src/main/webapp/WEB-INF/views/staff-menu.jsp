@@ -37,7 +37,7 @@
         </div>
         <div class="hero-actions">
             <a class="btn btn-secondary" href="<%= ctx %>/dashboard">Operations dashboard</a>
-            <a class="btn btn-primary" href="<%= ctx %>/staff/menu/new">Add menu item</a>
+            <a class="btn btn-primary" id="heroAddDishBtn" href="<%= ctx %>/staff/menu/new">Add menu item</a>
         </div>
     </div>
 </section>
@@ -189,10 +189,26 @@
                                         </button>
                                     </form>
 
-                                    <!-- Edit Item -->
-                                    <a class="btn btn-secondary btn-sm" style="white-space: nowrap; font-weight: 600;" href="<%= ctx %>/staff/menu/edit?id=<%= item.getId() %>">
+                                    <!-- Edit Item (Popup Modal Trigger) -->
+                                    <button type="button" class="btn btn-secondary btn-sm edit-dish-trigger"
+                                        style="white-space: nowrap; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;"
+                                        data-item-id="<%= item.getId() %>"
+                                        data-item-name="<%= HtmlUtil.escape(item.getName()) %>"
+                                        data-item-category="<%= item.getCategoryId() %>"
+                                        data-item-price="<%= item.getPrice().toPlainString() %>"
+                                        data-item-prep="<%= item.getPreparationMinutes() %>"
+                                        data-item-dietary="<%= item.getDietaryType() %>"
+                                        data-item-spice="<%= item.getSpiceLevel() %>"
+                                        data-item-status="<%= item.getAvailabilityStatus() %>"
+                                        data-item-image="<%= item.getImagePath() != null ? HtmlUtil.escape(item.getImagePath()) : "dish-signature.svg" %>"
+                                        data-item-desc="<%= item.getDescription() != null ? HtmlUtil.escape(item.getDescription()) : "" %>"
+                                        title="Edit dish details in popup dashboard">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:13px; height:13px;" aria-hidden="true">
+                                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                        </svg>
                                         Edit
-                                    </a>
+                                    </button>
 
                                     <!-- Delete / Archive Item -->
                                     <form method="post" action="<%= ctx %>/staff/menu/delete" style="display:inline; margin:0;" onsubmit="return confirm('Are you sure you want to remove \'<%= HtmlUtil.escape(item.getName()) %>\'? If it has linked orders, it will be safely archived.');">
@@ -287,5 +303,274 @@
         </section>
     </div>
 </section>
+
+<!-- ═══════════════════════════════════════════════
+     POPUP EDITING DASHBOARD FOR MENU ITEMS
+     ═══════════════════════════════════════════════ -->
+<div id="editMenuItemModal" class="menu-edit-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="editModalTitle" style="display:none;">
+    <div class="menu-edit-modal-card">
+        <!-- Modal Header -->
+        <div class="menu-edit-modal-header">
+            <div style="display:flex; align-items:center; gap:14px;">
+                <div class="menu-edit-icon-badge">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:22px; height:22px;" aria-hidden="true">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 id="editModalTitle" class="menu-edit-modal-title">Edit Menu Dish</h3>
+                    <span id="editModalSubtitle" class="muted small" style="margin-top:2px; display:block;">
+                        Dish ID #<strong id="editModalItemIdDisplay" style="color:var(--brand-strong, #9333ea);">0</strong> &middot; Updates the live guest menu immediately
+                    </span>
+                </div>
+            </div>
+            <!-- Close icon button -->
+            <button type="button" class="menu-edit-modal-close" data-edit-modal-close aria-label="Close editing modal" title="Close (Esc)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:18px; height:18px;" aria-hidden="true">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Modal Form Body -->
+        <div class="menu-edit-modal-body">
+            <form id="editMenuItemForm" method="post" action="<%= ctx %>/staff/menu/save">
+                <input type="hidden" id="editModalItemId" name="id" value="0">
+                <input type="hidden" name="returnTo" value="/staff/menu">
+
+                <div class="form-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:16px;">
+                    <!-- Dish Name (full width) -->
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label for="editModalName" style="font-weight:700; margin-bottom:6px; display:flex; justify-content:space-between;">
+                            <span>Dish Name <span style="color:#b3261e;">*</span></span>
+                            <span class="muted small">Required (max 140 chars)</span>
+                        </label>
+                        <input class="form-control" id="editModalName" name="name" type="text" required maxlength="140"
+                               placeholder="e.g. Ceylon Cinnamon Spiced Lamb">
+                    </div>
+
+                    <!-- Menu Category -->
+                    <div class="form-group">
+                        <label for="editModalCategory" style="font-weight:700; margin-bottom:6px; display:block;">
+                            Menu Category <span style="color:#b3261e;">*</span>
+                        </label>
+                        <select class="form-control" id="editModalCategory" name="categoryId" required>
+                            <option value="">-- Select category --</option>
+                            <% if (categories != null) { for (MenuCategoryRecord cat : categories) { %>
+                                <option value="<%= cat.getId() %>">
+                                    <%= HtmlUtil.escape(cat.getName()) %>
+                                </option>
+                            <% }} %>
+                        </select>
+                    </div>
+
+                    <!-- Price -->
+                    <div class="form-group">
+                        <label for="editModalPrice" style="font-weight:700; margin-bottom:6px; display:block;">
+                            Price in LKR <span style="color:#b3261e;">* (&gt; 0)</span>
+                        </label>
+                        <input class="form-control" id="editModalPrice" name="price" type="number" step="0.01" min="0.01" required
+                               placeholder="e.g. 2450.00">
+                    </div>
+
+                    <!-- Preparation Time -->
+                    <div class="form-group">
+                        <label for="editModalPrep" style="font-weight:700; margin-bottom:6px; display:block;">
+                            Preparation Time (minutes)
+                        </label>
+                        <input class="form-control" id="editModalPrep" name="preparationMinutes" type="number" min="1" max="180"
+                               value="20">
+                    </div>
+
+                    <!-- Dietary Classification -->
+                    <div class="form-group">
+                        <label for="editModalDietary" style="font-weight:700; margin-bottom:6px; display:block;">
+                            Dietary Classification
+                        </label>
+                        <select class="form-control" id="editModalDietary" name="dietaryType">
+                            <option value="REGULAR">Regular</option>
+                            <option value="VEGETARIAN">Vegetarian</option>
+                            <option value="VEGAN">Vegan</option>
+                            <option value="GLUTEN_AWARE">Gluten-Aware</option>
+                        </select>
+                    </div>
+
+                    <!-- Spice Level -->
+                    <div class="form-group">
+                        <label for="editModalSpice" style="font-weight:700; margin-bottom:6px; display:block;">
+                            Spice Level
+                        </label>
+                        <select class="form-control" id="editModalSpice" name="spiceLevel">
+                            <option value="NONE">None (Mild/Sweet)</option>
+                            <option value="MILD">Mild</option>
+                            <option value="MEDIUM">Medium</option>
+                            <option value="HOT">Hot</option>
+                        </select>
+                    </div>
+
+                    <!-- Availability Status -->
+                    <div class="form-group">
+                        <label for="editModalStatus" style="font-weight:700; margin-bottom:6px; display:block;">
+                            Availability Status
+                        </label>
+                        <select class="form-control" id="editModalStatus" name="availabilityStatus">
+                            <option value="AVAILABLE">Available for ordering</option>
+                            <option value="SOLD_OUT">Sold out today</option>
+                            <option value="UNAVAILABLE">Unavailable / Archived</option>
+                        </select>
+                    </div>
+
+                    <!-- Artwork / Icon Filename -->
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label for="editModalImage" style="font-weight:700; margin-bottom:6px; display:block;">
+                            Artwork / Icon Filename
+                        </label>
+                        <select class="form-control" id="editModalImage" name="imagePath">
+                            <option value="dish-signature.svg">dish-signature.svg (Signature Chef Dish)</option>
+                            <option value="dish-curry.svg">dish-curry.svg (Curry / Sri Lankan)</option>
+                            <option value="dish-seafood.svg">dish-seafood.svg (Seafood / Fish)</option>
+                            <option value="dish-dessert.svg">dish-dessert.svg (Dessert / Sweet)</option>
+                            <option value="hero-dish.jpg">hero-dish.jpg (Gourmet Fine Dining Photo)</option>
+                        </select>
+                    </div>
+
+                    <!-- Dish Description -->
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label for="editModalDesc" style="font-weight:700; margin-bottom:6px; display:flex; justify-content:space-between;">
+                            <span>Dish Description</span>
+                            <span class="muted small">Max 600 characters</span>
+                        </label>
+                        <textarea class="form-control" id="editModalDesc" name="description" rows="3" maxlength="600"
+                                  placeholder="Describe the dish, preparation, ingredients, or accompaniment notes..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Footer Actions -->
+                <div class="menu-edit-modal-footer">
+                    <button type="button" class="btn btn-secondary" data-edit-modal-close style="font-weight:600;">
+                        Cancel
+                    </button>
+                    <button id="editModalSubmitBtn" class="btn btn-primary" type="submit" style="font-weight:700; display:inline-flex; align-items:center; gap:8px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:16px; height:16px;" aria-hidden="true">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                            <polyline points="17 21 17 13 7 13 7 21"/>
+                            <polyline points="7 3 7 8 15 8"/>
+                        </svg>
+                        <span id="editModalSubmitText">Update Menu Item</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+(() => {
+    const modal = document.getElementById('editMenuItemModal');
+    if (!modal) return;
+
+    const titleEl = document.getElementById('editModalTitle');
+    const subtitleEl = document.getElementById('editModalSubtitle');
+    const itemIdEl = document.getElementById('editModalItemId');
+    const itemIdDisplayEl = document.getElementById('editModalItemIdDisplay');
+    const nameEl = document.getElementById('editModalName');
+    const categoryEl = document.getElementById('editModalCategory');
+    const priceEl = document.getElementById('editModalPrice');
+    const prepEl = document.getElementById('editModalPrep');
+    const dietaryEl = document.getElementById('editModalDietary');
+    const spiceEl = document.getElementById('editModalSpice');
+    const statusEl = document.getElementById('editModalStatus');
+    const imageEl = document.getElementById('editModalImage');
+    const descEl = document.getElementById('editModalDesc');
+    const submitTextEl = document.getElementById('editModalSubmitText');
+
+    function openModal(data) {
+        const isEdit = data && data.id && parseInt(data.id, 10) > 0;
+
+        itemIdEl.value = isEdit ? data.id : '0';
+        if (itemIdDisplayEl) itemIdDisplayEl.textContent = isEdit ? data.id : 'New';
+        titleEl.textContent = isEdit ? 'Edit Menu Dish Specifications' : 'Add New Menu Dish';
+        subtitleEl.innerHTML = isEdit 
+            ? 'Dish ID #<strong style="color:var(--brand-strong, #9333ea);">' + data.id + '</strong> &middot; Updates the live guest menu immediately'
+            : 'Fill dish details to publish directly to the live customer menu';
+
+        nameEl.value = isEdit ? (data.name || '') : '';
+        categoryEl.value = isEdit ? (data.category || '') : (categoryEl.options.length > 1 ? categoryEl.options[1].value : '');
+        priceEl.value = isEdit ? (data.price || '') : '';
+        prepEl.value = isEdit ? (data.prep || '20') : '20';
+        dietaryEl.value = isEdit ? (data.dietary || 'REGULAR') : 'REGULAR';
+        spiceEl.value = isEdit ? (data.spice || 'NONE') : 'NONE';
+        statusEl.value = isEdit ? (data.status || 'AVAILABLE') : 'AVAILABLE';
+        imageEl.value = isEdit ? (data.image || 'dish-signature.svg') : 'dish-signature.svg';
+        descEl.value = isEdit ? (data.desc || '') : '';
+        submitTextEl.textContent = isEdit ? 'Update Menu Item' : 'Publish to Menu';
+
+        modal.style.display = 'flex';
+        modal.offsetHeight; // Force reflow
+        modal.classList.add('open');
+        document.body.style.overflow = 'hidden';
+
+        setTimeout(() => { nameEl.focus(); }, 120);
+    }
+
+    function closeModal() {
+        modal.classList.remove('open');
+        setTimeout(() => {
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        }, 220);
+    }
+
+    // Attach click to all Edit buttons in the table
+    document.querySelectorAll('.edit-dish-trigger').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const d = btn.dataset;
+            openModal({
+                id: d.itemId,
+                name: d.itemName,
+                category: d.itemCategory,
+                price: d.itemPrice,
+                prep: d.itemPrep,
+                dietary: d.itemDietary,
+                spice: d.itemSpice,
+                status: d.itemStatus,
+                image: d.itemImage,
+                desc: d.itemDesc
+            });
+        });
+    });
+
+    // Hook "Add menu item" in hero banner to open the modal
+    const addBtn = document.getElementById('heroAddDishBtn');
+    if (addBtn) {
+        addBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            openModal(null);
+        });
+    }
+
+    // Close on buttons with data-edit-modal-close
+    modal.querySelectorAll('[data-edit-modal-close]').forEach(el => {
+        el.addEventListener('click', closeModal);
+    });
+
+    // Close on clicking backdrop outside the card
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeModal();
+        }
+    });
+
+    // Close on Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('open')) {
+            closeModal();
+        }
+    });
+})();
+</script>
 
 <%@ include file="fragments/footer.jspf" %>

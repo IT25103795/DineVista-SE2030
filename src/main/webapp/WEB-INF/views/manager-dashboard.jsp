@@ -21,7 +21,7 @@
             <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span><span class="trend">Live operations</span></div><strong><%= activeReservationCount %></strong><span>Active reservations</span></article>
             <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4h2l2 10h10l2-7H7"/></svg></span><span class="trend">Kitchen queue</span></div><strong><%= activeOrderCount %></strong><span>Active food orders</span></article>
             <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M3 12h18"/></svg></span><span class="trend">Validation</span></div><strong>90m</strong><span>Reservation slot protection</span></article>
-            <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg></span><span class="trend">Connected control</span></div><strong>5</strong><span>Operational workspaces</span></article>
+            <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg></span><span class="trend">Connected control</span></div><strong>7</strong><span>Operational workspaces</span></article>
         </div>
 
         <div class="dashboard-grid">
@@ -99,6 +99,36 @@
                         </div>
                         <span>Open</span>
                     </a>
+                    <a class="operations-launch" href="<%= ctx %>/staff/event-resources">
+                        <span class="launch-icon green" title="Event resources &amp; venues">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-3"/>
+                                <line x1="9" y1="9" x2="9" y2="9.01"/>
+                                <line x1="9" y1="13" x2="9" y2="13.01"/>
+                                <line x1="9" y1="17" x2="9" y2="17.01"/>
+                            </svg>
+                        </span>
+                        <div>
+                            <strong>Event resources &amp; venues</strong>
+                            <p>Manage bookable venues, shared equipment, and conflict-free event bookings.</p>
+                        </div>
+                        <span>Open</span>
+                    </a>
+                    <a class="operations-launch" href="<%= ctx %>/staff/staff-scheduling">
+                        <span class="launch-icon" title="Staff scheduling &amp; roster">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                <circle cx="9" cy="7" r="4"/>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                            </svg>
+                        </span>
+                        <div>
+                            <strong>Staff scheduling &amp; roster</strong>
+                            <p>Schedule staff shifts, track availability, and assign crew to confirmed events.</p>
+                        </div>
+                        <span>Open</span>
+                    </a>
                 </div>
             </section>
             <aside class="panel">
@@ -108,6 +138,8 @@
                     <li>Validates party size and table capacity.</li>
                     <li>Blocks invalid item quantities.</li>
                     <li>Enforces reservation and order status transitions.</li>
+                    <li>Guarantees conflict-free venue and equipment allocation.</li>
+                    <li>Prevents shift and event staff double-booking.</li>
                     <li>Stores a full status history for audit.</li>
                 </ul>
             </aside>

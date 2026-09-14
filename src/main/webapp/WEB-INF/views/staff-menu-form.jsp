@@ -24,7 +24,7 @@
             <div class="breadcrumbs dark">
                 <a href="<%= ctx %>/staff/menu">Menu Management</a><span>/</span><span><%= editing ? "Edit" : "New" %></span>
             </div>
-            <span class="eyebrow">Menu Management &middot; IT25103794</span>
+            <span class="eyebrow">Menu Management</span>
             <h1><%= editing ? "Edit menu dish." : "Add a new dish to the menu." %></h1>
             <p><%= editing ? "Update dish specifications, price, preparation time, and availability for '" + HtmlUtil.escape(item.getName()) + "'." : "Enter dish details, pricing, and dietary labels. Published dishes are immediately visible on the guest menu and ordering system." %></p>
         </div>

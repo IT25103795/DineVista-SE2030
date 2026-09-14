@@ -31,7 +31,7 @@
 <section class="operations-hero">
     <div class="container">
         <div>
-            <span class="eyebrow">Restaurant staff operations &middot; IT25103794</span>
+            <span class="eyebrow">Restaurant staff operations</span>
             <h1>Menu management & publishing.</h1>
             <p>Maintain accurate dishes, categories, pricing, and live availability so customers and waiters see real-time options for dine-in, takeaway, and pre-orders.</p>
         </div>
@@ -97,13 +97,25 @@
 
         <!-- Menu items table -->
         <section class="panel operations-table-panel">
-            <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
-                <div>
-                    <h3>Menu items (<%= items == null ? 0 : items.size() %>)</h3>
-                    <span class="muted small">All dishes visible to staff. Changes update the public customer menu instantly.</span>
+            <div class="panel-header table-panel-highlight-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+                <div style="display:flex; align-items:center; gap:14px;">
+                    <div style="display:inline-grid; width:44px; height:44px; place-items:center; border-radius:12px; background:linear-gradient(135deg, #a855f7, #7c3aed); color:#ffffff; box-shadow:0 6px 18px rgba(168, 85, 247, 0.38); flex-shrink:0;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:22px; height:22px;" aria-hidden="true">
+                            <path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8zM6 1v3M10 1v3M14 1v3"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="table-main-title" style="margin:0; font-size:1.32rem; font-weight:850; letter-spacing:-0.01em; display:flex; align-items:center; gap:10px;">
+                            Menu items
+                            <span class="badge badge-table-count" style="background:rgba(168, 85, 247, 0.16); color:#7c3aed; border:1px solid rgba(168, 85, 247, 0.35); padding:3px 12px; border-radius:99px; font-size:0.82rem; font-weight:800;">
+                                <%= items == null ? 0 : items.size() %> dishes
+                            </span>
+                        </h3>
+                        <span class="muted small" style="margin-top:4px; display:block;">All dishes visible to staff. Changes update the public customer menu instantly.</span>
+                    </div>
                 </div>
                 <div>
-                    <a class="btn btn-secondary btn-sm" href="#categories-section">&darr; Manage categories</a>
+                    <a class="btn btn-secondary btn-sm" href="#categories-section" style="font-weight:700;">&darr; Manage categories</a>
                 </div>
             </div>
             <div class="table-wrap" style="overflow-x: auto;">
@@ -200,10 +212,23 @@
 
         <!-- Categories Section -->
         <section id="categories-section" class="panel operations-table-panel" style="margin-top: 40px;">
-            <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
-                <div>
-                    <h3>Menu Categories (<%= categories == null ? 0 : categories.size() %>)</h3>
-                    <span class="muted small">Categories group dishes on both the public menu and the staff kitchen screen.</span>
+            <div class="panel-header table-panel-highlight-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+                <div style="display:flex; align-items:center; gap:14px;">
+                    <div style="display:inline-grid; width:44px; height:44px; place-items:center; border-radius:12px; background:linear-gradient(135deg, #a855f7, #7c3aed); color:#ffffff; box-shadow:0 6px 18px rgba(168, 85, 247, 0.38); flex-shrink:0;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:22px; height:22px;" aria-hidden="true">
+                            <rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="table-main-title" style="margin:0; font-size:1.32rem; font-weight:850; letter-spacing:-0.01em; display:flex; align-items:center; gap:10px;">
+                            Menu Categories
+                            <span class="badge badge-table-count" style="background:rgba(168, 85, 247, 0.16); color:#7c3aed; border:1px solid rgba(168, 85, 247, 0.35); padding:3px 12px; border-radius:99px; font-size:0.82rem; font-weight:800;">
+                                <%= categories == null ? 0 : categories.size() %> active
+                            </span>
+                        </h3>
+                        <span class="muted small" style="margin-top:4px; display:block;">Categories group dishes on both the public menu and the staff kitchen screen.</span>
+                    </div>
                 </div>
             </div>
 

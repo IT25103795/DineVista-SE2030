@@ -2581,6 +2581,27 @@ textarea.form-control { min-height: 118px; resize: vertical; }
     padding: 22px 22px 0;
 }
 
+.operations-table-panel .panel-header.table-panel-highlight-header {
+    padding: 20px 24px;
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.08) 0%, rgba(124, 58, 237, 0.02) 100%);
+    border-top: 3.5px solid #9333ea;
+    border-bottom: 1px solid rgba(168, 85, 247, 0.16);
+}
+
+.table-panel-highlight-header .table-main-title {
+    color: #270f47;
+}
+
+html[data-theme="dark"] .operations-table-panel .panel-header.table-panel-highlight-header {
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.16) 0%, rgba(27, 18, 51, 0.95) 100%);
+    border-top: 3.5px solid #c084fc;
+    border-bottom: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+html[data-theme="dark"] .table-panel-highlight-header .table-main-title {
+    color: #fdf8ff;
+}
+
 .operations-table th,
 .operations-table td {
     padding: 14px;
@@ -4671,9 +4692,17 @@ body.manager-interface .operations-launch:hover {
     border-color: #43ad99;
     box-shadow: 0 9px 22px rgba(42, 136, 120, .1);
 }
-body.manager-interface .data-table th {
-    color: #56707e;
-    background: rgba(232, 240, 244, .65);
+body.manager-interface .data-table th,
+.operations-table thead th {
+    color: #270f47 !important;
+    background: linear-gradient(180deg, #f3ecf9 0%, #e6d8f5 100%) !important;
+    font-size: .78rem !important;
+    font-weight: 900 !important;
+    letter-spacing: .08em !important;
+    text-transform: uppercase !important;
+    border-top: 1px solid rgba(168, 85, 247, .25) !important;
+    border-bottom: 2.5px solid #9333ea !important;
+    padding: 15px 14px !important;
 }
 
 .manager-footer {
@@ -4710,7 +4739,14 @@ html[data-theme="dark"] body.manager-interface .operations-summary > div {
     box-shadow: 0 14px 32px rgba(5, 2, 12, .4);
 }
 html[data-theme="dark"] body.manager-interface .operations-launch { border-color: rgba(168, 85, 247, 0.32); background: #20153c; }
-html[data-theme="dark"] body.manager-interface .data-table th { color: #e9d5ff; background: rgba(36, 23, 68, 0.95); border-bottom: 2px solid rgba(168, 85, 247, 0.4); }
+html[data-theme="dark"] body.manager-interface .data-table th,
+html[data-theme="dark"] .operations-table thead th {
+    color: #f5edff !important;
+    background: linear-gradient(180deg, #2f1c52 0%, #1e1138 100%) !important;
+    border-top: 1px solid rgba(168, 85, 247, 0.35) !important;
+    border-bottom: 2.5px solid #c084fc !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
 
 @media (max-width: 1120px) {
     body.manager-interface .menu-toggle { display: grid; }

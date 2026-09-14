@@ -3162,11 +3162,13 @@ input::placeholder, textarea::placeholder { color: var(--ink-soft); opacity: .78
 
 html[data-theme="dark"] .reservation-hero,
 html[data-theme="dark"] .order-hero { background-position: center; background-size: cover; }
-html[data-theme="dark"] .menu-hero { background-image: var(--hero-overlay), url('../images/bg-menu.svg'); }
-html[data-theme="dark"] .order-hero { background-image: var(--hero-overlay), url('../images/bg-order.svg'); }
-html[data-theme="dark"] .reservation-hero { background-image: var(--hero-overlay), url('../images/bg-reserve.svg'); }
-html[data-theme="dark"] .events-hero { background-image: var(--hero-overlay), url('../images/bg-events.svg'); }
-html[data-theme="dark"] .about-hero { background-image: var(--hero-overlay), url('../images/bg-about.svg'); }
+/* Dark mode must use the same photographic hero system as light mode.
+   Do not restore the retired cartoon SVG fallback here. */
+html[data-theme="dark"] .menu-hero { background-image: url('../images/hero-bg-menu.jpg'); }
+html[data-theme="dark"] .order-hero { background-image: url('../images/hero-dish.jpg'); }
+html[data-theme="dark"] .reservation-hero { background-image: url('../images/hero-bg.jpg'); }
+html[data-theme="dark"] .events-hero { background-image: url('../images/hero-bg-menu.jpg'); }
+html[data-theme="dark"] .about-hero { background-image: url('../images/hero-bg.jpg'); }
 html[data-theme="dark"] .filter-bar,
 html[data-theme="dark"] .operations-summary > div,
 html[data-theme="dark"] .server-cart-item,
@@ -5734,10 +5736,10 @@ html[data-theme="dark"] .order-checkout-card {
     background-position: center 48%;
 }
 .events-hero {
-    background-image: url('../images/event-corporate.svg');
-    background-position: center;
+    background-image: url('../images/hero-bg-menu.jpg');
+    background-position: center 25%;
 }
 .about-hero {
-    background-image: url('../images/venue-garden.svg');
-    background-position: center;
+    background-image: url('../images/hero-bg.jpg');
+    background-position: center 70%;
 }

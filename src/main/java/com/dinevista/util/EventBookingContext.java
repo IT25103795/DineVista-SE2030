@@ -1,38 +1,20 @@
 package com.dinevista.util;
-
-import com.dinevista.repository.EventBookingRepository;
-import com.dinevista.repository.InMemoryEventBookingRepository;
-import com.dinevista.repository.JdbcEventBookingRepository;
-
+import com.dinevista.repository.*;
+import com.dinevista.service.EventBookingService;
 import javax.servlet.ServletContext;
-
-/** Creates one event-booking repository for the web application. */
 public final class EventBookingContext {
-    private static final String REPOSITORY_KEY = EventBookingRepository.class.getName();
-
-    private EventBookingContext() {}
-
-    public static EventBookingRepository repository(ServletContext context) {
-        synchronized (context) {
-            EventBookingRepository repository =
-                    (EventBookingRepository) context.getAttribute(REPOSITORY_KEY);
-            if (repository == null) {
-                DatabaseConfig config = DatabaseConfig.load();
-                if (config.isMysqlEnabled()) {
-                    try {
-                        repository = new JdbcEventBookingRepository(config);
-                        context.setAttribute("eventBookingStorageMode", "mysql");
-                    } catch (Exception ex) {
-                        throw new IllegalStateException(
-                                "Event Booking requires MySQL, but persistence could not start.", ex);
-                    }
-                } else {
-                    repository = new InMemoryEventBookingRepository();
-                    context.setAttribute("eventBookingStorageMode", "memory");
-                }
-                context.setAttribute(REPOSITORY_KEY, repository);
-            }
-            return repository;
+    private static final String REPO=EventBookingRepository.class.getName(), SERVICE=EventBookingService.class.getName();
+    private EventBookingContext(){}
+    public static EventBookingService service(ServletContext c){
+        synchronized(c){
+            EventBookingService s=(EventBookingService)c.getAttribute(SERVICE);
+            if(s==null){
+                DatabaseConfig cfg=DatabaseConfig.load(); EventBookingRepository r;
+                if(cfg.isMysqlEnabled()){try{r=new JdbcEventBookingRepository(cfg);c.setAttribute("eventBookingStorageMode","mysql");}
+                catch(Exception e){throw new IllegalStateException("Event Booking persistence could not start.",e);}}
+                else{r=new InMemoryEventBookingRepository();c.setAttribute("eventBookingStorageMode","memory");}
+                c.setAttribute(REPO,r);s=new EventBookingService(r,EventPackageContext.repository(c));c.setAttribute(SERVICE,s);
+            } return s;
         }
     }
 }

@@ -21,7 +21,7 @@
             <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span><span class="trend">Live operations</span></div><strong><%= activeReservationCount %></strong><span>Active reservations</span></article>
             <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4h2l2 10h10l2-7H7"/></svg></span><span class="trend">Kitchen queue</span></div><strong><%= activeOrderCount %></strong><span>Active food orders</span></article>
             <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M3 12h18"/></svg></span><span class="trend">Validation</span></div><strong>90m</strong><span>Reservation slot protection</span></article>
-            <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg></span><span class="trend">Connected control</span></div><strong>7</strong><span>Operational workspaces</span></article>
+            <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg></span><span class="trend">Connected control</span></div><strong>9</strong><span>Operational workspaces</span></article>
         </div>
 
         <div class="dashboard-grid">
@@ -129,6 +129,36 @@
                         </div>
                         <span>Open</span>
                     </a>
+                    <a class="operations-launch" href="<%= ctx %>/staff/event-packages">
+                        <span class="launch-icon green" title="Event packages">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                                <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                                <line x1="12" y1="22.08" x2="12" y2="12"/>
+                            </svg>
+                        </span>
+                        <div>
+                            <strong>Event packages</strong>
+                            <p>Configure pricing, guest thresholds, inclusions, and active package offerings.</p>
+                        </div>
+                        <span>Open</span>
+                    </a>
+                    <a class="operations-launch" href="<%= ctx %>/staff/event-bookings">
+                        <span class="launch-icon" title="Event bookings">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                <line x1="16" y1="2" x2="16" y2="6"/>
+                                <line x1="8" y1="2" x2="8" y2="6"/>
+                                <line x1="3" y1="10" x2="21" y2="10"/>
+                                <path d="m9 16 2 2 4-4"/>
+                            </svg>
+                        </span>
+                        <div>
+                            <strong>Event bookings</strong>
+                            <p>Manage customer event inquiries, quote estimates, confirm dates, and process updates.</p>
+                        </div>
+                        <span>Open</span>
+                    </a>
                 </div>
             </section>
             <aside class="panel">
@@ -140,6 +170,8 @@
                     <li>Enforces reservation and order status transitions.</li>
                     <li>Guarantees conflict-free venue and equipment allocation.</li>
                     <li>Prevents shift and event staff double-booking.</li>
+                    <li>Validates package guest thresholds and duration windows.</li>
+                    <li>Prevents package and venue scheduling conflicts.</li>
                     <li>Stores a full status history for audit.</li>
                 </ul>
             </aside>

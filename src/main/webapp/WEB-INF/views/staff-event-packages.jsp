@@ -1,0 +1,9 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page import="com.dinevista.model.EventPackageRecord,java.util.List" %>
+<% request.setAttribute("pageTitle","Event Packages"); request.setAttribute("activeNav","staffEventPackages"); List<EventPackageRecord> ps=(List<EventPackageRecord>)request.getAttribute("eventPackages"); String ctx=request.getContextPath(); %>
+<%@ include file="fragments/header.jspf" %>
+<section class="section-sm"><div class="container"><div class="section-heading"><div><span class="section-kicker">Event operations</span><h1>Event packages</h1></div><a class="btn btn-primary" href="<%=ctx%>/staff/event-packages/new">Add package</a></div>
+<form method="get" class="search-bar"><input class="form-control" name="search" placeholder="Search packages..." value="<%=com.dinevista.util.HtmlUtil.escape(String.valueOf(request.getParameter("search")==null?"":request.getParameter("search")))%>"><button class="btn btn-secondary">Search</button></form>
+<div class="table-wrap"><table class="data-table"><thead><tr><th>Package</th><th>Category</th><th>Price/guest</th><th>Capacity</th><th>Duration</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+<%for(EventPackageRecord p:ps){%><tr><td><strong><%=com.dinevista.util.HtmlUtil.escape(p.getName())%></strong><br><small><%=com.dinevista.util.HtmlUtil.escape(p.getDescription())%></small></td><td><%=p.getCategory()%></td><td>LKR <%=p.getPricePerGuest()%></td><td><%=p.getMinimumGuests()%> - <%=p.getMaximumGuests()%></td><td><%=p.getDurationMinutes()/60%>h <%=p.getDurationMinutes()%60%>m</td><td><%=p.isActive()?"ACTIVE":"INACTIVE"%></td><td><a class="btn btn-secondary btn-sm" href="<%=ctx%>/staff/event-packages/view?id=<%=p.getId()%>">View</a> <a class="btn btn-secondary btn-sm" href="<%=ctx%>/staff/event-packages/edit?id=<%=p.getId()%>">Edit</a></td></tr><%}%>
+</tbody></table></div></div></section><%@ include file="fragments/footer.jspf" %>

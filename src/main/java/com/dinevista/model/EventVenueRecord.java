@@ -44,6 +44,7 @@ public class EventVenueRecord implements Serializable {
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
     public String getAvailabilityStatus() { return availabilityStatus; }
+    public String getStatus() { return availabilityStatus; }
     public void setAvailabilityStatus(String availabilityStatus) { this.availabilityStatus = availabilityStatus; }
 
     public boolean isBookable() {

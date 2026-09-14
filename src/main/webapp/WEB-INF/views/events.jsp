@@ -1,5 +1,10 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<% request.setAttribute("pageTitle", "Events and Packages"); request.setAttribute("activeNav", "events"); %>
+<%@ page import="com.dinevista.model.EventPackageRecord,java.util.List" %>
+<%
+    request.setAttribute("pageTitle", "Events and Packages");
+    request.setAttribute("activeNav", "events");
+    List<EventPackageRecord> packages = (List<EventPackageRecord>) request.getAttribute("eventPackages");
+%>
 <%@ include file="fragments/header.jspf" %>
 <section class="page-hero events-hero">
     <div class="page-hero-orb" aria-hidden="true"></div>
@@ -18,39 +23,68 @@
             <p>Packages provide a practical foundation for food, venue, service, decor, and staffing. Final quotations can be adjusted to your event.</p>
         </div>
         <div class="package-grid">
-            <article class="package-card">
-                <div class="card-media"><img src="<%= ctx %>/assets/images/event-birthday.svg" alt="Birthday celebration package"><span class="card-badge">Social events</span></div>
-                <div class="card-body">
-                    <span class="eyebrow">Celebration package</span>
-                    <h3>Joyful Gatherings</h3>
-                    <p>Ideal for birthdays, anniversaries, reunions, and family celebrations.</p>
-                    <div class="package-price">LKR 4,500 <small>per guest from</small></div>
-                    <ul class="check-list"><li>Choice of buffet or set menu</li><li>Basic venue styling</li><li>Welcome beverage</li><li>Event service staff</li></ul>
-                    <a class="btn btn-secondary btn-block" data-package-select="Joyful Gatherings" href="<%= ctx %>/event-booking">Choose package</a>
-                </div>
-            </article>
-            <article class="package-card featured">
-                <div class="card-media"><img src="<%= ctx %>/assets/images/event-wedding.svg" alt="Wedding event package"><span class="card-badge">Most requested</span></div>
-                <div class="card-body">
-                    <span class="eyebrow">Wedding package</span>
-                    <h3>Everlasting Elegance</h3>
-                    <p>A refined wedding reception package with food, styling, service, and coordination.</p>
-                    <div class="package-price">LKR 7,900 <small>per guest from</small></div>
-                    <ul class="check-list"><li>Premium menu collection</li><li>Venue and table styling</li><li>Dedicated coordinator</li><li>Bridal table and cake service</li></ul>
-                    <a class="btn btn-primary btn-block" data-package-select="Everlasting Elegance" href="<%= ctx %>/event-booking">Choose package</a>
-                </div>
-            </article>
-            <article class="package-card">
-                <div class="card-media"><img src="<%= ctx %>/assets/images/event-corporate.svg" alt="Corporate event package"><span class="card-badge">Business events</span></div>
-                <div class="card-body">
-                    <span class="eyebrow">Corporate package</span>
-                    <h3>Professional Impact</h3>
-                    <p>Designed for meetings, launches, workshops, staff events, and formal dinners.</p>
-                    <div class="package-price">LKR 5,800 <small>per guest from</small></div>
-                    <ul class="check-list"><li>Meeting or banquet setup</li><li>Tea, coffee, and meal service</li><li>Audio-visual essentials</li><li>Registration desk support</li></ul>
-                    <a class="btn btn-secondary btn-block" data-package-select="Professional Impact" href="<%= ctx %>/event-booking">Choose package</a>
-                </div>
-            </article>
+            <% if (packages != null && !packages.isEmpty()) {
+                for (EventPackageRecord p : packages) {
+                    String img = "WEDDING".equalsIgnoreCase(p.getCategory()) ? "event-wedding.svg"
+                            : ("CORPORATE".equalsIgnoreCase(p.getCategory()) ? "event-corporate.svg" : "event-birthday.svg");
+            %>
+                <article class="package-card <%= "WEDDING".equalsIgnoreCase(p.getCategory()) ? "featured" : "" %>">
+                    <div class="card-media">
+                        <img src="<%= ctx %>/assets/images/<%= img %>" alt="<%= com.dinevista.util.HtmlUtil.escape(p.getName()) %>">
+                        <span class="card-badge"><%= com.dinevista.util.HtmlUtil.escape(p.getCategory()) %></span>
+                    </div>
+                    <div class="card-body">
+                        <span class="eyebrow"><%= com.dinevista.util.HtmlUtil.escape(p.getCategory()) %> package</span>
+                        <h3><%= com.dinevista.util.HtmlUtil.escape(p.getName()) %></h3>
+                        <p><%= com.dinevista.util.HtmlUtil.escape(p.getDescription()) %></p>
+                        <div class="package-price">LKR <%= String.format("%,.2f", p.getPricePerGuest()) %> <small>per guest</small></div>
+                        <ul class="check-list">
+                            <li><%= p.getMinimumGuests() %> to <%= p.getMaximumGuests() %> guests</li>
+                            <li><%= p.getDurationMinutes() / 60 %>h <%= p.getDurationMinutes() % 60 > 0 ? (p.getDurationMinutes() % 60) + "m " : "" %>event duration</li>
+                            <% if (p.getInclusions() != null) {
+                                for (String inc : p.getInclusions().split(",")) {
+                                    if (!inc.trim().isEmpty()) { %>
+                                        <li><%= com.dinevista.util.HtmlUtil.escape(inc.trim()) %></li>
+                            <% }}} %>
+                        </ul>
+                        <a class="btn <%= "WEDDING".equalsIgnoreCase(p.getCategory()) ? "btn-primary" : "btn-secondary" %> btn-block" href="<%= ctx %>/event-booking?packageId=<%= p.getId() %>">Choose package</a>
+                    </div>
+                </article>
+            <% }} else { %>
+                <article class="package-card">
+                    <div class="card-media"><img src="<%= ctx %>/assets/images/event-birthday.svg" alt="Birthday celebration package"><span class="card-badge">Social events</span></div>
+                    <div class="card-body">
+                        <span class="eyebrow">Celebration package</span>
+                        <h3>Joyful Gatherings</h3>
+                        <p>Ideal for birthdays, anniversaries, reunions, and family celebrations.</p>
+                        <div class="package-price">LKR 4,500 <small>per guest from</small></div>
+                        <ul class="check-list"><li>Choice of buffet or set menu</li><li>Basic venue styling</li><li>Welcome beverage</li><li>Event service staff</li></ul>
+                        <a class="btn btn-secondary btn-block" data-package-select="Joyful Gatherings" href="<%= ctx %>/event-booking">Choose package</a>
+                    </div>
+                </article>
+                <article class="package-card featured">
+                    <div class="card-media"><img src="<%= ctx %>/assets/images/event-wedding.svg" alt="Wedding event package"><span class="card-badge">Most requested</span></div>
+                    <div class="card-body">
+                        <span class="eyebrow">Wedding package</span>
+                        <h3>Everlasting Elegance</h3>
+                        <p>A refined wedding reception package with food, styling, service, and coordination.</p>
+                        <div class="package-price">LKR 7,900 <small>per guest from</small></div>
+                        <ul class="check-list"><li>Premium menu collection</li><li>Venue and table styling</li><li>Dedicated coordinator</li><li>Bridal table and cake service</li></ul>
+                        <a class="btn btn-primary btn-block" data-package-select="Everlasting Elegance" href="<%= ctx %>/event-booking">Choose package</a>
+                    </div>
+                </article>
+                <article class="package-card">
+                    <div class="card-media"><img src="<%= ctx %>/assets/images/event-corporate.svg" alt="Corporate event package"><span class="card-badge">Business events</span></div>
+                    <div class="card-body">
+                        <span class="eyebrow">Corporate package</span>
+                        <h3>Professional Impact</h3>
+                        <p>Designed for meetings, launches, workshops, staff events, and formal dinners.</p>
+                        <div class="package-price">LKR 5,800 <small>per guest from</small></div>
+                        <ul class="check-list"><li>Meeting or banquet setup</li><li>Tea, coffee, and meal service</li><li>Audio-visual essentials</li><li>Registration desk support</li></ul>
+                        <a class="btn btn-secondary btn-block" data-package-select="Professional Impact" href="<%= ctx %>/event-booking">Choose package</a>
+                    </div>
+                </article>
+            <% } %>
         </div>
     </div>
 </section>

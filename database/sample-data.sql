@@ -36,11 +36,11 @@ INSERT INTO restaurant_table (table_code, seating_area, capacity, table_status) 
 ('C-02', 'CHEF_COUNTER', 4, 'AVAILABLE');
 
 INSERT INTO event_package
-(package_name, event_category, description, base_price_per_guest, minimum_guests, maximum_guests, inclusions)
+(package_name, event_category, description, base_price_per_guest, minimum_guests, maximum_guests, inclusions, duration_minutes)
 VALUES
-('Joyful Gatherings', 'BIRTHDAY', 'Birthday and family celebration package.', 4500.00, 20, 180, 'Buffet or set menu, basic styling, welcome beverage, service staff'),
-('Everlasting Elegance', 'WEDDING', 'Premium wedding reception package.', 7900.00, 50, 350, 'Premium menu, venue styling, coordinator, bridal table, cake service'),
-('Professional Impact', 'CORPORATE', 'Corporate meeting and launch package.', 5800.00, 20, 300, 'Meeting setup, food service, audio-visual essentials, registration support');
+('Joyful Gatherings', 'BIRTHDAY', 'Birthday and family celebration package.', 4500.00, 20, 180, 'Buffet or set menu, basic styling, welcome beverage, service staff', 240),
+('Everlasting Elegance', 'WEDDING', 'Premium wedding reception package.', 7900.00, 50, 350, 'Premium menu, venue styling, coordinator, bridal table, cake service', 360),
+('Professional Impact', 'CORPORATE', 'Corporate meeting and launch package.', 5800.00, 20, 300, 'Meeting setup, food service, audio-visual essentials, registration support', 300);
 
 INSERT INTO event_venue (venue_name, venue_type, capacity, base_fee, description) VALUES
 ('Garden Pavilion', 'OUTDOOR', 220, 150000.00, 'Landscaped outdoor event venue with weather backup options.'),

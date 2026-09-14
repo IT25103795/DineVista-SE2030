@@ -248,7 +248,11 @@ CREATE TABLE event_package (
     minimum_guests INT NOT NULL DEFAULT 10,
     maximum_guests INT NOT NULL DEFAULT 500,
     inclusions TEXT,
-    is_active BOOLEAN NOT NULL DEFAULT TRUE
+    duration_minutes INT NOT NULL DEFAULT 240,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    CHECK (base_price_per_guest > 0),
+    CHECK (minimum_guests > 0 AND maximum_guests >= minimum_guests),
+    CHECK (duration_minutes BETWEEN 30 AND 1440)
 ) ENGINE=InnoDB;
 
 CREATE TABLE event_venue (
@@ -272,12 +276,16 @@ CREATE TABLE event_booking (
     phone VARCHAR(20) NOT NULL,
     event_type VARCHAR(100) NOT NULL,
     event_date DATE NOT NULL,
+    event_time TIME NOT NULL DEFAULT '12:00:00',
     guest_count INT NOT NULL,
     requirements_summary TEXT,
     booking_status ENUM('INQUIRY','CONSULTATION','QUOTED','CONFIRMED','COMPLETED','CANCELLED') NOT NULL DEFAULT 'INQUIRY',
     estimated_amount DECIMAL(14,2),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CHECK (guest_count > 0),
+    INDEX idx_event_booking_schedule (package_id, venue_id, event_date, event_time, booking_status),
+    INDEX idx_event_booking_customer (customer_id, event_date),
     CONSTRAINT fk_event_customer FOREIGN KEY (customer_id) REFERENCES customer_profile(customer_id),
     CONSTRAINT fk_event_package FOREIGN KEY (package_id) REFERENCES event_package(package_id),
     CONSTRAINT fk_event_venue FOREIGN KEY (venue_id) REFERENCES event_venue(venue_id)

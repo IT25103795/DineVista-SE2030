@@ -130,8 +130,10 @@
                 <a class="<%= "staffOrders".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/staff/orders">Kitchen</a>
                 <a class="<%= "staffInventory".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/staff/inventory">Inventory</a>
                 <a class="<%= "staffBilling".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/staff/billing">Billing</a>
-                <a class="<%= "staffEventResources".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/staff/event-resources">Events</a>
-                <a class="<%= "staffStaffScheduling".equals(activeNav) || "staffScheduling".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/staff/staff-scheduling">Scheduling</a>
+                <a class="<%= "staffEventPackages".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/staff/event-packages">Packages</a>
+                <a class="<%= "staffEventBookings".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/staff/event-bookings">Bookings</a>
+                <a class="<%= "staffEventResources".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/staff/event-resources">Resources</a>
+                <a class="<%= "staffStaffScheduling".equals(activeNav) || "staffScheduling".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/staff/staff-scheduling">Staff</a>
             <% } else { %>
                 <a class="<%= "home".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/">Home</a>
                 <a class="<%= "menu".equals(activeNav) ? "active" : "" %>" href="<%= ctx %>/menu">Menu</a>

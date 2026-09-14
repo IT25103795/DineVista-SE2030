@@ -7,16 +7,15 @@ import java.sql.Statement;
 
 public class TestConnection {
     public static void main(String[] args) {
-        String url = "jdbc:mysql://localhost:3306/dinevistadb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Colombo";
-
         try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            Connection conn = DriverManager.getConnection(url, "root", "NooB4002$$$tiilS");
+            com.dinevista.util.DatabaseConfig config = com.dinevista.util.DatabaseConfig.load();
+            System.out.println("Connecting using mode: " + (config.isMysqlEnabled() ? "mysql" : "memory"));
+            Connection conn = config.openConnection();
             System.out.println("✅ Database connected successfully!");
 
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT 1");
-            if(rs.next()) {
+            if (rs.next()) {
                 System.out.println("✅ Test query successful!");
             }
 

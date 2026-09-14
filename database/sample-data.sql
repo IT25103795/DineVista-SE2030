@@ -57,3 +57,12 @@ INSERT INTO event_resource (resource_name, resource_category, total_quantity, av
 ('LED Uplighting Set', 'LIGHTING', 20, 20, 4500.00),
 ('Backdrop & Floral Decor Kit', 'DECOR', 10, 10, 18000.00),
 ('Chafing Dish Set', 'KITCHEN', 25, 25, 2200.00);
+
+-- Billing, Promotions & Discounts Management (Nawarathna N. M. I. N. / IT25103797)
+
+INSERT INTO promotion (promotion_code, promotion_name, discount_type, discount_value, minimum_spend, start_date, end_date, usage_limit, is_active)
+VALUES
+('WELCOME10', 'New customer welcome discount', 'PERCENTAGE', 10.00, 0.00, '2026-01-01', '2026-12-31', 200, TRUE),
+('EVENT500', 'Flat event booking discount', 'FIXED_AMOUNT', 500.00, 5000.00, '2026-01-01', '2026-12-31', 100, TRUE),
+('FESTIVE15', 'Festive dining celebration offer', 'PERCENTAGE', 15.00, 3500.00, '2026-01-01', '2026-12-31', 150, TRUE);
+

@@ -135,7 +135,7 @@
                 <a class="btn btn-secondary btn-sm" style="margin-top:12px;display:inline-flex" href="<%= ctx %>/staff/billing/promotions">Manage promotions</a>
             </article>
             <article class="panel">
-                <span class="section-kicker">Business checks</span>
+                <span class="section-kicker">Things to know</span>
                 <ul class="check-list operational-checks">
                     <li>Totals always derive from the lines entered here.</li>
                     <li>An invalid or ineligible code never blocks the invoice — it simply isn't applied.</li>

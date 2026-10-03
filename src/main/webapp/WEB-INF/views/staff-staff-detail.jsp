@@ -233,7 +233,7 @@
 
         <aside class="detail-sidebar">
             <article class="panel">
-                <span class="section-kicker">Business checks</span>
+                <span class="section-kicker">Things to know</span>
                 <ul class="check-list operational-checks"><li>No two active shifts or assignments for one staff member may overlap.</li><li>Unavailable staff cannot be newly scheduled or assigned.</li><li>Every status change stays on record — nothing is deleted.</li></ul>
             </article>
         </aside>

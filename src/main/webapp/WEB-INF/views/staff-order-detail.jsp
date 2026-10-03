@@ -65,7 +65,7 @@
             </article>
 
             <article class="detail-card">
-                <div class="panel-header"><div><h3>Order history</h3><span class="muted small">Complete kitchen and service audit trail.</span></div></div>
+                <div class="panel-header"><div><h3>Order history</h3><span class="muted small">All kitchen and service updates in one place.</span></div></div>
                 <div class="timeline">
                     <% for (StatusHistoryRecord item : order.getHistory()) { %><div class="timeline-item"><span class="timeline-dot"></span><div><div class="timeline-top"><strong><%= HtmlUtil.escape(item.getStatus()) %></strong><span><%= item.getChangedAtDisplay() %></span></div><p><%= HtmlUtil.escape(item.getNote()) %></p><small>By <%= HtmlUtil.escape(item.getChangedBy()) %></small></div></div><% } %>
                 </div>

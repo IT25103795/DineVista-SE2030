@@ -80,7 +80,7 @@
                         </span>
                         <div>
                             <strong>Inventory management</strong>
-                            <p>Track ingredients, reorder levels, and an auditable purchase, usage, and waste history.</p>
+                            <p>Track ingredients, reorder levels, and a clear history of purchases, usage, and waste.</p>
                         </div>
                         <span>Open</span>
                     </a>
@@ -172,7 +172,7 @@
                     <li>Prevents shift and event staff double-booking.</li>
                     <li>Validates package guest thresholds and duration windows.</li>
                     <li>Prevents package and venue scheduling conflicts.</li>
-                    <li>Stores a full status history for audit.</li>
+                    <li>Keeps a full history of status changes.</li>
                 </ul>
             </aside>
         </div>

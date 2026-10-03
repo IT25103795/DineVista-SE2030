@@ -46,7 +46,7 @@ public class AccountService {
                                                         String confirmPassword, String managerToken) {
         List<String> errors = validate(firstName, lastName, email, phone, password, confirmPassword);
         if (MANAGER.equals(role) && !ManagerTokenVerifier.isValid(managerToken)) {
-            errors.add("The manager registration token is invalid.");
+            errors.add("The invitation code is invalid.");
         }
         if (!CUSTOMER.equals(role) && !MANAGER.equals(role)) {
             errors.add("Unsupported account type.");

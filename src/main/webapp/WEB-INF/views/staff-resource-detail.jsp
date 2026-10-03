@@ -122,7 +122,7 @@
                 </form>
             </article>
             <article class="panel">
-                <span class="section-kicker">Business checks</span>
+                <span class="section-kicker">Things to know</span>
                 <ul class="check-list operational-checks"><li>Reserved quantities on the same date can never exceed the usable total.</li><li>Resources with recorded bookings cannot be deleted.</li><li>Every allocation, return, and cancellation stays on record.</li></ul>
             </article>
         </aside>

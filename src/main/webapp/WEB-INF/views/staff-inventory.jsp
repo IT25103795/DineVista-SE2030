@@ -18,7 +18,7 @@
         <div>
             <span class="eyebrow">Restaurant staff operations </span>
             <h1>Inventory control centre.</h1>
-            <p>Maintain accurate ingredients, stock quantities, reorder levels, and an auditable transaction history so the kitchen and menu always reflect real availability.</p>
+            <p>Keep ingredient quantities and reorder levels accurate, with a clear history of every stock change.</p>
         </div>
         <div class="hero-actions">
             <a class="btn btn-secondary" href="<%= ctx %>/dashboard">Operations dashboard</a>

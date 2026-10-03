@@ -124,7 +124,7 @@
                 </form>
             </article>
             <article class="panel">
-                <span class="section-kicker">Business checks</span>
+                <span class="section-kicker">Things to know</span>
                 <ul class="check-list operational-checks"><li>No two active bookings for a venue may overlap on the same date.</li><li>Guest count cannot exceed the venue's capacity.</li><li>Venues with recorded bookings cannot be deleted.</li><li>Cancelled bookings remain visible in the history.</li></ul>
             </article>
         </aside>

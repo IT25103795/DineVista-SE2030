@@ -140,7 +140,7 @@
                 <div class="panel-header"><div><h3>Status history</h3></div></div>
                 <div class="timeline">
                     <% if (invoice.getHistory().isEmpty()) { %>
-                        <p class="muted">No status changes recorded in this session yet.</p>
+                        <p class="muted">No status changes recorded yet.</p>
                     <% } else { for (StatusHistoryRecord entry : invoice.getHistory()) { %>
                         <div class="timeline-item"><span class="timeline-dot"></span><div><div class="timeline-top"><strong><%= entry.getStatus().replace('_',' ') %></strong><span><%= entry.getChangedAtDisplay() %></span></div><p><%= HtmlUtil.escape(entry.getNote()) %></p><small>By <%= HtmlUtil.escape(entry.getChangedBy()) %></small></div></div>
                     <% }} %>
@@ -169,7 +169,7 @@
             </article>
             <% } %>
             <article class="panel">
-                <span class="section-kicker">Business checks</span>
+                <span class="section-kicker">Things to know</span>
                 <ul class="check-list operational-checks">
                     <li>A payment can never exceed the outstanding balance.</li>
                     <li>Duplicate payment references are blocked automatically.</li>

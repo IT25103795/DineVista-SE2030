@@ -16,7 +16,7 @@
             <div class="breadcrumbs dark"><a href="<%= ctx %>/staff/inventory">Inventory</a><span>/</span><span><%= HtmlUtil.escape(ingredient.getName()) %></span></div>
             <span class="eyebrow">Inventory Management</span>
             <h1><%= HtmlUtil.escape(ingredient.getName()) %></h1>
-            <p>Review stock on hand, record purchases or usage, and keep a complete, auditable movement history.</p>
+            <p>Review stock on hand, record purchases or usage, and see a complete history of stock changes.</p>
         </div>
         <a class="btn btn-secondary" href="<%= ctx %>/staff/inventory">Back to inventory</a>
     </div>
@@ -90,7 +90,7 @@
                 </form>
             </article>
             <article class="panel">
-                <span class="section-kicker">Business checks</span>
+                <span class="section-kicker">Things to know</span>
                 <ul class="check-list operational-checks"><li>Stock can never go below zero.</li><li>Every purchase, usage, waste, return, or adjustment is recorded.</li><li>Ingredients with recorded history cannot be deleted.</li><li>Names must stay unique across the catalogue.</li></ul>
             </article>
         </aside>

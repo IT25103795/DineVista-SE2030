@@ -80,7 +80,7 @@
             </article>
 
             <article class="detail-card">
-                <div class="panel-header"><div><h3>Status history</h3><span class="muted small">Complete audit trail for this reservation.</span></div></div>
+                <div class="panel-header"><div><h3>Status history</h3><span class="muted small">All changes to this reservation in one place.</span></div></div>
                 <div class="timeline">
                     <% for (StatusHistoryRecord item : reservation.getHistory()) { %>
                         <div class="timeline-item"><span class="timeline-dot"></span><div><div class="timeline-top"><strong><%= HtmlUtil.escape(item.getStatus().replace('_', ' ')) %></strong><span><%= item.getChangedAtDisplay() %></span></div><p><%= HtmlUtil.escape(item.getNote()) %></p><small>By <%= HtmlUtil.escape(item.getChangedBy()) %></small></div></div>
@@ -95,7 +95,7 @@
                 <div class="contact-stack"><div><span>Name</span><strong><%= HtmlUtil.escape(reservation.getGuestName()) %></strong></div><div><span>Email</span><strong><%= HtmlUtil.escape(reservation.getEmail()) %></strong></div><div><span>Phone</span><strong><%= HtmlUtil.escape(reservation.getPhone()) %></strong></div></div>
             </article>
             <article class="panel">
-                <span class="section-kicker">Business checks</span>
+                <span class="section-kicker">Things to know</span>
                 <ul class="check-list operational-checks">
                     <li>Capacity must support the party size.</li>
                     <li>Table must be available for the 90-minute slot.</li>

@@ -28,7 +28,7 @@
                     </div>
                     <div class="form-actions"><button class="btn btn-primary btn-block" type="submit">Open management dashboard</button></div>
                 </form>
-                <p class="auth-footer">Need a manager account? <a href="<%= ctx %>/manager/register">Register with a manager token</a></p>
+                <p class="auth-footer">Need a manager account? <a href="<%= ctx %>/manager/register">Register with an invitation code</a></p>
                 <p class="auth-footer">Dining customer? <a href="<%= ctx %>/login">Use customer sign in</a></p>
             </div>
         </div>

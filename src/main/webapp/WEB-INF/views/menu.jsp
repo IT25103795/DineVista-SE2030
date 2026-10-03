@@ -187,7 +187,7 @@
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:-2px;margin-right:6px"><path d="M3 4h2l2 10h10l2-7H7"/><circle cx="9" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/></svg>
                 Open food cart
             </a>
-            <p class="muted small" style="margin:0;text-align:center">Selected dishes stay saved in your session until checkout.</p>
+            <p class="muted small" style="margin:0;text-align:center">Your selected dishes stay in the basket until checkout.</p>
         </aside>
     </div>
 </section>

@@ -25,6 +25,8 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 public class JdbcReservationOrderRepository implements ReservationOrderRepository {
@@ -62,7 +64,10 @@ public class JdbcReservationOrderRepository implements ReservationOrderRepositor
     @Override
     public List<MenuItemRecord> findAllMenuItems() {
         String sql = "SELECT m.menu_item_id, c.category_name, m.item_name, m.description, "
-                + "m.price, m.image_path, m.dietary_type, m.spice_level, m.availability_status "
+                + "m.price, m.image_path, m.dietary_type, m.spice_level, m.availability_status, "
+                + "NOT EXISTS (SELECT 1 FROM menu_item_ingredient r "
+                + "JOIN ingredient i ON i.ingredient_id=r.ingredient_id "
+                + "WHERE r.menu_item_id=m.menu_item_id AND i.current_quantity<r.quantity_required) AS recipe_stock_ok "
                 + "FROM menu_item m JOIN menu_category c ON c.category_id = m.category_id "
                 + "WHERE c.is_active = TRUE ORDER BY c.display_order, m.item_name";
         List<MenuItemRecord> result = new ArrayList<>();
@@ -79,7 +84,8 @@ public class JdbcReservationOrderRepository implements ReservationOrderRepositor
                         imageName(rows.getString("image_path")),
                         rows.getString("dietary_type"),
                         rows.getString("spice_level"),
-                        "AVAILABLE".equals(rows.getString("availability_status"))));
+                        "AVAILABLE".equals(rows.getString("availability_status"))
+                                && rows.getBoolean("recipe_stock_ok")));
             }
         } catch (SQLException ex) {
             throw repositoryFailure("Unable to load menu items.", ex);
@@ -90,6 +96,37 @@ public class JdbcReservationOrderRepository implements ReservationOrderRepositor
     @Override
     public Optional<MenuItemRecord> findMenuItem(long id) {
         return findAllMenuItems().stream().filter(item -> item.getId() == id).findFirst();
+    }
+
+    @Override
+    public boolean hasSufficientRecipeStock(Map<Long, Integer> quantities) {
+        String sql = "SELECT r.ingredient_id,r.quantity_required,i.current_quantity "
+                + "FROM menu_item_ingredient r JOIN ingredient i ON i.ingredient_id=r.ingredient_id "
+                + "WHERE r.menu_item_id=?";
+        Map<Long, BigDecimal> needed = new HashMap<>();
+        Map<Long, BigDecimal> available = new HashMap<>();
+        try (Connection connection = config.openConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            for (Map.Entry<Long, Integer> line : quantities.entrySet()) {
+                if (line.getValue() == null || line.getValue() < 1) return false;
+                statement.setLong(1, line.getKey());
+                try (ResultSet rows = statement.executeQuery()) {
+                    while (rows.next()) {
+                        long ingredientId = rows.getLong("ingredient_id");
+                        BigDecimal amount = rows.getBigDecimal("quantity_required")
+                                .multiply(BigDecimal.valueOf(line.getValue()));
+                        needed.merge(ingredientId, amount, BigDecimal::add);
+                        available.put(ingredientId, rows.getBigDecimal("current_quantity"));
+                    }
+                }
+            }
+        } catch (SQLException ex) {
+            throw repositoryFailure("Unable to check recipe stock.", ex);
+        }
+        for (Map.Entry<Long, BigDecimal> entry : needed.entrySet()) {
+            if (available.get(entry.getKey()).compareTo(entry.getValue()) < 0) return false;
+        }
+        return true;
     }
 
     @Override

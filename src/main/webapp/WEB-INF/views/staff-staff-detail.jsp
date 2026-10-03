@@ -151,13 +151,13 @@
             <article class="detail-card">
                 <span class="section-kicker">Coordinator action</span>
                 <h3>Assign to an event</h3>
-                <p class="muted">An assignment that overlaps another active assignment or shift for this staff member on the same date is rejected.</p>
+                <p class="muted">Use a confirmed event reference or confirmed venue booking name. The assignment must fit its date and time, and must not overlap another active assignment or shift.</p>
                 <form method="post" action="<%= ctx %>/staff/staff-scheduling/assignments/save">
                     <input type="hidden" name="staffId" value="<%= staff.getId() %>">
                     <div class="form-grid">
                         <div class="form-group full">
-                            <label for="eventLabel">Event name / reference</label>
-                            <input class="form-control" id="eventLabel" name="eventLabel" type="text" required maxlength="180" placeholder="e.g. Perera Wedding Reception">
+                            <label for="eventLabel">Confirmed event reference or venue booking name</label>
+                            <input class="form-control" id="eventLabel" name="eventLabel" type="text" required maxlength="180" placeholder="e.g. DV-E-1234ABCD">
                         </div>
                         <div class="form-group">
                             <label for="assignmentRole">Role at this event</label>

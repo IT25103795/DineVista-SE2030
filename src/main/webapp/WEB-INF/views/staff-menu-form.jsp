@@ -2,11 +2,16 @@
 <%@ page import="java.util.List" %>
 <%@ page import="com.dinevista.model.MenuItemAdminRecord" %>
 <%@ page import="com.dinevista.model.MenuCategoryRecord" %>
+<%@ page import="com.dinevista.model.IngredientRecord" %>
+<%@ page import="com.dinevista.model.MenuRecipeIngredientRecord" %>
 <%@ page import="com.dinevista.util.HtmlUtil" %>
 <%
     MenuItemAdminRecord item = (MenuItemAdminRecord) request.getAttribute("item");
     List<MenuCategoryRecord> categories = (List<MenuCategoryRecord>) request.getAttribute("categories");
     boolean editing = item != null;
+    boolean recipeEnabled = Boolean.TRUE.equals(request.getAttribute("recipeEnabled"));
+    List<IngredientRecord> ingredients = (List<IngredientRecord>) request.getAttribute("ingredients");
+    List<MenuRecipeIngredientRecord> recipe = (List<MenuRecipeIngredientRecord>) request.getAttribute("recipe");
 
     request.setAttribute("pageTitle", editing ? "Edit Menu Item" : "Add Menu Item");
     request.setAttribute("activeNav", "staffMenu");
@@ -151,6 +156,47 @@
                     </button>
                 </div>
             </form>
+
+            <% if (editing && recipeEnabled) { %>
+            <div style="margin-top:30px;border-top:1px solid var(--line,#d7d7d7);padding-top:22px">
+                <span class="section-kicker">Stock-linked recipe</span>
+                <h2>Ingredients per portion</h2>
+                <p class="muted">Guest ordering checks the current stock against this recipe. When an ingredient is short, the dish becomes unavailable automatically; restocking restores it without changing the dish status.</p>
+                <% if (recipe != null && !recipe.isEmpty()) { %>
+                <div class="table-wrap"><table class="data-table operations-table">
+                    <thead><tr><th>Ingredient</th><th>Needed / portion</th><th>Current stock</th><th></th></tr></thead>
+                    <tbody><% for (MenuRecipeIngredientRecord part : recipe) { %>
+                    <tr>
+                        <td><%= HtmlUtil.escape(part.getIngredientName()) %></td>
+                        <td><%= part.getQuantityRequired().toPlainString() %> <%= HtmlUtil.escape(part.getUnit()) %></td>
+                        <td><%= part.getCurrentQuantity().toPlainString() %> <%= HtmlUtil.escape(part.getUnit()) %> — <%= part.isInStock() ? "Ready" : "Short" %></td>
+                        <td><form method="post" action="<%= ctx %>/staff/menu/recipe/remove">
+                            <input type="hidden" name="itemId" value="<%= item.getId() %>">
+                            <input type="hidden" name="ingredientId" value="<%= part.getIngredientId() %>">
+                            <button class="btn btn-danger btn-sm" type="submit">Remove</button>
+                        </form></td>
+                    </tr><% } %></tbody>
+                </table></div>
+                <% } else { %><p class="muted">No ingredient requirements have been linked yet.</p><% } %>
+                <form method="post" action="<%= ctx %>/staff/menu/recipe/save">
+                    <input type="hidden" name="itemId" value="<%= item.getId() %>">
+                    <div class="form-grid">
+                        <div class="form-group"><label for="recipeIngredient">Ingredient</label>
+                            <select class="form-control" id="recipeIngredient" name="ingredientId" required>
+                                <option value="">Select ingredient</option>
+                                <% if (ingredients != null) { for (IngredientRecord ingredient : ingredients) { %>
+                                <option value="<%= ingredient.getId() %>"><%= HtmlUtil.escape(ingredient.getName()) %> (<%= HtmlUtil.escape(ingredient.getUnit()) %>)</option>
+                                <% }} %>
+                            </select>
+                        </div>
+                        <div class="form-group"><label for="quantityRequired">Amount for one portion</label>
+                            <input class="form-control" id="quantityRequired" name="quantityRequired" type="number" min="0.001" step="0.001" required placeholder="0.500">
+                        </div>
+                    </div>
+                    <div class="form-actions"><button class="btn btn-primary" type="submit">Save ingredient amount</button></div>
+                </form>
+            </div>
+            <% } %>
         </div>
     </div>
 </section>

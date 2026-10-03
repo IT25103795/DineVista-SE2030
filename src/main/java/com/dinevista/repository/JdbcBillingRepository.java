@@ -5,6 +5,7 @@ import com.dinevista.model.InvoiceRecord;
 import com.dinevista.model.PaymentRecord;
 import com.dinevista.model.PromotionRecord;
 import com.dinevista.model.PromotionUsageRecord;
+import com.dinevista.model.StatusHistoryRecord;
 import com.dinevista.util.DatabaseConfig;
 
 import java.math.BigDecimal;
@@ -37,9 +38,8 @@ import java.util.UUID;
  * verifier name on {@code payment}, and an invoice/customer-key link on
  * {@code promotion_usage}.
  *
- * Invoice status history is kept in memory only for freshly created invoices
- * within this JVM; there is no dedicated history table for invoices in the
- * base schema, so a reloaded invoice will show an empty timeline in MySQL mode.
+ * Invoice status changes are persisted in invoice_status_history so reloads
+ * retain the finance audit trail.
  */
 public class JdbcBillingRepository implements BillingRepository {
     private final DatabaseConfig config;
@@ -65,6 +65,17 @@ public class JdbcBillingRepository implements BillingRepository {
         ensureColumn("promotion_usage", "invoice_id", "BIGINT");
         ensureColumn("promotion_usage", "promotion_code", "VARCHAR(40)");
         ensureColumn("promotion_usage", "customer_key", "VARCHAR(190)");
+        try (Connection connection = config.openConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                     "CREATE TABLE IF NOT EXISTS invoice_status_history ("
+                             + "history_id BIGINT PRIMARY KEY AUTO_INCREMENT,"
+                             + "invoice_id BIGINT NOT NULL,status VARCHAR(40) NOT NULL,"
+                             + "note VARCHAR(500),changed_by VARCHAR(160),"
+                             + "changed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,"
+                             + "CONSTRAINT fk_invoice_history_invoice FOREIGN KEY (invoice_id) "
+                             + "REFERENCES invoice(invoice_id) ON DELETE CASCADE) ENGINE=InnoDB")) {
+            statement.executeUpdate();
+        }
     }
 
     private void ensureColumn(String table, String column, String ddlType) throws SQLException {
@@ -165,7 +176,22 @@ public class JdbcBillingRepository implements BillingRepository {
                 rows.getString("created_by_name"),
                 created == null ? LocalDateTime.now() : created.toLocalDateTime(),
                 updated == null ? null : updated.toLocalDateTime(),
-                null);
+                loadHistory(connection, invoiceId));
+    }
+
+    private List<StatusHistoryRecord> loadHistory(Connection connection, long invoiceId) throws SQLException {
+        List<StatusHistoryRecord> history = new ArrayList<>();
+        try (PreparedStatement statement = connection.prepareStatement(
+                "SELECT status,note,changed_by,changed_at FROM invoice_status_history "
+                        + "WHERE invoice_id=? ORDER BY history_id DESC")) {
+            statement.setLong(1, invoiceId);
+            try (ResultSet rows = statement.executeQuery()) {
+                while (rows.next()) history.add(new StatusHistoryRecord(rows.getString("status"),
+                        rows.getString("note"), rows.getString("changed_by"),
+                        rows.getTimestamp("changed_at").toLocalDateTime()));
+            }
+        }
+        return history;
     }
 
     private List<InvoiceItemRecord> loadItems(Connection connection, long invoiceId) throws SQLException {
@@ -191,6 +217,8 @@ public class JdbcBillingRepository implements BillingRepository {
     public InvoiceRecord saveInvoice(InvoiceRecord invoice) {
         String existsSql = "SELECT invoice_id FROM invoice WHERE invoice_id = ?";
         try (Connection connection = config.openConnection()) {
+            connection.setAutoCommit(false);
+            try {
             boolean exists;
             try (PreparedStatement statement = connection.prepareStatement(existsSql)) {
                 statement.setLong(1, invoice.getId());
@@ -204,9 +232,41 @@ public class JdbcBillingRepository implements BillingRepository {
                 insertInvoice(connection, invoice);
             }
             replaceItems(connection, invoice);
+            saveNewHistory(connection, invoice);
+            connection.commit();
             return invoice;
+            } catch (SQLException ex) {
+                connection.rollback();
+                throw ex;
+            }
         } catch (SQLException ex) {
             throw repositoryFailure("Unable to save invoice.", ex);
+        }
+    }
+
+    private void saveNewHistory(Connection connection, InvoiceRecord invoice) throws SQLException {
+        int persisted;
+        try (PreparedStatement count = connection.prepareStatement(
+                "SELECT COUNT(*) FROM invoice_status_history WHERE invoice_id=?")) {
+            count.setLong(1, invoice.getId());
+            try (ResultSet rows = count.executeQuery()) { rows.next(); persisted = rows.getInt(1); }
+        }
+        List<StatusHistoryRecord> history = invoice.getHistory();
+        int newCount = history.size() - persisted;
+        if (newCount <= 0) return;
+        try (PreparedStatement insert = connection.prepareStatement(
+                "INSERT INTO invoice_status_history(invoice_id,status,note,changed_by,changed_at) "
+                        + "VALUES (?,?,?,?,?)")) {
+            for (int i = newCount - 1; i >= 0; i--) {
+                StatusHistoryRecord entry = history.get(i);
+                insert.setLong(1, invoice.getId());
+                insert.setString(2, entry.getStatus());
+                insert.setString(3, entry.getNote());
+                insert.setString(4, entry.getChangedBy());
+                insert.setTimestamp(5, Timestamp.valueOf(entry.getChangedAt()));
+                insert.addBatch();
+            }
+            insert.executeBatch();
         }
     }
 
@@ -393,7 +453,7 @@ public class JdbcBillingRepository implements BillingRepository {
                 String sql = "UPDATE payment SET invoice_id=?, payment_reference=?, payment_method=?, amount=?, "
                         + "payment_status=?, paid_at=?, verified_by_name=?, note=? WHERE payment_id=?";
                 try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                    bindPayment(statement, payment);
+                    bindPayment(statement, payment, 1);
                     statement.setLong(9, payment.getId());
                     statement.executeUpdate();
                 }
@@ -403,7 +463,7 @@ public class JdbcBillingRepository implements BillingRepository {
                         + "VALUES (?,?,?,?,?,?,?,?,?,?)";
                 try (PreparedStatement statement = connection.prepareStatement(sql)) {
                     statement.setLong(1, payment.getId());
-                    bindPayment(statement, payment);
+                    bindPayment(statement, payment, 2);
                     statement.setTimestamp(10, Timestamp.valueOf(payment.getCreatedAt()));
                     statement.executeUpdate();
                 }
@@ -414,15 +474,16 @@ public class JdbcBillingRepository implements BillingRepository {
         }
     }
 
-    private void bindPayment(PreparedStatement statement, PaymentRecord payment) throws SQLException {
-        statement.setLong(1, payment.getInvoiceId());
-        statement.setString(2, payment.getPaymentReference());
-        statement.setString(3, payment.getPaymentMethod());
-        statement.setBigDecimal(4, payment.getAmount());
-        statement.setString(5, payment.getStatus());
-        statement.setTimestamp(6, payment.getPaidAt() == null ? null : Timestamp.valueOf(payment.getPaidAt()));
-        statement.setString(7, payment.getVerifiedBy());
-        statement.setString(8, payment.getNote());
+    private void bindPayment(PreparedStatement statement, PaymentRecord payment, int start) throws SQLException {
+        int i = start;
+        statement.setLong(i++, payment.getInvoiceId());
+        statement.setString(i++, payment.getPaymentReference());
+        statement.setString(i++, payment.getPaymentMethod());
+        statement.setBigDecimal(i++, payment.getAmount());
+        statement.setString(i++, payment.getStatus());
+        statement.setTimestamp(i++, payment.getPaidAt() == null ? null : Timestamp.valueOf(payment.getPaidAt()));
+        statement.setString(i++, payment.getVerifiedBy());
+        statement.setString(i, payment.getNote());
     }
 
     @Override

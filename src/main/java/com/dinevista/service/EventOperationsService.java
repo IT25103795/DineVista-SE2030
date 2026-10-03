@@ -424,6 +424,10 @@ public class EventOperationsService {
         }
         if (!errors.isEmpty()) return OperationResult.failure(errors);
 
+        if (!repository.hasConfirmedEvent(cleanLabel, assignmentDate, startTime, endTime)) {
+            return OperationResult.failure("Select a confirmed event reference or confirmed venue booking name covering the assignment time.");
+        }
+
         for (EventStaffAssignmentRecord existing : repository.findActiveAssignmentsForStaffOnDate(staffId, assignmentDate)) {
             if (existing.overlaps(startTime, endTime)) {
                 return OperationResult.failure(staff.getFullName() + " is already assigned to \""

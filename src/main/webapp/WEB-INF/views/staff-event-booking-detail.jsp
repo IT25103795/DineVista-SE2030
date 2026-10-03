@@ -1,10 +1,13 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="com.dinevista.model.EventBookingRecord" %>
+<%@ page import="com.dinevista.model.EventQuoteRecord" %>
 <%@ page import="com.dinevista.util.HtmlUtil" %>
+<%@ page import="java.util.List" %>
 <%
     request.setAttribute("pageTitle", "Event Booking Review");
     request.setAttribute("activeNav", "staffEventBookings");
     EventBookingRecord b = (EventBookingRecord) request.getAttribute("booking");
+    List<EventQuoteRecord> quotes = (List<EventQuoteRecord>) request.getAttribute("quotes");
 %>
 <%@ include file="fragments/header.jspf" %>
 <section class="operations-hero">
@@ -105,6 +108,21 @@
                 </div>
             </aside>
         </div>
+        <section class="panel" style="margin-top:18px">
+            <div class="panel-header"><h3>Versioned quotations &amp; customer approval</h3></div>
+            <% if (quotes == null || quotes.isEmpty()) { %>
+            <p class="muted">No quotation issued yet. Set status to QUOTED to capture the first priced requirements version.</p>
+            <% } else { EventQuoteRecord latest=quotes.get(0); %>
+            <p class="muted">Current quote v<%= latest.getVersion() %> is <%= latest.isAccepted()?"accepted by the customer":"awaiting customer approval" %>. Confirm only after the latest version is accepted.</p>
+            <div class="table-wrap"><table class="data-table operations-table"><thead><tr><th>Version</th><th>Guests</th><th>Per guest</th><th>Venue fee</th><th>Total</th><th>Approval</th></tr></thead><tbody>
+            <% for (EventQuoteRecord quote : quotes) { %><tr>
+                <td>v<%= quote.getVersion() %></td><td><%= quote.getGuestCount() %></td>
+                <td>LKR <%= quote.getPricePerGuest() %></td><td>LKR <%= quote.getVenueFee() %></td>
+                <td>LKR <%= quote.getTotal() %></td><td><%= quote.isAccepted()?"Accepted":"Awaiting approval" %></td>
+            </tr><% } %></tbody></table></div>
+            <p><strong>Latest requirements:</strong> <%= HtmlUtil.escape(latest.getRequirements()) %></p>
+            <% } %>
+        </section>
     <% } %>
 </div>
 

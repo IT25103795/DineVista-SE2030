@@ -2,6 +2,8 @@ package com.dinevista.service;
 
 import com.dinevista.model.MenuCategoryRecord;
 import com.dinevista.model.MenuItemAdminRecord;
+import com.dinevista.model.IngredientRecord;
+import com.dinevista.model.MenuRecipeIngredientRecord;
 import com.dinevista.repository.MenuRepository;
 
 import java.math.BigDecimal;
@@ -130,6 +132,35 @@ public class MenuService {
         return repository.findItem(id);
     }
 
+    public List<MenuRecipeIngredientRecord> recipe(long itemId) {
+        return repository.findRecipe(itemId);
+    }
+
+    /** Defines the stock needed for one portion; stock is read live at order time. */
+    public OperationResult<Void> saveRecipeIngredient(long itemId, IngredientRecord ingredient, String amountRaw) {
+        if (repository.findItem(itemId).isEmpty()) return OperationResult.failure("Menu item not found.");
+        if (ingredient == null) return OperationResult.failure("Select a valid ingredient.");
+        BigDecimal amount;
+        try {
+            amount = new BigDecimal(amountRaw == null ? "" : amountRaw.trim());
+        } catch (NumberFormatException ex) {
+            return OperationResult.failure("Enter a valid ingredient amount per portion.");
+        }
+        if (amount.signum() <= 0 || amount.scale() > 3 || amount.precision() > 10) {
+            return OperationResult.failure("Amount per portion must be positive with at most three decimal places.");
+        }
+        repository.upsertRecipeIngredient(itemId, ingredient.getId(), amount);
+        return OperationResult.success(null);
+    }
+
+    public OperationResult<Void> removeRecipeIngredient(long itemId, long ingredientId) {
+        if (repository.findItem(itemId).isEmpty()) return OperationResult.failure("Menu item not found.");
+        if (!repository.removeRecipeIngredient(itemId, ingredientId)) {
+            return OperationResult.failure("Recipe ingredient was not found.");
+        }
+        return OperationResult.success(null);
+    }
+
     public OperationResult<MenuItemAdminRecord> saveItem(long id, Long categoryId, String name,
                                                          String description, String priceRaw,
                                                          String imagePath, String prepMinutesRaw,
@@ -236,6 +267,12 @@ public class MenuService {
         }
 
         MenuItemAdminRecord item = existing.get();
+        if (repository.itemReferencedByOrders(id)) {
+            item.setAvailabilityStatus("UNAVAILABLE");
+            repository.saveItem(item);
+            return new DeleteOutcome(true, true,
+                    "'" + item.getName() + "' was archived because existing orders reference it.");
+        }
         boolean deleted = repository.deleteItem(id);
         if (deleted) {
             return new DeleteOutcome(true, false,

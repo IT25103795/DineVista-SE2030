@@ -42,6 +42,7 @@ public class EventBookingServlet extends HttpServlet {
         } else {
             if("/create".equals(path)){create(req,res);return;}
             if("/update".equals(path)){customerUpdate(req,res);return;}
+            if("/accept-quote".equals(path)){acceptQuote(req,res);return;}
             if("/cancel".equals(path)){cancel(req,res);return;}
         }
         res.sendError(404);
@@ -63,6 +64,16 @@ public class EventBookingServlet extends HttpServlet {
         OperationResult<EventBookingRecord> x=service.cancelByCustomer(userId(r),email(r),RequestUtil.clean(r,"reference"),RequestUtil.clean(r,"reason"));
         s.sendRedirect(r.getContextPath()+"/event-booking/view?reference="+RequestUtil.clean(r,"reference")+"&cancelled="+x.isSuccess());
     }
+    private void acceptQuote(HttpServletRequest r,HttpServletResponse s)throws ServletException,IOException{
+        String ref=RequestUtil.clean(r,"reference");
+        OperationResult<EventQuoteRecord> result=service.acceptQuote(userId(r),email(r),ref,longValue(r,"quoteId"));
+        if(!result.isSuccess()){
+            r.setAttribute("errors",result.getErrors());
+            view(r,s,false);
+            return;
+        }
+        s.sendRedirect(r.getContextPath()+"/event-booking/view?reference="+ref+"&quoteAccepted=1");
+    }
     private void managerUpdate(HttpServletRequest r,HttpServletResponse s)throws ServletException,IOException{
         String ref=RequestUtil.clean(r,"reference");
         OperationResult<EventBookingRecord> x=service.managerUpdate(ref,RequestUtil.clean(r,"customerName"),RequestUtil.clean(r,"email"),RequestUtil.clean(r,"phone"),RequestUtil.clean(r,"eventType"),
@@ -73,7 +84,9 @@ public class EventBookingServlet extends HttpServlet {
     private void view(HttpServletRequest r,HttpServletResponse s,boolean manager)throws ServletException,IOException{
         Optional<EventBookingRecord> x=service.booking(RequestUtil.clean(r,"reference"));if(x.isEmpty()){s.sendError(404);return;}
         if(!manager&&!owned(r,x.get())){s.sendError(404);return;}
-        r.setAttribute("booking",x.get());r.setAttribute("managerView",manager);r.getRequestDispatcher(manager?"/WEB-INF/views/staff-event-booking-detail.jsp":"/WEB-INF/views/event-booking-detail.jsp").forward(r,s);
+        r.setAttribute("booking",x.get());r.setAttribute("managerView",manager);
+        r.setAttribute("quotes",service.quotes(x.get().getReference()));
+        r.getRequestDispatcher(manager?"/WEB-INF/views/staff-event-booking-detail.jsp":"/WEB-INF/views/event-booking-detail.jsp").forward(r,s);
     }
     private void edit(HttpServletRequest r,HttpServletResponse s,boolean manager)throws ServletException,IOException{
         Optional<EventBookingRecord> x=service.booking(RequestUtil.clean(r,"reference"));if(x.isEmpty()){s.sendError(404);return;}

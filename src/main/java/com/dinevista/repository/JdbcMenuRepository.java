@@ -2,6 +2,7 @@ package com.dinevista.repository;
 
 import com.dinevista.model.MenuCategoryRecord;
 import com.dinevista.model.MenuItemAdminRecord;
+import com.dinevista.model.MenuRecipeIngredientRecord;
 import com.dinevista.util.DatabaseConfig;
 
 import java.math.BigDecimal;
@@ -291,6 +292,7 @@ public class JdbcMenuRepository implements MenuRepository {
 
     @Override
     public boolean deleteItem(long id) {
+        if (itemReferencedByOrders(id)) return false;
         try (Connection connection = config.openConnection()) {
             connection.setAutoCommit(false);
             try {
@@ -298,11 +300,6 @@ public class JdbcMenuRepository implements MenuRepository {
                         "DELETE FROM menu_item_ingredient WHERE menu_item_id = ?")) {
                     s1.setLong(1, id);
                     s1.executeUpdate();
-                }
-                try (PreparedStatement s2 = connection.prepareStatement(
-                        "DELETE FROM order_item WHERE menu_item_id = ?")) {
-                    s2.setLong(1, id);
-                    s2.executeUpdate();
                 }
                 int rows;
                 try (PreparedStatement s3 = connection.prepareStatement(
@@ -340,6 +337,54 @@ public class JdbcMenuRepository implements MenuRepository {
     @Override
     public long nextItemId() {
         return nextId("menu_item", "menu_item_id");
+    }
+
+    @Override
+    public List<MenuRecipeIngredientRecord> findRecipe(long menuItemId) {
+        String sql = "SELECT r.ingredient_id,i.ingredient_name,i.unit,r.quantity_required,i.current_quantity "
+                + "FROM menu_item_ingredient r JOIN ingredient i ON i.ingredient_id=r.ingredient_id "
+                + "WHERE r.menu_item_id=? ORDER BY i.ingredient_name";
+        List<MenuRecipeIngredientRecord> result = new ArrayList<>();
+        try (Connection connection = config.openConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, menuItemId);
+            try (ResultSet rows = statement.executeQuery()) {
+                while (rows.next()) result.add(new MenuRecipeIngredientRecord(
+                        rows.getLong("ingredient_id"), rows.getString("ingredient_name"), rows.getString("unit"),
+                        rows.getBigDecimal("quantity_required"), rows.getBigDecimal("current_quantity")));
+            }
+        } catch (SQLException ex) {
+            throw repositoryFailure("Unable to load recipe.", ex);
+        }
+        return result;
+    }
+
+    @Override
+    public void upsertRecipeIngredient(long menuItemId, long ingredientId, BigDecimal amount) {
+        String sql = "INSERT INTO menu_item_ingredient(menu_item_id,ingredient_id,quantity_required) "
+                + "VALUES (?,?,?) ON DUPLICATE KEY UPDATE quantity_required=VALUES(quantity_required)";
+        try (Connection connection = config.openConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, menuItemId);
+            statement.setLong(2, ingredientId);
+            statement.setBigDecimal(3, amount);
+            statement.executeUpdate();
+        } catch (SQLException ex) {
+            throw repositoryFailure("Unable to save recipe ingredient.", ex);
+        }
+    }
+
+    @Override
+    public boolean removeRecipeIngredient(long menuItemId, long ingredientId) {
+        String sql = "DELETE FROM menu_item_ingredient WHERE menu_item_id=? AND ingredient_id=?";
+        try (Connection connection = config.openConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, menuItemId);
+            statement.setLong(2, ingredientId);
+            return statement.executeUpdate() > 0;
+        } catch (SQLException ex) {
+            throw repositoryFailure("Unable to remove recipe ingredient.", ex);
+        }
     }
 
     private long nextId(String table, String column) {

@@ -44,6 +44,24 @@ public class JdbcEventOperationsRepository implements EventOperationsRepository 
         }
     }
 
+    @Override
+    public boolean hasConfirmedEvent(String label, LocalDate date, LocalTime start, LocalTime end) {
+        if (EventOperationsRepository.super.hasConfirmedEvent(label, date, start, end)) return true;
+        String sql = "SELECT 1 FROM event_booking eb JOIN event_package ep ON ep.package_id=eb.package_id "
+                + "WHERE eb.event_reference=? AND eb.event_date=? AND eb.booking_status='CONFIRMED' "
+                + "AND eb.event_time<=? AND ADDTIME(eb.event_time,SEC_TO_TIME(ep.duration_minutes*60))>=? LIMIT 1";
+        try (Connection connection = config.openConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, label);
+            statement.setDate(2, Date.valueOf(date));
+            statement.setTime(3, Time.valueOf(start));
+            statement.setTime(4, Time.valueOf(end));
+            try (ResultSet rows = statement.executeQuery()) { return rows.next(); }
+        } catch (SQLException ex) {
+            throw failure("Unable to validate the confirmed event for staff assignment.", ex);
+        }
+    }
+
     // ---------------------------------------------------------------- Venues
 
     @Override

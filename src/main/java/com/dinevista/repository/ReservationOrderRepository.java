@@ -9,11 +9,14 @@ import com.dinevista.model.TableReservationRecord;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface ReservationOrderRepository {
     List<MenuItemRecord> findAllMenuItems();
     Optional<MenuItemRecord> findMenuItem(long id);
+    /** Checks all cart lines together so shared ingredients cannot be overcommitted. */
+    default boolean hasSufficientRecipeStock(Map<Long, Integer> quantities) { return true; }
     List<RestaurantTableRecord> findAllTables();
     Optional<RestaurantTableRecord> findTable(long id);
 

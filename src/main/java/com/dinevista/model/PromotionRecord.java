@@ -1,5 +1,7 @@
 package com.dinevista.model;
 
+import com.dinevista.strategy.DiscountStrategies;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -78,9 +80,7 @@ public class PromotionRecord implements Serializable {
 
     /** Computes the discount for a given subtotal, capped so it never exceeds the subtotal. */
     public BigDecimal calculateDiscount(BigDecimal subtotal) {
-        BigDecimal raw = isPercentage()
-                ? subtotal.multiply(discountValue).divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP)
-                : discountValue;
+        BigDecimal raw = DiscountStrategies.forType(discountType).calculate(subtotal, discountValue);
         if (raw.compareTo(subtotal) > 0) raw = subtotal;
         if (raw.compareTo(BigDecimal.ZERO) < 0) raw = BigDecimal.ZERO;
         return raw.setScale(2, RoundingMode.HALF_UP);

@@ -53,7 +53,7 @@ public class StockTransactionRecord implements Serializable {
 
     public String getQuantityDisplay() {
         String sign = isInbound() ? "+" : "-";
-        if ("ADJUSTMENT".equals(transactionType)) sign = quantity.signum() >= 0 ? "+" : "";
+        if ("ADJUSTMENT".equals(transactionType)) sign = quantity.signum() > 0 ? "+" : quantity.signum() < 0 ? "-" : "";
         return sign + quantity.abs().stripTrailingZeros().toPlainString();
     }
 

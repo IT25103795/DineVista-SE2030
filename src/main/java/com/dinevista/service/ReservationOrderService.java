@@ -475,6 +475,11 @@ public class ReservationOrderService {
             return OperationResult.failure("The combined item quantity cannot exceed "
                     + MAX_CART_QUANTITY + ".");
         }
+        Map<Long, Integer> proposed = new LinkedHashMap<>(cart);
+        proposed.put(menuItemId, updated);
+        if (!repository.hasSufficientRecipeStock(proposed)) {
+            return OperationResult.failure("The selected quantity exceeds current ingredient stock.");
+        }
         cart.put(menuItemId, updated);
         return OperationResult.success(updated);
     }
@@ -496,6 +501,11 @@ public class ReservationOrderService {
         if (item.isEmpty() || !item.get().isAvailable()) {
             cart.remove(menuItemId);
             return OperationResult.failure("This menu item is no longer available and was removed.");
+        }
+        Map<Long, Integer> proposed = new LinkedHashMap<>(cart);
+        proposed.put(menuItemId, quantity);
+        if (!repository.hasSufficientRecipeStock(proposed)) {
+            return OperationResult.failure("The selected quantity exceeds current ingredient stock.");
         }
         cart.put(menuItemId, quantity);
         return OperationResult.success(quantity);
@@ -519,6 +529,9 @@ public class ReservationOrderService {
 
         List<CartLineRecord> cartLines = cartLines(cart);
         if (cartLines.isEmpty()) errors.add("Add at least one available menu item to the cart.");
+        if (!cartLines.isEmpty() && !repository.hasSufficientRecipeStock(cart)) {
+            errors.add("The order exceeds current ingredient stock. Reduce quantities or choose another dish.");
+        }
 
         String linkedReservation = clean(reservationReference);
         if ("DINE_IN".equals(type) || "PRE_ORDER".equals(type)) {
@@ -981,6 +994,11 @@ public class ReservationOrderService {
 
     private OperationResult<FoodOrderRecord> saveCustomerOrderItemChange(
             FoodOrderRecord order, List<OrderItemRecord> updatedItems, String historyNote) {
+        Map<Long, Integer> quantities = new LinkedHashMap<>();
+        for (OrderItemRecord item : updatedItems) quantities.merge(item.getMenuItemId(), item.getQuantity(), Integer::sum);
+        if (!repository.hasSufficientRecipeStock(quantities)) {
+            return OperationResult.failure("The updated order exceeds current ingredient stock.");
+        }
         order.replaceItems(updatedItems, historyNote, order.getCustomerName());
         repository.saveOrder(order);
         createNotification(

@@ -22,6 +22,7 @@ DROP TABLE IF EXISTS event_venue_booking;
 DROP TABLE IF EXISTS event_resource;
 DROP TABLE IF EXISTS event_requirement;
 DROP TABLE IF EXISTS event_booking_status_history;
+DROP TABLE IF EXISTS event_quote;
 DROP TABLE IF EXISTS event_booking;
 DROP TABLE IF EXISTS event_venue;
 DROP TABLE IF EXISTS event_package;
@@ -291,6 +292,25 @@ CREATE TABLE event_booking (
     CONSTRAINT fk_event_venue FOREIGN KEY (venue_id) REFERENCES event_venue(venue_id)
 ) ENGINE=InnoDB;
 
+CREATE TABLE event_quote (
+    quote_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    event_booking_id BIGINT NOT NULL,
+    version_no INT NOT NULL,
+    package_id BIGINT NOT NULL,
+    venue_id BIGINT NOT NULL,
+    guest_count INT NOT NULL,
+    requirements_snapshot TEXT,
+    price_per_guest DECIMAL(12,2) NOT NULL,
+    venue_fee DECIMAL(12,2) NOT NULL,
+    total_amount DECIMAL(14,2) NOT NULL,
+    issued_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    accepted_at TIMESTAMP NULL,
+    accepted_by_user_id BIGINT NULL,
+    UNIQUE KEY uq_event_quote_version (event_booking_id, version_no),
+    CONSTRAINT fk_event_quote_booking FOREIGN KEY (event_booking_id)
+        REFERENCES event_booking(event_booking_id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
 CREATE TABLE event_booking_status_history (
     event_history_id BIGINT PRIMARY KEY AUTO_INCREMENT,
     event_booking_id BIGINT NOT NULL,
@@ -418,6 +438,17 @@ CREATE TABLE invoice (
     CONSTRAINT fk_invoice_customer FOREIGN KEY (customer_id) REFERENCES customer_profile(customer_id),
     CONSTRAINT fk_invoice_order FOREIGN KEY (order_id) REFERENCES food_order(order_id),
     CONSTRAINT fk_invoice_event FOREIGN KEY (event_booking_id) REFERENCES event_booking(event_booking_id)
+) ENGINE=InnoDB;
+
+CREATE TABLE invoice_status_history (
+    history_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    invoice_id BIGINT NOT NULL,
+    status VARCHAR(40) NOT NULL,
+    note VARCHAR(500),
+    changed_by VARCHAR(160),
+    changed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_invoice_history_invoice FOREIGN KEY (invoice_id)
+        REFERENCES invoice(invoice_id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 CREATE TABLE invoice_item (

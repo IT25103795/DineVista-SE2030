@@ -2,10 +2,13 @@ package com.dinevista.controller;
 
 import com.dinevista.model.MenuCategoryRecord;
 import com.dinevista.model.MenuItemAdminRecord;
+import com.dinevista.model.IngredientRecord;
 import com.dinevista.service.MenuService;
+import com.dinevista.service.InventoryService;
 import com.dinevista.service.OperationResult;
 import com.dinevista.util.FlashUtil;
 import com.dinevista.util.MenuContext;
+import com.dinevista.util.InventoryContext;
 import com.dinevista.util.RequestUtil;
 import com.dinevista.util.ReservationOrderContext;
 
@@ -66,6 +69,11 @@ public class StaffMenuServlet extends HttpServlet {
                 List<MenuCategoryRecord> categories = service.allCategories();
                 request.setAttribute("item", item.get());
                 request.setAttribute("categories", categories);
+                request.setAttribute("recipeEnabled", "mysql".equals(getServletContext().getAttribute("menuStorageMode")));
+                if ("mysql".equals(getServletContext().getAttribute("menuStorageMode"))) {
+                    request.setAttribute("recipe", service.recipe(id));
+                    request.setAttribute("ingredients", InventoryContext.service(getServletContext()).allIngredients("", false));
+                }
                 request.getRequestDispatcher("/WEB-INF/views/staff-menu-form.jsp")
                         .forward(request, response);
                 return;
@@ -80,6 +88,7 @@ public class StaffMenuServlet extends HttpServlet {
                 List<MenuCategoryRecord> categories = service.allCategories();
 
                 request.setAttribute("items", items);
+                request.setAttribute("recipeEnabled", "mysql".equals(getServletContext().getAttribute("menuStorageMode")));
                 request.setAttribute("categories", categories);
                 request.setAttribute("menuSearch", search == null ? "" : search);
                 request.setAttribute("selectedCategory", categoryId);
@@ -104,8 +113,35 @@ public class StaffMenuServlet extends HttpServlet {
             throws ServletException, IOException {
         if (!requireManager(request, response)) return;
         String path = path(request);
+        if (path.startsWith("/recipe/")
+                && !"mysql".equals(getServletContext().getAttribute("menuStorageMode"))) {
+            FlashUtil.error(request, "Recipe management requires MySQL storage.");
+            response.sendRedirect(request.getContextPath() + "/staff/menu");
+            return;
+        }
 
         switch (path) {
+            case "/recipe/save": {
+                long itemId = RequestUtil.longValue(request, "itemId", 0);
+                long ingredientId = RequestUtil.longValue(request, "ingredientId", 0);
+                InventoryService inventory = InventoryContext.service(getServletContext());
+                IngredientRecord ingredient = inventory.ingredient(ingredientId).orElse(null);
+                OperationResult<Void> result = service.saveRecipeIngredient(
+                        itemId, ingredient, RequestUtil.clean(request, "quantityRequired"));
+                if (result.isSuccess()) FlashUtil.success(request, "Recipe amount saved. Guest availability now follows live stock.");
+                else FlashUtil.errors(request, result.getErrors());
+                response.sendRedirect(request.getContextPath() + "/staff/menu/edit?id=" + itemId);
+                return;
+            }
+            case "/recipe/remove": {
+                long itemId = RequestUtil.longValue(request, "itemId", 0);
+                long ingredientId = RequestUtil.longValue(request, "ingredientId", 0);
+                OperationResult<Void> result = service.removeRecipeIngredient(itemId, ingredientId);
+                if (result.isSuccess()) FlashUtil.success(request, "Recipe ingredient removed.");
+                else FlashUtil.errors(request, result.getErrors());
+                response.sendRedirect(request.getContextPath() + "/staff/menu/edit?id=" + itemId);
+                return;
+            }
             case "/save": {
                 long id = RequestUtil.longValue(request, "id", 0);
                 long categoryId = RequestUtil.longValue(request, "categoryId", 0);

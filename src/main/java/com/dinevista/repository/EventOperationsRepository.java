@@ -9,6 +9,7 @@ import com.dinevista.model.StaffMemberRecord;
 import com.dinevista.model.StaffScheduleRecord;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -47,6 +48,16 @@ public interface EventOperationsRepository {
     Optional<EventVenueBookingRecord> findVenueBooking(long id);
     EventVenueBookingRecord saveVenueBooking(EventVenueBookingRecord booking);
     long nextVenueBookingId();
+
+    /** A staff assignment must belong to a confirmed event covering its full shift. */
+    default boolean hasConfirmedEvent(String label, LocalDate date, LocalTime start, LocalTime end) {
+        return findAllVenueBookings().stream().anyMatch(booking ->
+                "CONFIRMED".equals(booking.getStatus())
+                        && booking.getEventLabel().equalsIgnoreCase(label)
+                        && booking.getEventDate().equals(date)
+                        && !booking.getStartTime().isAfter(start)
+                        && !booking.getEndTime().isBefore(end));
+    }
 
     // Resource bookings
     List<ResourceBookingRecord> findResourceBookings(long resourceId);

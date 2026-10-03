@@ -49,7 +49,7 @@
         <section class="panel">
             <div class="panel-header">
                 <h3>Booking details &amp; status transition</h3>
-                <p class="muted small">Changes will update the live booking record and notify the coordinator team.</p>
+                <p class="muted small">Selecting QUOTED saves a numbered price/requirements snapshot. Revising guests or requirements while QUOTED creates a new version and resets approval for the latest version. CONFIRMED requires customer acceptance of that current quote.</p>
             </div>
 
             <form method="post" action="<%= ctx %>/staff/event-bookings/update">

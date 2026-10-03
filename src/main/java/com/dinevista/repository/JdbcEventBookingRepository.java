@@ -2,11 +2,13 @@ package com.dinevista.repository;
 
 import com.dinevista.model.EventBookingRecord;
 import com.dinevista.model.EventVenueRecord;
+import com.dinevista.model.EventQuoteRecord;
 import com.dinevista.util.DatabaseConfig;
 import java.math.BigDecimal;
 import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.LocalDateTime;
 import java.util.*;
 
 public class JdbcEventBookingRepository implements EventBookingRepository {
@@ -14,6 +16,16 @@ public class JdbcEventBookingRepository implements EventBookingRepository {
     public JdbcEventBookingRepository(DatabaseConfig config)throws SQLException{
         this.config=config;
         try(Connection c=config.openConnection();PreparedStatement s=c.prepareStatement("SELECT 1 FROM event_booking LIMIT 1")){s.executeQuery();}
+        try(Connection c=config.openConnection();PreparedStatement s=c.prepareStatement(
+                "CREATE TABLE IF NOT EXISTS event_quote ("
+                + "quote_id BIGINT PRIMARY KEY AUTO_INCREMENT,event_booking_id BIGINT NOT NULL,"
+                + "version_no INT NOT NULL,package_id BIGINT NOT NULL,venue_id BIGINT NOT NULL,"
+                + "guest_count INT NOT NULL,requirements_snapshot TEXT,price_per_guest DECIMAL(12,2) NOT NULL,"
+                + "venue_fee DECIMAL(12,2) NOT NULL,total_amount DECIMAL(14,2) NOT NULL,"
+                + "issued_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,accepted_at TIMESTAMP NULL,"
+                + "accepted_by_user_id BIGINT NULL,UNIQUE KEY uq_event_quote_version(event_booking_id,version_no),"
+                + "CONSTRAINT fk_event_quote_booking FOREIGN KEY(event_booking_id) "
+                + "REFERENCES event_booking(event_booking_id) ON DELETE CASCADE) ENGINE=InnoDB")){s.executeUpdate();}
     }
     @Override public EventBookingRecord save(EventBookingRecord b){
         String sql="INSERT INTO event_booking (event_reference,customer_id,package_id,venue_id,contact_name,email,phone,event_type,event_date,event_time,guest_count,requirements_summary,booking_status,estimated_amount) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
@@ -26,11 +38,11 @@ public class JdbcEventBookingRepository implements EventBookingRepository {
     private EventBookingRecord write(EventBookingRecord b,String sql,boolean update){
         try(Connection c=config.openConnection();PreparedStatement s=c.prepareStatement(sql,update?Statement.NO_GENERATED_KEYS:Statement.RETURN_GENERATED_KEYS)){
             int i=1;
-            if(update){s.setLong(i++,b.getCustomerId());s.setLong(i++,b.getPackageId());s.setLong(i++,b.getVenueId());}
+            if(update){if(b.getCustomerId()>0)s.setLong(i++,b.getCustomerId());else s.setNull(i++,Types.BIGINT);s.setLong(i++,b.getPackageId());s.setLong(i++,b.getVenueId());}
             else {s.setString(i++,b.getReference()); if(b.getCustomerId()>0)s.setLong(i++,b.getCustomerId());else s.setNull(i++,Types.BIGINT);
                 s.setLong(i++,b.getPackageId());s.setLong(i++,b.getVenueId());}
             s.setString(i++,b.getCustomerName());s.setString(i++,b.getEmail());s.setString(i++,b.getPhone());s.setString(i++,b.getEventType());
-            s.setDate(i++,java.sql.Date.valueOf(b.getEventDate()));s.setTime(i++,Time.valueOf(b.getEventTime()));s.setInt(i++,b.getGuestCount());
+            s.setDate(i++,java.sql.Date.valueOf(b.getEventDate()));s.setTime(i++,Time.valueOf(LocalTime.parse(b.getEventTime())));s.setInt(i++,b.getGuestCount());
             s.setString(i++,b.getNotes());s.setString(i++,b.getStatus());s.setBigDecimal(i++,b.getTotalAmount());
             if(update)s.setString(i,b.getReference());
             if(s.executeUpdate()!=1)throw new SQLException("Event booking was not found or could not be saved.");
@@ -62,9 +74,9 @@ public class JdbcEventBookingRepository implements EventBookingRepository {
         return list(sql,q,q,q,q);
     }
     @Override public boolean hasConflict(long packageId,long venueId,LocalDate date,LocalTime time,int duration,String excluding){
-        String sql="SELECT 1 FROM event_booking eb JOIN event_package ep ON ep.package_id=eb.package_id WHERE eb.package_id=? AND eb.venue_id=? AND eb.event_date=? AND eb.booking_status<>'CANCELLED' AND (?='' OR eb.event_reference<>?) AND TIME_TO_SEC(eb.event_time) < TIME_TO_SEC(?) + ?*60 AND TIME_TO_SEC(eb.event_time) + ep.duration_minutes*60 > TIME_TO_SEC(?) LIMIT 1";
+        String sql="SELECT 1 FROM event_booking eb JOIN event_package ep ON ep.package_id=eb.package_id WHERE eb.venue_id=? AND eb.event_date=? AND eb.booking_status<>'CANCELLED' AND (?='' OR eb.event_reference<>?) AND TIME_TO_SEC(eb.event_time) < TIME_TO_SEC(?) + ?*60 AND TIME_TO_SEC(eb.event_time) + ep.duration_minutes*60 > TIME_TO_SEC(?) LIMIT 1";
         try(Connection c=config.openConnection();PreparedStatement s=c.prepareStatement(sql)){
-            int i=1;s.setLong(i++,packageId);s.setLong(i++,venueId);s.setDate(i++,java.sql.Date.valueOf(date));s.setString(i++,excluding==null?"":excluding);s.setString(i++,excluding==null?"":excluding);
+            int i=1;s.setLong(i++,venueId);s.setDate(i++,java.sql.Date.valueOf(date));s.setString(i++,excluding==null?"":excluding);s.setString(i++,excluding==null?"":excluding);
             s.setTime(i++,Time.valueOf(time));s.setInt(i++,duration);s.setTime(i,Time.valueOf(time));
             try(ResultSet r=s.executeQuery()){return r.next();}
         }catch(SQLException e){throw failure("Unable to check event availability.",e);}
@@ -86,6 +98,51 @@ public class JdbcEventBookingRepository implements EventBookingRepository {
         try(Connection c=config.openConnection();PreparedStatement s=c.prepareStatement(sql)){
             s.setString(1,status);s.setString(2,note==null?"":note);s.setString(3,reference);s.executeUpdate();
         }catch(SQLException e){throw failure("Unable to record booking status history.",e);}
+    }
+    @Override public List<EventQuoteRecord> findQuotes(String reference){
+        List<EventQuoteRecord> result=new ArrayList<>();
+        String sql="SELECT q.*,b.event_reference FROM event_quote q JOIN event_booking b "
+                + "ON b.event_booking_id=q.event_booking_id WHERE b.event_reference=? ORDER BY q.version_no DESC";
+        try(Connection c=config.openConnection();PreparedStatement s=c.prepareStatement(sql)){
+            s.setString(1,reference);
+            try(ResultSet r=s.executeQuery()){
+                while(r.next()){
+                    Timestamp accepted=r.getTimestamp("accepted_at");
+                    result.add(new EventQuoteRecord(r.getLong("quote_id"),r.getString("event_reference"),
+                            r.getInt("version_no"),r.getLong("package_id"),r.getLong("venue_id"),
+                            r.getInt("guest_count"),r.getString("requirements_snapshot"),
+                            r.getBigDecimal("price_per_guest"),r.getBigDecimal("venue_fee"),
+                            r.getBigDecimal("total_amount"),r.getTimestamp("issued_at").toLocalDateTime(),
+                            accepted==null?null:accepted.toLocalDateTime()));
+                }
+            }
+            return result;
+        }catch(SQLException e){throw failure("Unable to load event quotations.",e);}
+    }
+    @Override public EventQuoteRecord issueQuote(String reference,long packageId,long venueId,int guests,
+                                                  String requirements,BigDecimal pricePerGuest,
+                                                  BigDecimal venueFee,BigDecimal total){
+        String sql="INSERT INTO event_quote(event_booking_id,version_no,package_id,venue_id,guest_count,"
+                + "requirements_snapshot,price_per_guest,venue_fee,total_amount) "
+                + "SELECT b.event_booking_id,COALESCE((SELECT MAX(q.version_no) FROM event_quote q "
+                + "WHERE q.event_booking_id=b.event_booking_id),0)+1,?,?,?,?,?,?,? "
+                + "FROM event_booking b WHERE b.event_reference=?";
+        try(Connection c=config.openConnection();PreparedStatement s=c.prepareStatement(sql)){
+            int i=1;s.setLong(i++,packageId);s.setLong(i++,venueId);s.setInt(i++,guests);
+            s.setString(i++,requirements);s.setBigDecimal(i++,pricePerGuest);
+            s.setBigDecimal(i++,venueFee);s.setBigDecimal(i++,total);s.setString(i,reference);
+            if(s.executeUpdate()!=1)throw new SQLException("Booking was not found.");
+            return findQuotes(reference).get(0);
+        }catch(SQLException e){throw failure("Unable to issue event quotation.",e);}
+    }
+    @Override public boolean acceptQuote(String reference,long quoteId,long customerUserId){
+        String sql="UPDATE event_quote q JOIN event_booking b ON b.event_booking_id=q.event_booking_id "
+                + "SET q.accepted_at=CURRENT_TIMESTAMP,q.accepted_by_user_id=? "
+                + "WHERE q.quote_id=? AND b.event_reference=? AND q.accepted_at IS NULL";
+        try(Connection c=config.openConnection();PreparedStatement s=c.prepareStatement(sql)){
+            if(customerUserId>0)s.setLong(1,customerUserId);else s.setNull(1,Types.BIGINT);
+            s.setLong(2,quoteId);s.setString(3,reference);return s.executeUpdate()==1;
+        }catch(SQLException e){throw failure("Unable to accept event quotation.",e);}
     }
     @Override public long nextId(){return 0;}
     private Optional<EventBookingRecord> query(String sql,String ref){List<EventBookingRecord> l=list(sql,ref);return l.stream().findFirst();}

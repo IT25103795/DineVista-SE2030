@@ -118,10 +118,13 @@
                                 <td><%= HtmlUtil.escape(payment.getVerifiedBy()) %></td>
                                 <td>
                                 <% if ("SUCCESS".equals(payment.getStatus())) { %>
-                                    <form method="post" action="<%= ctx %>/staff/billing/void" onsubmit="return promptVoidReason(this);">
+                                    <form method="post" action="<%= ctx %>/staff/billing/void">
                                         <input type="hidden" name="paymentId" value="<%= payment.getId() %>">
                                         <input type="hidden" name="invoiceId" value="<%= invoice.getId() %>">
-                                        <input type="hidden" name="reason" class="void-reason">
+                                        <label class="small" for="void-reason-<%= payment.getId() %>">Refund reason</label>
+                                        <input class="form-control" id="void-reason-<%= payment.getId() %>" name="reason"
+                                               type="text" maxlength="255" required style="min-width:10rem;margin-bottom:6px"
+                                               placeholder="Required reason">
                                         <button class="btn btn-danger btn-sm" type="submit">Void / refund</button>
                                     </form>
                                 <% } %>
@@ -178,12 +181,6 @@
     </div>
 </section>
 <script>
-function promptVoidReason(form) {
-    var reason = window.prompt('Reason for voiding / refunding this payment:');
-    if (!reason) return false;
-    form.querySelector('.void-reason').value = reason;
-    return true;
-}
 function promptCancelReason(form) {
     if (!window.confirm('Mark this invoice as Cancelled?')) return false;
     var reason = window.prompt('Reason for cancelling this invoice:') || 'Cancelled by staff.';

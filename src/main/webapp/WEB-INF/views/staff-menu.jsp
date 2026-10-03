@@ -210,6 +210,10 @@
                                         Edit
                                     </button>
 
+                                    <% if (Boolean.TRUE.equals(request.getAttribute("recipeEnabled"))) { %>
+                                    <a class="btn btn-secondary btn-sm" href="<%= ctx %>/staff/menu/edit?id=<%= item.getId() %>" title="Manage stock-linked recipe">Recipe</a>
+                                    <% } %>
+
                                     <!-- Delete Item from Database -->
                                     <form method="post" action="<%= ctx %>/staff/menu/delete" style="display:inline; margin:0;" onsubmit="return confirm('Are you sure you want to permanently delete \'<%= HtmlUtil.escape(item.getName()) %>\' from the database?');">
                                         <input type="hidden" name="id" value="<%= item.getId() %>">

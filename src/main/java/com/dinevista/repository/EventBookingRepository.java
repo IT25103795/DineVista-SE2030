@@ -2,6 +2,8 @@ package com.dinevista.repository;
 
 import com.dinevista.model.EventBookingRecord;
 import com.dinevista.model.EventVenueRecord;
+import com.dinevista.model.EventQuoteRecord;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
@@ -19,5 +21,10 @@ public interface EventBookingRepository {
     List<EventVenueRecord> findVenues();
     Long customerIdForUser(long userId);
     void addStatusHistory(String reference, String status, String note);
+    List<EventQuoteRecord> findQuotes(String reference);
+    EventQuoteRecord issueQuote(String reference, long packageId, long venueId, int guests,
+                                String requirements, BigDecimal pricePerGuest,
+                                BigDecimal venueFee, BigDecimal total);
+    boolean acceptQuote(String reference, long quoteId, long customerUserId);
     long nextId();
 }

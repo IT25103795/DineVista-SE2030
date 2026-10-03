@@ -2,6 +2,9 @@ package com.dinevista.repository;
 
 import com.dinevista.model.MenuCategoryRecord;
 import com.dinevista.model.MenuItemAdminRecord;
+import com.dinevista.model.MenuRecipeIngredientRecord;
+
+import java.math.BigDecimal;
 
 import java.util.List;
 import java.util.Optional;
@@ -31,4 +34,13 @@ public interface MenuRepository {
     boolean deleteItem(long id);
     boolean itemReferencedByOrders(long id);
     long nextItemId();
+
+    /** Recipe management is available in the MySQL-backed application. */
+    default List<MenuRecipeIngredientRecord> findRecipe(long menuItemId) { return List.of(); }
+    default void upsertRecipeIngredient(long menuItemId, long ingredientId, BigDecimal amount) {
+        throw new UnsupportedOperationException("Recipe management requires MySQL storage.");
+    }
+    default boolean removeRecipeIngredient(long menuItemId, long ingredientId) {
+        throw new UnsupportedOperationException("Recipe management requires MySQL storage.");
+    }
 }

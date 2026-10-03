@@ -188,7 +188,7 @@ public class BillingServlet extends HttpServlet {
             OperationResult<Void> result = billingService.deleteInvoice(
                     invoiceId, RequestUtil.clean(request, "reason"), staffName);
             if (result.isSuccess()) {
-                FlashUtil.success(request, "Invoice was permanently deleted from the database.");
+                FlashUtil.success(request, "Invoice was permanently deleted.");
                 response.sendRedirect(request.getContextPath() + "/staff/billing");
             } else {
                 FlashUtil.errors(request, result.getErrors());

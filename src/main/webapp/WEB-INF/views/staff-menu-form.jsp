@@ -80,7 +80,7 @@
 
                     <!-- Price -->
                     <div class="form-group">
-                        <label for="price">Price in LKR <span style="color:#b3261e;">* (BR-MEN-01: &gt; 0)</span></label>
+                        <label for="price">Price in LKR <span style="color:#b3261e;">*</span></label>
                         <input class="form-control" id="price" name="price" type="number" step="0.01" min="0.01" required
                                placeholder="e.g. 2450.00"
                                value="<%= editing ? item.getPrice().toPlainString() : "" %>">

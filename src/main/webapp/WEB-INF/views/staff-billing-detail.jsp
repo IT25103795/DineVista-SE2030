@@ -18,7 +18,7 @@
             <div class="breadcrumbs dark"><a href="<%= ctx %>/staff/billing">Billing</a><span>/</span><span><%= HtmlUtil.escape(invoice.getInvoiceNumber()) %></span></div>
             <span class="eyebrow">Billing, Promotions &amp; Discounts</span>
             <h1><%= HtmlUtil.escape(invoice.getInvoiceNumber()) %></h1>
-            <p>Review charges, record and verify simulated payments, and keep a complete audit trail of every change.</p>
+            <p>Review charges, record test payments, and see a complete history of every change.</p>
         </div>
         <a class="btn btn-secondary" href="<%= ctx %>/staff/billing">Back to billing</a>
     </div>
@@ -69,7 +69,7 @@
             <article class="detail-card">
                 <span class="section-kicker">Cashier / Finance action</span>
                 <h3>Record and verify a payment</h3>
-                <p class="muted">Payments are recorded and verified locally — there is no live payment gateway in this prototype. A duplicate reference is always blocked.</p>
+                <p class="muted">Payments here are for demonstration only; no real money is transferred. A payment reference can be used only once.</p>
                 <form method="post" action="<%= ctx %>/staff/billing/pay">
                     <input type="hidden" name="invoiceId" value="<%= invoice.getId() %>">
                     <div class="form-grid">
@@ -188,7 +188,7 @@ function promptCancelReason(form) {
     return true;
 }
 function promptDeleteReason(form) {
-    if (!window.confirm('Are you sure you want to PERMANENTLY DELETE this invoice from the database?\nThis will completely erase the invoice record.')) return false;
+    if (!window.confirm('Permanently delete this invoice? This cannot be undone.')) return false;
     var reason = window.prompt('Reason for permanently deleting this invoice:');
     if (!reason || !reason.trim()) {
         alert('A reason is required before deleting.');

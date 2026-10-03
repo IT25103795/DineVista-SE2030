@@ -233,7 +233,7 @@ public class ReservationServlet extends HttpServlet {
                 customerKey, reference, reason, manager);
 
         if (result.isSuccess()) {
-            FlashUtil.success(request, "Reservation " + reference + " has been permanently deleted from the database.");
+            FlashUtil.success(request, "Reservation " + reference + " has been permanently deleted.");
             response.sendRedirect(request.getContextPath() + "/reservations");
         } else {
             FlashUtil.errors(request, result.getErrors());

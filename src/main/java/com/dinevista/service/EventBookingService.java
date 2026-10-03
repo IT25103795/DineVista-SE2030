@@ -50,7 +50,7 @@ public class EventBookingService {
         if(old.isEmpty())return OperationResult.failure("Event booking was not found.");
         if(date==null||time==null)return OperationResult.failure("Select a valid event date and time.");
         if(!STATUSES.contains(status))return OperationResult.failure("Select a valid booking status.");
-        if(!validTransition(old.get().getStatus(),status))return OperationResult.failure("This booking status transition is not allowed.");
+        if(!validTransition(old.get().getStatus(),status))return OperationResult.failure("This booking cannot be moved to the selected status.");
         if("CONFIRMED".equals(old.get().getStatus())
                 && (old.get().getPackageId()!=packageId||old.get().getVenueId()!=venueId
                 ||old.get().getGuestCount()!=guests

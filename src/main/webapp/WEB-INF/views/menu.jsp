@@ -133,7 +133,7 @@
         <div>
             <span class="section-kicker">Flexible ordering</span>
             <h2>Dine in, pre-order for a reservation, or collect takeaway.</h2>
-            <p class="banner-desc">All cart totals and business rules are validated by the Java service layer before an order is stored.</p>
+            <p class="banner-desc">Review your choices and total before placing your order.</p>
             <div class="order-modes-grid">
                 <div class="order-mode-item">
                     <div class="order-mode-icon">

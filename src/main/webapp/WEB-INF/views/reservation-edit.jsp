@@ -71,7 +71,7 @@
         <aside class="info-card">
             <span class="section-kicker">Edit policy</span>
             <h3>Before confirmation</h3>
-            <p class="muted">Changing the date, time, party size, or area triggers a new availability validation.</p>
+            <p class="muted">If you change the date, time, party size, or area, we will check availability again.</p>
             <ul class="info-list">
                 <li><span><strong>Status</strong><span><%= HtmlUtil.escape(editReservation.getStatus()) %></span></span></li>
                 <li><span><strong>Current table</strong><span><%= editReservation.getTableCode() == null ? "Not assigned" : HtmlUtil.escape(editReservation.getTableCode()) %></span></span></li>

@@ -15,7 +15,7 @@
             <div class="breadcrumbs dark"><a href="<%= ctx %>/staff/inventory">Inventory</a><span>/</span><span><%= editing ? "Edit" : "Add" %></span></div>
             <span class="eyebrow">Inventory Management</span>
             <h1><%= editing ? "Edit ingredient." : "Add a new ingredient." %></h1>
-            <p><%= editing ? "Update details for " + HtmlUtil.escape(ingredient.getName()) + ". Stock quantity itself changes only through recorded transactions." : "Register a new stock-controlled ingredient. Opening quantity starts at zero -- record a purchase transaction next to bring in stock." %></p>
+            <p><%= editing ? "Update details for " + HtmlUtil.escape(ingredient.getName()) + ". To change its quantity, record a stock purchase or use." : "Add a new ingredient. Its quantity starts at zero; record a stock purchase when it arrives." %></p>
         </div>
         <a class="btn btn-secondary" href="<%= ctx %>/staff/inventory">Back to inventory</a>
     </div>

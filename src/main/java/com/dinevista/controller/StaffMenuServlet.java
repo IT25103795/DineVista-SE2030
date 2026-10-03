@@ -115,7 +115,7 @@ public class StaffMenuServlet extends HttpServlet {
         String path = path(request);
         if (path.startsWith("/recipe/")
                 && !"mysql".equals(getServletContext().getAttribute("menuStorageMode"))) {
-            FlashUtil.error(request, "Recipe management requires MySQL storage.");
+            FlashUtil.error(request, "Recipe editing is temporarily unavailable.");
             response.sendRedirect(request.getContextPath() + "/staff/menu");
             return;
         }

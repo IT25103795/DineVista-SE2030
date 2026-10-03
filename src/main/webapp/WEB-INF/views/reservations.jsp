@@ -313,7 +313,7 @@
             <ul class="info-list">
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span><strong>Opening hours</strong><span>Daily from 11:00 AM to 11:00 PM.</span></span></li>
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-5.2 7-12a7 7 0 1 0-14 0c0 6.8 7 12 7 12z"/><circle cx="12" cy="9" r="2"/></svg><span><strong>Location</strong><span>Malabe, Sri Lanka.</span></span></li>
-                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4zM8 9h8M8 13h5"/></svg><span><strong>Business rule</strong><span>Reservations must be made at least 30 minutes in advance.</span></span></li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4zM8 9h8M8 13h5"/></svg><span><strong>Book ahead</strong><span>Reservations must be made at least 30 minutes in advance.</span></span></li>
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M12 3v18"/></svg><span><strong>Table assignment</strong><span>Staff assign a suitable non-overlapping table before confirmation.</span></span></li>
             </ul>
         </aside>

@@ -191,7 +191,7 @@ public class MenuService {
             try {
                 price = new BigDecimal(priceRaw.trim());
                 if (price.compareTo(BigDecimal.ZERO) <= 0) {
-                    errors.add("Price must be greater than zero (BR-MEN-01).");
+                    errors.add("Price must be greater than zero.");
                 } else if (price.scale() > 2) {
                     price = price.setScale(2, RoundingMode.HALF_UP);
                 }
@@ -234,7 +234,7 @@ public class MenuService {
         if (categoryId != null && categoryId > 0 && !cleanName.isEmpty()) {
             Optional<MenuItemAdminRecord> duplicate = repository.findItemByNameInCategory(cleanName, categoryId);
             if (duplicate.isPresent() && duplicate.get().getId() != id) {
-                errors.add("An item named '" + cleanName + "' already exists in this category (A2 duplicate prevention).");
+                errors.add("An item named '" + cleanName + "' already exists in this category.");
             }
         }
 
@@ -276,7 +276,7 @@ public class MenuService {
         boolean deleted = repository.deleteItem(id);
         if (deleted) {
             return new DeleteOutcome(true, false,
-                    "'" + item.getName() + "' was permanently deleted from the database.");
+                    "'" + item.getName() + "' was permanently deleted.");
         } else {
             return new DeleteOutcome(false, false, "Failed to remove menu item.");
         }

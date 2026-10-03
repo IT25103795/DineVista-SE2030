@@ -210,7 +210,7 @@ public class BillingService {
 
         boolean deleted = repository.deleteInvoice(invoiceId);
         if (!deleted) {
-            return OperationResult.failure("Failed to delete invoice from the database.");
+            return OperationResult.failure("Could not delete the invoice. Please try again.");
         }
         return OperationResult.success(null);
     }

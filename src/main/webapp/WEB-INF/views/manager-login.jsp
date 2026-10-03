@@ -10,7 +10,7 @@
                 <a class="brand" href="<%= ctx %>/"><img src="<%= ctx %>/assets/images/logo.svg" alt=""><span>Dine<em>Vista</em></span></a>
                 <h2>Restaurant operations manager portal.</h2>
                 <p>Only verified manager accounts can access reservations, kitchen orders, inventory, and management reporting.</p>
-                <ul class="check-list"><li>Role checked against the database</li><li>Manager-only operational access</li><li>Customer accounts are rejected here</li></ul>
+                <ul class="check-list"><li>Private access for restaurant managers</li><li>Oversee daily restaurant operations</li><li>Customers can sign in through the customer page</li></ul>
             </aside>
             <div class="auth-content">
                 <span class="section-kicker">Restricted access</span>

@@ -19,7 +19,7 @@
         <div>
             <span class="eyebrow">Restaurant &amp; event finance</span>
             <h1>Billing control centre.</h1>
-            <p>Generate invoices from confirmed charges, apply only eligible promotions, and record and verify simulated payments with a complete, auditable history.</p>
+            <p>Generate invoices from confirmed charges, apply eligible promotions, and record demonstration payments with a clear history.</p>
         </div>
         <div class="hero-actions">
             <a class="btn btn-secondary" href="<%= ctx %>/staff/billing/promotions">Manage promotions</a>

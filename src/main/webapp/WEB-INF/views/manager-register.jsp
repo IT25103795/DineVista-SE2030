@@ -10,7 +10,7 @@
                 <a class="brand" href="<%= ctx %>/"><img src="<%= ctx %>/assets/images/logo.svg" alt=""><span>Dine<em>Vista</em></span></a>
                 <h2>Protected manager account registration.</h2>
                 <p>A valid manager token is required before an account receives access to restaurant operations.</p>
-                <ul class="check-list"><li>Manager token verification</li><li>Secure password hashing</li><li>Database-enforced manager role</li></ul>
+                <ul class="check-list"><li>Invitation required</li><li>Your account stays private</li><li>Access limited to restaurant managers</li></ul>
             </aside>
             <div class="auth-content">
                 <span class="section-kicker">Restricted registration</span>

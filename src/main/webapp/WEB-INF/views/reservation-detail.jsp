@@ -152,7 +152,7 @@
         <button class="icon-btn dialog-close" type="button" data-dialog-close aria-label="Close">×</button>
         <span class="section-kicker">Permanent Deletion</span>
         <h3 id="delete-reservation-title">Permanently delete reservation.</h3>
-        <p class="muted">This record will be completely erased from the database (Pure SQL DELETE).</p>
+        <p class="muted">This reservation will be permanently removed and cannot be recovered.</p>
         <form method="post" action="<%= ctx %>/reservations/delete">
             <input type="hidden" name="reference" value="<%= HtmlUtil.escape(reservation.getReference()) %>">
             <div class="form-group"><label for="deleteReason">Reason for deletion</label><textarea class="form-control" id="deleteReason" name="reason" minlength="3" maxlength="500" required placeholder="Enter deletion reason (e.g. Duplicate test, customer requested removal)"></textarea></div>

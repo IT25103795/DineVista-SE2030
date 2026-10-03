@@ -215,9 +215,9 @@
                                     <% } %>
 
                                     <!-- Delete Item from Database -->
-                                    <form method="post" action="<%= ctx %>/staff/menu/delete" style="display:inline; margin:0;" onsubmit="return confirm('Are you sure you want to permanently delete \'<%= HtmlUtil.escape(item.getName()) %>\' from the database?');">
+                                    <form method="post" action="<%= ctx %>/staff/menu/delete" style="display:inline; margin:0;" onsubmit="return confirm('Permanently delete \'<%= HtmlUtil.escape(item.getName()) %>\'? This cannot be undone.');">
                                         <input type="hidden" name="id" value="<%= item.getId() %>">
-                                        <button class="btn btn-sm" style="white-space: nowrap; font-weight: 600; color: #b3261e; background: rgba(179,38,30,.08); border: 1px solid rgba(179,38,30,.2);" type="submit" title="Delete from database">
+                                        <button class="btn btn-sm" style="white-space: nowrap; font-weight: 600; color: #b3261e; background: rgba(179,38,30,.08); border: 1px solid rgba(179,38,30,.2);" type="submit" title="Permanently delete item">
                                             Delete
                                         </button>
                                     </form>

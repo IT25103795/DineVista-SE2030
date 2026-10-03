@@ -337,7 +337,7 @@ public class ReservationOrderService {
 
         boolean deleted = repository.deleteReservation(reference);
         if (!deleted) {
-            return OperationResult.failure("Failed to delete reservation from the database.");
+            return OperationResult.failure("Could not delete the reservation. Please try again.");
         }
 
         if (!isStaffOrManager) {
@@ -654,7 +654,7 @@ public class ReservationOrderService {
 
         boolean deleted = repository.deleteOrder(reference);
         if (!deleted) {
-            return OperationResult.failure("Failed to delete food order from the database.");
+            return OperationResult.failure("Could not delete the food order. Please try again.");
         }
 
         if (!isStaffOrManager) {

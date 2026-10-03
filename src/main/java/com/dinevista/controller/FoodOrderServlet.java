@@ -249,7 +249,7 @@ public class FoodOrderServlet extends HttpServlet {
                 reason, manager);
 
         if (result.isSuccess()) {
-            FlashUtil.success(request, "Order " + reference + " has been permanently deleted from the database.");
+            FlashUtil.success(request, "Order " + reference + " has been permanently deleted.");
             response.sendRedirect(request.getContextPath() + "/orders");
         } else {
             FlashUtil.errors(request, result.getErrors());

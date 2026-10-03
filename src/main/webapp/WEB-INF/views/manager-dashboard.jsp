@@ -20,8 +20,8 @@
         <div class="kpi-grid">
             <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span><span class="trend">Live operations</span></div><strong><%= activeReservationCount %></strong><span>Active reservations</span></article>
             <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4h2l2 10h10l2-7H7"/></svg></span><span class="trend">Kitchen queue</span></div><strong><%= activeOrderCount %></strong><span>Active food orders</span></article>
-            <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M3 12h18"/></svg></span><span class="trend">Validation</span></div><strong>90m</strong><span>Reservation slot protection</span></article>
-            <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg></span><span class="trend">Connected control</span></div><strong>9</strong><span>Operational workspaces</span></article>
+            <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M3 12h18"/></svg></span><span class="trend">Reservations</span></div><strong>90m</strong><span>Time between table bookings</span></article>
+            <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg></span><span class="trend">Daily management</span></div><strong>9</strong><span>Areas to manage</span></article>
         </div>
 
         <div class="dashboard-grid">
@@ -162,12 +162,12 @@
                 </div>
             </section>
             <aside class="panel">
-                <div class="panel-header"><h3>Business rules active</h3></div>
+                <div class="panel-header"><h3>Keeping daily operations on track</h3></div>
                 <ul class="check-list operational-checks">
                     <li>Prevents overlapping table assignments.</li>
                     <li>Validates party size and table capacity.</li>
                     <li>Blocks invalid item quantities.</li>
-                    <li>Enforces reservation and order status transitions.</li>
+                    <li>Keeps reservations and orders moving through the right stages.</li>
                     <li>Guarantees conflict-free venue and equipment allocation.</li>
                     <li>Prevents shift and event staff double-booking.</li>
                     <li>Validates package guest thresholds and duration windows.</li>

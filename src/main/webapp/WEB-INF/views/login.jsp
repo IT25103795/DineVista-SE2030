@@ -10,7 +10,7 @@
                 <a class="brand" href="<%= ctx %>/"><img src="<%= ctx %>/assets/images/logo.svg" alt=""><span>Dine<em>Vista</em></span></a>
                 <h2>Welcome back to your DineVista experience.</h2>
                 <p>This customer portal keeps reservations, food orders, events, and notifications connected to your account.</p>
-                <ul class="check-list"><li>Database-backed customer account</li><li>Private reservation and order history</li><li>Separate access from restaurant management</li></ul>
+                <ul class="check-list"><li>Your personal DineVista account</li><li>Private reservation and order history</li><li>Easy access to your dining plans</li></ul>
             </aside>
             <div class="auth-content">
                 <span class="section-kicker">Customer access</span>

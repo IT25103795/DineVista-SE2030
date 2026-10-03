@@ -113,7 +113,7 @@
                 </div>
                 <% if (editablePendingOrder) { %>
                     <div class="pending-order-editor">
-                        <div><span class="section-kicker">Before staff confirmation</span><h3>Add another menu item</h3><p class="muted small">Quantities and totals are recalculated on the server and recorded in the order history.</p></div>
+                        <div><span class="section-kicker">Before staff confirmation</span><h3>Add another menu item</h3><p class="muted small">Your updated items and total will appear in your order history.</p></div>
                         <form method="post" action="<%= ctx %>/orders/items/add">
                             <input type="hidden" name="reference" value="<%= HtmlUtil.escape(order.getReference()) %>">
                             <div class="form-group">
@@ -199,7 +199,7 @@
         <button class="icon-btn dialog-close" type="button" data-dialog-close aria-label="Close">×</button>
         <span class="section-kicker">Permanent Deletion</span>
         <h3 id="delete-order-title">Permanently delete food order.</h3>
-        <p class="muted">This order will be completely erased from the database (Pure SQL DELETE).</p>
+        <p class="muted">This order will be permanently removed and cannot be recovered.</p>
         <form method="post" action="<%= ctx %>/orders/delete">
             <input type="hidden" name="reference" value="<%= HtmlUtil.escape(order.getReference()) %>">
             <div class="form-group"><label for="orderDeleteReason">Reason for deletion</label><textarea class="form-control" id="orderDeleteReason" name="reason" minlength="3" maxlength="255" required placeholder="Enter deletion reason (e.g. Duplicate order, testing order, customer requested removal)"></textarea></div>

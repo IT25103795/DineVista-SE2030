@@ -17,7 +17,7 @@
 <% if (quotes != null && !quotes.isEmpty()) { EventQuoteRecord latest=quotes.get(0); %>
 <article class="detail-card" style="margin-top:18px">
     <h2>Quotation versions</h2>
-    <p class="muted">Only the latest version can be approved. Earlier versions stay visible as an audit trail.</p>
+    <p class="muted">Only the latest version can be approved. Earlier versions remain in your booking history.</p>
     <div class="table-wrap"><table class="data-table operations-table"><thead><tr><th>Version</th><th>Guests</th><th>Per guest</th><th>Venue</th><th>Total</th><th>Approval</th></tr></thead><tbody>
     <% for (EventQuoteRecord quote : quotes) { %><tr>
         <td>v<%= quote.getVersion() %><%= quote.getId()==latest.getId()?" · Current":"" %></td>

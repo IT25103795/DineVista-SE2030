@@ -96,17 +96,9 @@
             </div>
             <div class="form-group">
                 <label for="availabilityTime">Time</label>
-                <select class="form-control" id="availabilityTime" name="availabilityTime" required>
-                    <option value="">Select time</option>
-                    <% String availabilityTime = request.getParameter("availabilityTime") == null ? "" : request.getParameter("availabilityTime"); %>
-                    <option value="11:30" <%= HtmlUtil.selected("11:30", availabilityTime) %>>11:30 AM</option>
-                    <option value="12:30" <%= HtmlUtil.selected("12:30", availabilityTime) %>>12:30 PM</option>
-                    <option value="13:30" <%= HtmlUtil.selected("13:30", availabilityTime) %>>1:30 PM</option>
-                    <option value="18:30" <%= HtmlUtil.selected("18:30", availabilityTime) %>>6:30 PM</option>
-                    <option value="19:30" <%= HtmlUtil.selected("19:30", availabilityTime) %>>7:30 PM</option>
-                    <option value="20:30" <%= HtmlUtil.selected("20:30", availabilityTime) %>>8:30 PM</option>
-                    <option value="21:30" <%= HtmlUtil.selected("21:30", availabilityTime) %>>9:30 PM</option>
-                </select>
+                <input class="form-control" id="availabilityTime" name="availabilityTime" type="time"
+                       min="11:00" max="22:00" step="60" required
+                       value="<%= HtmlUtil.escape(request.getParameter("availabilityTime")) %>">
             </div>
             <div class="form-group">
                 <label for="availabilityPartySize">Guests</label>
@@ -227,16 +219,9 @@
                         </div>
                         <div class="form-group">
                             <label for="time">Preferred time</label>
-                            <select class="form-control" id="time" name="time" required data-reservation-field>
-                                <option value="">Select time</option>
-                                <option value="11:30" <%= HtmlUtil.selected("11:30", formTime) %>>11:30 AM</option>
-                                <option value="12:30" <%= HtmlUtil.selected("12:30", formTime) %>>12:30 PM</option>
-                                <option value="13:30" <%= HtmlUtil.selected("13:30", formTime) %>>1:30 PM</option>
-                                <option value="18:30" <%= HtmlUtil.selected("18:30", formTime) %>>6:30 PM</option>
-                                <option value="19:30" <%= HtmlUtil.selected("19:30", formTime) %>>7:30 PM</option>
-                                <option value="20:30" <%= HtmlUtil.selected("20:30", formTime) %>>8:30 PM</option>
-                                <option value="21:30" <%= HtmlUtil.selected("21:30", formTime) %>>9:30 PM</option>
-                            </select>
+                            <input class="form-control" id="time" name="time" type="time"
+                                   min="11:00" max="22:00" step="60" required data-reservation-field
+                                   value="<%= HtmlUtil.escape(formTime) %>">
                         </div>
                         <div class="form-group">
                             <label for="partySize">Party size</label>

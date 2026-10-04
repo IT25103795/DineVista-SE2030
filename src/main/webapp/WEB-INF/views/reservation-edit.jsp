@@ -43,15 +43,7 @@
                     <div class="form-group"><label for="email">Email address</label><input class="form-control" id="email" name="email" type="email" required maxlength="160" value="<%= HtmlUtil.escape(email) %>"></div>
                     <div class="form-group"><label for="phone">Mobile number</label><input class="form-control" id="phone" name="phone" required pattern="(?:\+94|0)7[0-9]{8}" value="<%= HtmlUtil.escape(phone) %>"></div>
                     <div class="form-group"><label for="date">Reservation date</label><input class="form-control" id="date" name="date" type="date" min="<%= LocalDate.now() %>" required value="<%= HtmlUtil.escape(date) %>"></div>
-                    <div class="form-group"><label for="time">Time</label><select class="form-control" id="time" name="time" required>
-                        <option value="11:30" <%= HtmlUtil.selected("11:30", time) %>>11:30 AM</option>
-                        <option value="12:30" <%= HtmlUtil.selected("12:30", time) %>>12:30 PM</option>
-                        <option value="13:30" <%= HtmlUtil.selected("13:30", time) %>>1:30 PM</option>
-                        <option value="18:30" <%= HtmlUtil.selected("18:30", time) %>>6:30 PM</option>
-                        <option value="19:30" <%= HtmlUtil.selected("19:30", time) %>>7:30 PM</option>
-                        <option value="20:30" <%= HtmlUtil.selected("20:30", time) %>>8:30 PM</option>
-                        <option value="21:30" <%= HtmlUtil.selected("21:30", time) %>>9:30 PM</option>
-                    </select></div>
+                    <div class="form-group"><label for="time">Time</label><input class="form-control" id="time" name="time" type="time" min="11:00" max="22:00" step="60" required value="<%= HtmlUtil.escape(time) %>"></div>
                     <div class="form-group"><label for="partySize">Party size</label><input class="form-control" id="partySize" name="partySize" type="number" min="1" max="20" required value="<%= HtmlUtil.escape(party) %>"></div>
                     <div class="form-group"><label for="seatingArea">Seating preference</label><select class="form-control" id="seatingArea" name="seatingArea" required>
                         <option value="ANY" <%= HtmlUtil.selected("ANY", area) %>>Any available area</option>

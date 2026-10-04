@@ -22,6 +22,7 @@
         <div class="hero-actions">
             <a class="btn btn-secondary" href="<%= ctx %>/dashboard">Operations dashboard</a>
             <a class="btn btn-secondary" href="<%= ctx %>/staff/event-resources">Event resources</a>
+            <a class="btn btn-secondary" href="<%= ctx %>/staff/staff-scheduling/mine">My schedule</a>
         </div>
     </div>
 </section>
@@ -36,6 +37,14 @@
             <div><strong><%= schedules == null ? 0 : schedules.size() %></strong><span>Scheduled shifts</span></div>
             <div><strong><%= assignments == null ? 0 : assignments.size() %></strong><span>Event assignments</span></div>
         </div>
+
+        <section class="panel operations-table-panel" style="margin-top:24px">
+            <div class="panel-header"><div><h3>Publish a revised event schedule</h3><span class="muted small">After changes are saved, notify everyone using the shared manager portal.</span></div></div>
+            <form method="post" action="<%= ctx %>/staff/staff-scheduling/publish" class="form-grid" style="padding:20px">
+                <div class="form-group full"><label for="scheduleEventLabel">Confirmed event name</label><input id="scheduleEventLabel" name="eventLabel" class="form-control" maxlength="180" required placeholder="Enter a confirmed event name"></div>
+                <div class="form-actions full"><button class="btn btn-primary" type="submit">Publish revised schedule</button></div>
+            </form>
+        </section>
 
         <section class="panel operations-table-panel">
             <div class="panel-header"><div><h3>Operational staff roster</h3><span class="muted small">Open a staff member to update availability, or schedule shifts and event assignments.</span></div></div>

@@ -178,6 +178,16 @@
     <div class="container order-workspace">
         <section class="cart-panel cart-panel-static">
             <% if (cartLines == null || cartLines.isEmpty()) { %>
+                <% if (checkoutHasErrors) { %>
+                    <div class="alert alert-danger" role="alert">
+                        <strong>Unable to place the food order.</strong>
+                        <ul>
+                            <% for (String error : pageErrors) { %>
+                                <li><%= HtmlUtil.escape(error) %></li>
+                            <% } %>
+                        </ul>
+                    </div>
+                <% } %>
                 <div class="cart-empty-visual">
                     <div class="empty-cart-badge">
                         <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 4h2l2.2 10.1a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 2-1.6L20.5 8H7"/><circle cx="10" cy="20" r="1.2"/><circle cx="18" cy="20" r="1.2"/></svg>

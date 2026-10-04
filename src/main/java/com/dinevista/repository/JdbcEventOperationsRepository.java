@@ -464,6 +464,20 @@ public class JdbcEventOperationsRepository implements EventOperationsRepository 
     }
 
     @Override
+    public Optional<StaffMemberRecord> findStaffByUserId(long userId) {
+        String sql = staffSelect() + " WHERE s.user_id = ?";
+        try (Connection connection = config.openConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, userId);
+            try (ResultSet rows = statement.executeQuery()) {
+                return rows.next() ? Optional.of(mapStaff(rows)) : Optional.empty();
+            }
+        } catch (SQLException ex) {
+            throw failure("Unable to load your schedule.", ex);
+        }
+    }
+
+    @Override
     public boolean updateStaffAvailability(long staffId, String availabilityStatus) {
         String sql = "UPDATE staff_profile SET availability_status = ? WHERE staff_id = ?";
         try (Connection connection = config.openConnection();

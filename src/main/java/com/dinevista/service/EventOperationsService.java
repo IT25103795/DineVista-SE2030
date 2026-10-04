@@ -322,6 +322,8 @@ public class EventOperationsService {
 
     public Optional<StaffMemberRecord> staff(long id) { return repository.findStaff(id); }
 
+    public Optional<StaffMemberRecord> staffForUser(long userId) { return repository.findStaffByUserId(userId); }
+
     public OperationResult<Void> updateStaffAvailability(long staffId, String availabilityStatus) {
         String cleanStatus = clean(availabilityStatus).toUpperCase();
         if (!STAFF_AVAILABILITY.contains(cleanStatus)) return OperationResult.failure("Select a valid availability status.");

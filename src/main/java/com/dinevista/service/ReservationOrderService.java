@@ -527,7 +527,11 @@ public class ReservationOrderService {
         if (!ORDER_TYPES.contains(type)) errors.add("Select a valid order type.");
         if (clean(orderNotes).length() > 500) errors.add("Order notes cannot exceed 500 characters.");
 
+        int originalCartLines = cart.size();
         List<CartLineRecord> cartLines = cartLines(cart);
+        if (cart.size() < originalCartLines) {
+            errors.add("An item in your cart is no longer available and was removed. Please review your order before trying again.");
+        }
         if (cartLines.isEmpty()) errors.add("Add at least one available menu item to the cart.");
         if (!cartLines.isEmpty() && !repository.hasSufficientRecipeStock(cart)) {
             errors.add("The order exceeds current ingredient stock. Reduce quantities or choose another dish.");
@@ -1008,6 +1012,24 @@ public class ReservationOrderService {
                 "ORDER", order.getReference(),
                 "/staff/orders/view?reference=" + order.getReference());
         return OperationResult.success(order);
+    }
+
+    /** Record an operational schedule publication for the shared manager portal. */
+    public OperationResult<Void> publishScheduleNotice(String eventLabel, String summary) {
+        String label = clean(eventLabel);
+        if (label.isEmpty() || label.length() > 180) {
+            return OperationResult.failure("Select a valid event before publishing its schedule.");
+        }
+        try {
+            repository.saveNotification(new NotificationRecord(
+                    0, MANAGER_NOTIFICATION_KEY, "MANAGER", "SCHEDULE_PUBLISHED",
+                    "Event schedule updated", clean(summary), "EVENT",
+                    label.substring(0, Math.min(40, label.length())),
+                    "/staff/staff-scheduling", false, LocalDateTime.now()));
+            return OperationResult.success(null);
+        } catch (RuntimeException ex) {
+            return OperationResult.failure("The schedule could not be published. Please try again.");
+        }
     }
 
     private void createNotification(String recipientKey, String recipientRole, String type,

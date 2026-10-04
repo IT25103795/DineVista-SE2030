@@ -194,6 +194,17 @@ public final class ReservationOrderServiceSelfTest {
         service.menuItem(3).orElseThrow().setAvailable(false);
         ok(!service.addCartItem(cart, 3, 1).isSuccess(), "unavailable menu item blocked");
         service.menuItem(3).orElseThrow().setAvailable(true);
+        Map<Long, Integer> staleCart = new LinkedHashMap<>();
+        ok(service.addCartItem(staleCart, 3, 1).isSuccess(), "available item entered stale cart");
+        service.menuItem(3).orElseThrow().setAvailable(false);
+        OperationResult<FoodOrderRecord> staleCheckout = service.createOrder(
+                "stale-customer", "Order Guest", "order@example.com", "0771234567",
+                "TAKEAWAY", "", LocalDateTime.of(base, LocalTime.of(18, 30)), "", staleCart);
+        ok(!staleCheckout.isSuccess() && staleCheckout.getErrors().stream()
+                        .anyMatch(error -> error.contains("no longer available")),
+                "stale unavailable cart rejected with a clear message");
+        ok(staleCart.isEmpty(), "unavailable cart line removed");
+        service.menuItem(3).orElseThrow().setAvailable(true);
         ok(service.addCartItem(cart, 1, 2).isSuccess(), "cart create item");
         ok(!service.addCartItem(cart, 1, 9).isSuccess(), "combined cart maximum enforced");
         ok(service.updateCartItem(cart, 1, 4).isSuccess(), "cart quantity update");
@@ -441,6 +452,25 @@ public final class ReservationOrderServiceSelfTest {
         ok(service.notifications(ReservationOrderService.MANAGER_NOTIFICATION_KEY, 50).size()
                         == managerNotificationCount,
                 "clearing customer notifications preserves manager notifications");
+
+        ok(!service.publishScheduleNotice("", "Invalid update").isSuccess(),
+                "schedule publication requires an event");
+        ok(service.publishScheduleNotice("LAB6 Confirmed Test Event",
+                "One staff assignment remains after the resource change.").isSuccess(),
+                "schedule publication persists");
+        NotificationRecord scheduleNotice = service.notifications(
+                ReservationOrderService.MANAGER_NOTIFICATION_KEY, 50).stream()
+                .filter(item -> "SCHEDULE_PUBLISHED".equals(item.getType()))
+                .findFirst().orElseThrow();
+        ok("LAB6 Confirmed Test Event".equals(scheduleNotice.getReferenceCode())
+                        && scheduleNotice.getActionPath().equals("/staff/staff-scheduling"),
+                "published schedule notification is traceable");
+        ok(service.publishScheduleNotice("E".repeat(180), "Long named event").isSuccess(),
+                "long confirmed event label can be published");
+        ok(service.notifications(ReservationOrderService.MANAGER_NOTIFICATION_KEY, 50).stream()
+                        .filter(item -> "Long named event".equals(item.getMessage()))
+                        .findFirst().orElseThrow().getReferenceCode().length() == 40,
+                "publication reference fits the notification record");
     }
 
     private static void proposalAlignmentRegressions(ReservationOrderService service,

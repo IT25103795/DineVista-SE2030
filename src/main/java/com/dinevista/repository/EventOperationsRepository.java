@@ -69,6 +69,8 @@ public interface EventOperationsRepository {
     // Staff roster (created via account registration; this module reads and updates status)
     List<StaffMemberRecord> findAllStaff();
     Optional<StaffMemberRecord> findStaff(long id);
+    /** Resolve the operational staff record belonging to the signed-in account. */
+    default Optional<StaffMemberRecord> findStaffByUserId(long userId) { return Optional.empty(); }
     boolean updateStaffAvailability(long staffId, String availabilityStatus);
 
     // Shift schedule

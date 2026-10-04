@@ -66,6 +66,19 @@ public class StaffSchedulingServlet extends HttpServlet {
                         .forward(request, response);
                 return;
             }
+            case "/mine": {
+                Object accountId = request.getSession().getAttribute("userId");
+                if (!(accountId instanceof Number)) { response.sendError(HttpServletResponse.SC_FORBIDDEN); return; }
+                Optional<StaffMemberRecord> staff = service.staffForUser(((Number) accountId).longValue());
+                if (staff.isEmpty()) { response.sendError(HttpServletResponse.SC_NOT_FOUND); return; }
+                long id = staff.get().getId();
+                request.setAttribute("staffMember", staff.get());
+                request.setAttribute("schedules", service.schedulesForStaff(id));
+                request.setAttribute("assignments", service.assignmentsForStaff(id));
+                request.getRequestDispatcher("/WEB-INF/views/staff-my-schedule.jsp")
+                        .forward(request, response);
+                return;
+            }
             default:
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
         }
@@ -148,6 +161,29 @@ public class StaffSchedulingServlet extends HttpServlet {
                     FlashUtil.errors(request, result.getErrors());
                 }
                 response.sendRedirect(request.getContextPath() + "/staff/staff-scheduling/view?id=" + staffId);
+                return;
+            }
+            case "/publish": {
+                String label = RequestUtil.clean(request, "eventLabel");
+                boolean confirmed = service.allVenueBookings().stream().anyMatch(booking ->
+                        "CONFIRMED".equals(booking.getStatus())
+                                && booking.getEventLabel().equalsIgnoreCase(label));
+                if (!confirmed) {
+                    FlashUtil.errors(request, java.util.List.of("Select a confirmed event before publishing its schedule."));
+                } else {
+                    long staffCount = service.allAssignments().stream().filter(a ->
+                            a.getEventLabel().equalsIgnoreCase(label) && a.isActive()).count();
+                    long resourceCount = service.allResourceBookings().stream().filter(b ->
+                            b.getEventLabel().equalsIgnoreCase(label) && b.holdsCapacity()).count();
+                    String summary = "Revised schedule for " + label + ": " + staffCount
+                            + " active staff assignment(s), " + resourceCount
+                            + " active equipment allocation(s). Open scheduling to review the current plan.";
+                    OperationResult<Void> result = ReservationOrderContext.service(getServletContext())
+                            .publishScheduleNotice(label, summary);
+                    if (result.isSuccess()) FlashUtil.success(request, "Revised schedule published to the manager portal.");
+                    else FlashUtil.errors(request, result.getErrors());
+                }
+                response.sendRedirect(request.getContextPath() + "/staff/staff-scheduling");
                 return;
             }
             default:

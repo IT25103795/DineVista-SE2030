@@ -1,6 +1,7 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="com.dinevista.model.EventBookingRecord" %>
 <%@ page import="com.dinevista.model.EventQuoteRecord" %>
+<%@ page import="com.dinevista.model.InvoiceRecord" %>
 <%@ page import="com.dinevista.util.HtmlUtil" %>
 <%@ page import="java.util.List" %>
 <%
@@ -8,6 +9,7 @@
     request.setAttribute("activeNav", "staffEventBookings");
     EventBookingRecord b = (EventBookingRecord) request.getAttribute("booking");
     List<EventQuoteRecord> quotes = (List<EventQuoteRecord>) request.getAttribute("quotes");
+    InvoiceRecord eventInvoice = (InvoiceRecord) request.getAttribute("eventInvoice");
 %>
 <%@ include file="fragments/header.jspf" %>
 <section class="operations-hero">
@@ -100,7 +102,12 @@
                 </div>
                 <div style="display:flex;flex-direction:column;gap:12px;">
                     <a class="btn btn-primary" href="<%= ctx %>/staff/event-bookings/edit?reference=<%= b.getReference() %>">Change status or details</a>
-                    <a class="btn btn-secondary" href="<%= ctx %>/staff/billing/new?sourceType=EVENT_BOOKING&sourceReference=<%= b.getReference() %>">Generate invoice</a>
+                    <% if (eventInvoice != null) { %>
+                        <a class="btn btn-secondary" href="<%= ctx %>/staff/billing/view?id=<%= eventInvoice.getId() %>">View invoice - <%= HtmlUtil.escape(eventInvoice.getStatusLabel()) %></a>
+                        <p class="muted small">Demo payment: <%= eventInvoice.getAmountPaidDisplay() %> of <%= eventInvoice.getTotalAmountDisplay() %> recorded.</p>
+                    <% } else if (quotes != null && !quotes.isEmpty() && quotes.get(0).isAccepted()) { %>
+                        <a class="btn btn-secondary" href="<%= ctx %>/staff/billing/new?sourceType=EVENT_BOOKING&amp;sourceReference=<%= b.getReference() %>">Prepare final invoice</a>
+                    <% } else { %><p class="muted small">The customer must accept the latest quote before the final invoice and demo payment.</p><% } %>
                     <form method="post" action="<%= ctx %>/staff/event-bookings/delete" onsubmit="return confirm('Permanently delete this event booking record?');">
                         <input type="hidden" name="reference" value="<%= b.getReference() %>">
                         <button class="btn btn-ghost" style="width:100%;color:#c53030;" type="submit">Delete record</button>

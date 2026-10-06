@@ -22,7 +22,7 @@ public class InMemoryEventBookingRepository implements EventBookingRepository {
         EventBookingRecord b=found.get();
         update(new EventBookingRecord(b.getId(),b.getReference(),b.getCustomerId(),b.getPackageId(),b.getVenueId(),b.getCustomerName(),
                 b.getEmail(),b.getPhone(),b.getEventType(),b.getPackageName(),b.getVenue(),b.getEventDate(),b.getEventTime(),
-                b.getGuestCount(),b.getTotalAmount(),"CANCELLED",(b.getNotes()+" | Cancellation: "+(note==null?"Customer cancelled":note)).trim()));
+                b.getGuestCount(),b.getTotalAmount(),"CANCELLED",(b.getNotes()+" | Cancellation: "+(note==null?"Customer cancelled":note)).trim(),b.getPromotionCode()));
         return true;
     }
     @Override public boolean delete(String ref){quotes.remove(ref);return bookings.removeIf(b->b.getReference().equals(ref));}

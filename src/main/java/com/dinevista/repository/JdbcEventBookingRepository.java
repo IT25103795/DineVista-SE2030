@@ -17,6 +17,15 @@ public class JdbcEventBookingRepository implements EventBookingRepository {
         this.config=config;
         try(Connection c=config.openConnection();PreparedStatement s=c.prepareStatement("SELECT 1 FROM event_booking LIMIT 1")){s.executeQuery();}
         try(Connection c=config.openConnection();PreparedStatement s=c.prepareStatement(
+                "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='event_booking' AND COLUMN_NAME='promotion_code'")){
+            try(ResultSet rows=s.executeQuery()){
+                if(rows.next()&&rows.getInt(1)==0){
+                    try(Connection update=config.openConnection();PreparedStatement alter=update.prepareStatement(
+                            "ALTER TABLE event_booking ADD COLUMN promotion_code VARCHAR(40) NOT NULL DEFAULT ''")){alter.executeUpdate();}
+                }
+            }
+        }
+        try(Connection c=config.openConnection();PreparedStatement s=c.prepareStatement(
                 "CREATE TABLE IF NOT EXISTS event_quote ("
                 + "quote_id BIGINT PRIMARY KEY AUTO_INCREMENT,event_booking_id BIGINT NOT NULL,"
                 + "version_no INT NOT NULL,package_id BIGINT NOT NULL,venue_id BIGINT NOT NULL,"
@@ -28,11 +37,11 @@ public class JdbcEventBookingRepository implements EventBookingRepository {
                 + "REFERENCES event_booking(event_booking_id) ON DELETE CASCADE) ENGINE=InnoDB")){s.executeUpdate();}
     }
     @Override public EventBookingRecord save(EventBookingRecord b){
-        String sql="INSERT INTO event_booking (event_reference,customer_id,package_id,venue_id,contact_name,email,phone,event_type,event_date,event_time,guest_count,requirements_summary,booking_status,estimated_amount) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+        String sql="INSERT INTO event_booking (event_reference,customer_id,package_id,venue_id,contact_name,email,phone,event_type,event_date,event_time,guest_count,requirements_summary,booking_status,estimated_amount,promotion_code) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
         return write(b,sql,false);
     }
     @Override public EventBookingRecord update(EventBookingRecord b){
-        String sql="UPDATE event_booking SET customer_id=?,package_id=?,venue_id=?,contact_name=?,email=?,phone=?,event_type=?,event_date=?,event_time=?,guest_count=?,requirements_summary=?,booking_status=?,estimated_amount=? WHERE event_reference=?";
+        String sql="UPDATE event_booking SET customer_id=?,package_id=?,venue_id=?,contact_name=?,email=?,phone=?,event_type=?,event_date=?,event_time=?,guest_count=?,requirements_summary=?,booking_status=?,estimated_amount=?,promotion_code=? WHERE event_reference=?";
         return write(b,sql,true);
     }
     private EventBookingRecord write(EventBookingRecord b,String sql,boolean update){
@@ -43,7 +52,7 @@ public class JdbcEventBookingRepository implements EventBookingRepository {
                 s.setLong(i++,b.getPackageId());s.setLong(i++,b.getVenueId());}
             s.setString(i++,b.getCustomerName());s.setString(i++,b.getEmail());s.setString(i++,b.getPhone());s.setString(i++,b.getEventType());
             s.setDate(i++,java.sql.Date.valueOf(b.getEventDate()));s.setTime(i++,Time.valueOf(LocalTime.parse(b.getEventTime())));s.setInt(i++,b.getGuestCount());
-            s.setString(i++,b.getNotes());s.setString(i++,b.getStatus());s.setBigDecimal(i++,b.getTotalAmount());
+            s.setString(i++,b.getNotes());s.setString(i++,b.getStatus());s.setBigDecimal(i++,b.getTotalAmount());s.setString(i++,b.getPromotionCode());
             if(update)s.setString(i,b.getReference());
             if(s.executeUpdate()!=1)throw new SQLException("Event booking was not found or could not be saved.");
             return b;
@@ -158,7 +167,7 @@ public class JdbcEventBookingRepository implements EventBookingRepository {
             r.getLong("customer_id"),r.getLong("package_id"),r.getLong("venue_id"),r.getString("contact_name"),
             r.getString("email"),r.getString("phone"),r.getString("event_type"),r.getString("package_name"),
             r.getString("venue_name"),r.getDate("event_date").toLocalDate().toString(),time,r.getInt("guest_count"),
-            r.getBigDecimal("estimated_amount"),r.getString("booking_status"),r.getString("requirements_summary"));
+            r.getBigDecimal("estimated_amount"),r.getString("booking_status"),r.getString("requirements_summary"),r.getString("promotion_code"));
     }
     private static void addHistory(Connection c,String ref,String status,String note)throws SQLException{
         String sql="INSERT INTO event_booking_status_history(event_booking_id,status,note) SELECT event_booking_id,?,? FROM event_booking WHERE event_reference=?";

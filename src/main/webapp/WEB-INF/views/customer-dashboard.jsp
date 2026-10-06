@@ -2,14 +2,17 @@
 <%@ page import="java.util.List" %>
 <%@ page import="com.dinevista.model.TableReservationRecord" %>
 <%@ page import="com.dinevista.model.FoodOrderRecord" %>
+<%@ page import="com.dinevista.model.EventBookingRecord" %>
 <%@ page import="com.dinevista.util.HtmlUtil" %>
 <%
     request.setAttribute("pageTitle", "Customer Dashboard");
     request.setAttribute("activeNav", "");
     List<TableReservationRecord> customerReservations = (List<TableReservationRecord>) request.getAttribute("customerReservations");
     List<FoodOrderRecord> customerOrders = (List<FoodOrderRecord>) request.getAttribute("customerOrders");
+    List<EventBookingRecord> customerEventBookings = (List<EventBookingRecord>) request.getAttribute("customerEventBookings");
     int reservationCount = customerReservations == null ? 0 : customerReservations.size();
     int orderCount = customerOrders == null ? 0 : customerOrders.size();
+    int eventCount = customerEventBookings == null ? 0 : customerEventBookings.size();
 %>
 <%@ include file="fragments/header.jspf" %>
 <section class="dashboard-page">
@@ -18,7 +21,7 @@
             <div>
                 <span class="eyebrow">Customer portal</span>
                 <h1>Hello, <%= HtmlUtil.escape(session.getAttribute("displayName") == null ? "DineVista Guest" : session.getAttribute("displayName")) %>.</h1>
-                <p>Manage table reservations, food orders, and your next dining experience.</p>
+                <p>Manage table reservations, food orders and booked events in one place.</p>
             </div>
             <a class="btn btn-secondary" href="<%= ctx %>/logout">Sign out</a>
         </div>
@@ -27,7 +30,7 @@
             <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span><span class="trend">My visits</span></div><strong><%= reservationCount %></strong><span>Table reservations</span></article>
             <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4h2l2 10h10l2-7H7"/></svg></span><span class="trend">My favourites</span></div><strong><%= orderCount %></strong><span>Food orders</span></article>
             <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l2.5 5.1L20 9l-4 4 1 5.6-5-2.6-5 2.6 1-5.6-4-4 5.5-.9z"/></svg></span><span class="trend">DineVista rewards</span></div><strong>Silver</strong><span>Loyalty membership</span></article>
-            <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h16M6 20V10l6-6 6 6v10"/></svg></span><span class="trend">Celebrations</span></div><strong>0</strong><span>Event inquiries</span></article>
+            <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h16M6 20V10l6-6 6 6v10"/></svg></span><span class="trend">My events</span></div><strong><%= eventCount %></strong><span>Event bookings</span></article>
         </div>
 
         <div class="dashboard-grid">
@@ -53,6 +56,16 @@
                 </div>
             </aside>
         </div>
+
+        <section class="panel" style="margin-top:22px" id="my-booked-events">
+            <div class="panel-header"><div><h3>My Booked Events</h3><span class="muted small">Review the final invoice after accepting the quote, then use the simulated payment. No real money is charged.</span></div><a class="btn btn-ghost btn-sm" href="<%= ctx %>/event-booking">View all bookings</a></div>
+            <div class="table-wrap"><table class="data-table"><thead><tr><th>Reference</th><th>Package</th><th>Event date</th><th>Base estimate</th><th>Status</th><th></th></tr></thead><tbody>
+                <% if (customerEventBookings == null || customerEventBookings.isEmpty()) { %><tr><td colspan="6">No event bookings yet. <a href="<%= ctx %>/events">Explore event packages</a>.</td></tr>
+                <% } else { int shown = 0; for (EventBookingRecord item : customerEventBookings) { if (shown++ >= 5) break; %>
+                    <tr><td><a class="table-link" href="<%= ctx %>/event-booking/view?reference=<%= HtmlUtil.escape(item.getReference()) %>"><%= HtmlUtil.escape(item.getReference()) %></a></td><td><%= HtmlUtil.escape(item.getPackageName()) %></td><td><%= HtmlUtil.escape(item.getEventDate()) %></td><td>LKR <%= String.format("%,.2f", item.getTotalAmount()) %></td><td><span class="status-badge"><%= HtmlUtil.escape(item.getStatus()) %></span></td><td><a class="btn btn-secondary btn-sm" href="<%= ctx %>/event-booking/view?reference=<%= HtmlUtil.escape(item.getReference()) %>">View</a></td></tr>
+                <% }} %>
+            </tbody></table></div>
+        </section>
 
         <section class="panel" style="margin-top:22px">
             <div class="panel-header"><h3>Recent food orders</h3><a class="btn btn-ghost btn-sm" href="<%= ctx %>/orders#my-orders">View all orders</a></div>

@@ -1,8 +1,10 @@
 package com.dinevista.controller;
 
 import com.dinevista.service.AccountService;
+import com.dinevista.service.EventBookingService;
 import com.dinevista.service.ReservationOrderService;
 import com.dinevista.util.AccountContext;
+import com.dinevista.util.EventBookingContext;
 import com.dinevista.util.ReservationOrderContext;
 
 import javax.servlet.ServletException;
@@ -17,11 +19,13 @@ import java.io.IOException;
 public class DashboardServlet extends HttpServlet {
     private ReservationOrderService service;
     private AccountService accountService;
+    private EventBookingService eventBookingService;
 
     @Override
     public void init() {
         service = ReservationOrderContext.service(getServletContext());
         accountService = AccountContext.service(getServletContext());
+        eventBookingService = EventBookingContext.service(getServletContext());
     }
 
     @Override
@@ -51,6 +55,10 @@ public class DashboardServlet extends HttpServlet {
             String customerKey = ReservationOrderContext.customerKey(request);
             request.setAttribute("customerReservations", service.reservationsForCustomer(customerKey));
             request.setAttribute("customerOrders", service.ordersForCustomer(customerKey));
+            long userId = userIdObj instanceof Long ? (Long) userIdObj : 0L;
+            Object emailValue = session.getAttribute("demoEmail");
+            request.setAttribute("customerEventBookings", eventBookingService.customerBookings(
+                    userId, emailValue == null ? "" : String.valueOf(emailValue)));
             request.getRequestDispatcher("/WEB-INF/views/customer-dashboard.jsp").forward(request, response);
         } else {
             session.invalidate();

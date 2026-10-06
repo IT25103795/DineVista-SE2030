@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * MySQL-backed {@link BillingRepository} for the Billing, Promotions &amp;
@@ -43,6 +44,7 @@ import java.util.UUID;
  */
 public class JdbcBillingRepository implements BillingRepository {
     private final DatabaseConfig config;
+    private final AtomicLong invoiceItemSequence = new AtomicLong();
 
     public JdbcBillingRepository(DatabaseConfig config) throws SQLException {
         this.config = config;
@@ -380,7 +382,10 @@ public class JdbcBillingRepository implements BillingRepository {
     public long nextInvoiceId() { return nextId("invoice", "invoice_id"); }
 
     @Override
-    public long nextInvoiceItemId() { return nextId("invoice_item", "invoice_item_id"); }
+    public long nextInvoiceItemId() {
+        long databaseNext = nextId("invoice_item", "invoice_item_id");
+        return invoiceItemSequence.updateAndGet(previous -> Math.max(previous + 1, databaseNext));
+    }
 
     @Override
     public String nextInvoiceNumber() {

@@ -21,11 +21,13 @@ public class EventBookingRecord implements Serializable {
     private final BigDecimal totalAmount;
     private final String status;
     private final String notes;
+    private final String promotionCode;
 
     public EventBookingRecord(long id, String reference, long customerId, long packageId, long venueId,
                               String customerName, String email, String phone, String eventType,
                               String packageName, String venue, String eventDate, String eventTime,
-                              int guestCount, BigDecimal totalAmount, String status, String notes) {
+                              int guestCount, BigDecimal totalAmount, String status, String notes,
+                              String promotionCode) {
         this.id = id;
         this.reference = reference;
         this.customerId = customerId;
@@ -43,12 +45,13 @@ public class EventBookingRecord implements Serializable {
         this.totalAmount = totalAmount == null ? BigDecimal.ZERO : totalAmount;
         this.status = status;
         this.notes = notes == null ? "" : notes;
+        this.promotionCode = promotionCode == null ? "" : promotionCode;
     }
 
     public EventBookingRecord(String reference, String customerName, String email, String phone,
                               String eventType, String packageName, String venue,
                               String eventDate, int guestCount, String status, String notes) {
-        this(0, reference, 0, 0, 0, customerName, email, phone, eventType, packageName, venue, eventDate, "12:00:00", guestCount, BigDecimal.ZERO, status, notes);
+        this(0, reference, 0, 0, 0, customerName, email, phone, eventType, packageName, venue, eventDate, "12:00:00", guestCount, BigDecimal.ZERO, status, notes, "");
     }
 
     public long getId() { return id; }
@@ -68,4 +71,5 @@ public class EventBookingRecord implements Serializable {
     public BigDecimal getTotalAmount() { return totalAmount; }
     public String getStatus() { return status; }
     public String getNotes() { return notes; }
+    public String getPromotionCode() { return promotionCode; }
 }

@@ -2,6 +2,8 @@ package com.dinevista.service;
 
 import com.dinevista.model.InvoiceItemRecord;
 import com.dinevista.model.InvoiceRecord;
+import com.dinevista.model.EventBookingRecord;
+import com.dinevista.model.EventQuoteRecord;
 import com.dinevista.model.PaymentRecord;
 import com.dinevista.model.PromotionRecord;
 import com.dinevista.model.PromotionUsageRecord;
@@ -12,6 +14,7 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 
@@ -74,6 +77,17 @@ public class BillingService {
         return repository.findInvoiceBySource(sourceType, sourceReference);
     }
 
+    /** Checks a proposed code without consuming it or creating an invoice. */
+    public OperationResult<BigDecimal> previewDiscount(String promotionCode, BigDecimal subtotal) {
+        String code = promotionCode == null ? "" : promotionCode.trim().toUpperCase(Locale.ROOT);
+        if (code.isEmpty()) return OperationResult.success(BigDecimal.ZERO.setScale(2));
+        Optional<PromotionRecord> found = repository.findPromotionByCode(code);
+        if (found.isEmpty()) return OperationResult.failure("Promotion code was not found.");
+        String reason = ineligibilityReason(found.get(), subtotal);
+        if (reason != null) return OperationResult.failure("Promotion cannot be applied: " + reason);
+        return OperationResult.success(found.get().calculateDiscount(subtotal));
+    }
+
     /**
      * Generates an invoice from one or more billable lines (FR15). Line arrays must be the
      * same length; blank rows are ignored. Applies an eligible promotion code when one is
@@ -84,9 +98,57 @@ public class BillingService {
             String sourceType, String sourceReference, String customerKey, String customerName,
             String customerEmail, String[] descriptions, String[] quantities, String[] unitPrices,
             String promotionCode, String issuedBy) {
+        return generateInvoiceInternal(sourceType, sourceReference, customerKey, customerName,
+                customerEmail, descriptions, quantities, unitPrices, promotionCode, issuedBy, false);
+    }
+
+    /** The event charge and customer identity always come from the completed booking, not form fields. */
+    public synchronized OperationResult<InvoiceRecord> generateEventInvoice(
+            EventBookingRecord booking, EventQuoteRecord acceptedQuote,
+            String[] extraDescriptions, String[] extraQuantities,
+            String[] extraUnitPrices, String promotionCode, String issuedBy) {
+        if (booking == null || "CANCELLED".equals(booking.getStatus())
+                || !("QUOTED".equals(booking.getStatus()) || "CONFIRMED".equals(booking.getStatus())
+                || "COMPLETED".equals(booking.getStatus()))
+                || acceptedQuote == null || !acceptedQuote.isAccepted()) {
+            return OperationResult.failure("The customer must accept the latest event quote before an invoice is generated.");
+        }
+        if (!booking.getReference().equals(acceptedQuote.getBookingReference())
+                || booking.getPackageId() != acceptedQuote.getPackageId()
+                || booking.getVenueId() != acceptedQuote.getVenueId()
+                || booking.getGuestCount() != acceptedQuote.getGuestCount()
+                || !booking.getNotes().equals(acceptedQuote.getRequirements())
+                || booking.getTotalAmount().compareTo(acceptedQuote.getTotal()) != 0
+                || acceptedQuote.getTotal().compareTo(BigDecimal.ZERO) <= 0) {
+            return OperationResult.failure("The event details no longer match the accepted quote. Issue a revised quote first.");
+        }
+        int extras = extraDescriptions == null ? 0 : extraDescriptions.length;
+        String[] descriptions = new String[extras + 1];
+        String[] quantities = new String[extras + 1];
+        String[] unitPrices = new String[extras + 1];
+        descriptions[0] = "Event package and venue - " + booking.getPackageName();
+        quantities[0] = "1";
+        unitPrices[0] = acceptedQuote.getTotal().toPlainString();
+        for (int i = 0; i < extras; i++) {
+            descriptions[i + 1] = extraDescriptions[i];
+            quantities[i + 1] = value(extraQuantities, i, "1");
+            unitPrices[i + 1] = value(extraUnitPrices, i, "0");
+        }
+        return generateInvoiceInternal("EVENT_BOOKING", booking.getReference(),
+                booking.getEmail().trim().toLowerCase(Locale.ROOT), booking.getCustomerName(),
+                booking.getEmail(), descriptions, quantities, unitPrices, promotionCode, issuedBy, true);
+    }
+
+    private OperationResult<InvoiceRecord> generateInvoiceInternal(
+            String sourceType, String sourceReference, String customerKey, String customerName,
+            String customerEmail, String[] descriptions, String[] quantities, String[] unitPrices,
+            String promotionCode, String issuedBy, boolean verifiedEvent) {
 
         List<String> errors = new ArrayList<>();
         String cleanSourceType = SOURCE_TYPES.contains(sourceType) ? sourceType : "OTHER";
+        if ("EVENT_BOOKING".equals(cleanSourceType) && !verifiedEvent) {
+            return OperationResult.failure("Select an event booking with an accepted quote to create its invoice.");
+        }
         String cleanReference = sourceReference == null ? "" : sourceReference.trim();
         String cleanCustomerName = (customerName == null || customerName.trim().isEmpty())
                 ? "Walk-in customer" : customerName.trim();
@@ -124,11 +186,13 @@ public class BillingService {
         if (!cleanCode.isEmpty()) {
             Optional<PromotionRecord> promotionOpt = repository.findPromotionByCode(cleanCode);
             if (promotionOpt.isEmpty()) {
+                if (verifiedEvent) return OperationResult.failure("Promotion code was not found. Remove it or choose an eligible code.");
                 promotionNote.append("Promotion \"").append(cleanCode).append("\" was not found; invoice issued at full price.");
             } else {
                 PromotionRecord promotion = promotionOpt.get();
                 String reason = ineligibilityReason(promotion, subtotal);
                 if (reason != null) {
+                    if (verifiedEvent) return OperationResult.failure("Promotion cannot be applied: " + reason);
                     promotionNote.append("Promotion \"").append(cleanCode).append("\" was not applied: ").append(reason);
                 } else {
                     discountAmount = promotion.calculateDiscount(subtotal);

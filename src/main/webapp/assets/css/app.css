@@ -2136,6 +2136,28 @@ textarea.form-control { min-height: 118px; resize: vertical; }
     font-size: clamp(1.7rem, 3vw, 2.5rem);
 }
 
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+}
+
+.detail-grid > div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.detail-grid > div > span {
+    color: var(--muted);
+    font-size: .86rem;
+}
+
+.detail-grid > div > strong {
+    overflow-wrap: anywhere;
+}
+
 .detail-fact-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));

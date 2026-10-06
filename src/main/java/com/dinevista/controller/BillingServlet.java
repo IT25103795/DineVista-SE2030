@@ -1,12 +1,16 @@
 package com.dinevista.controller;
 
 import com.dinevista.model.FoodOrderRecord;
+import com.dinevista.model.EventBookingRecord;
+import com.dinevista.model.EventQuoteRecord;
 import com.dinevista.model.InvoiceRecord;
 import com.dinevista.model.PromotionRecord;
 import com.dinevista.service.BillingService;
+import com.dinevista.service.EventBookingService;
 import com.dinevista.service.OperationResult;
 import com.dinevista.service.ReservationOrderService;
 import com.dinevista.util.BillingContext;
+import com.dinevista.util.EventBookingContext;
 import com.dinevista.util.FlashUtil;
 import com.dinevista.util.RequestUtil;
 import com.dinevista.util.ReservationOrderContext;
@@ -17,7 +21,13 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Owner: Nawarathna N. M. I. N. (IT25103797) — Billing Management with
@@ -41,10 +51,12 @@ import java.util.Optional;
 @WebServlet(urlPatterns = {"/staff/billing", "/staff/billing/*"})
 public class BillingServlet extends HttpServlet {
     private BillingService billingService;
+    private EventBookingService eventBookingService;
 
     @Override
     public void init() {
         billingService = BillingContext.service(getServletContext());
+        eventBookingService = EventBookingContext.service(getServletContext());
     }
 
     @Override
@@ -56,18 +68,7 @@ public class BillingServlet extends HttpServlet {
 
         switch (path) {
             case "/new": {
-                String orderReference = RequestUtil.clean(request, "orderReference");
-                if (!orderReference.isEmpty()) {
-                    ReservationOrderService orderService = ReservationOrderContext.service(getServletContext());
-                    Optional<FoodOrderRecord> order = orderService.order(orderReference);
-                    if (order.isPresent()) {
-                        request.setAttribute("prefillOrder", order.get());
-                        request.setAttribute("existingInvoice",
-                                billingService.existingInvoiceForSource("FOOD_ORDER", orderReference).orElse(null));
-                    }
-                }
-                request.setAttribute("promotions", billingService.allPromotions());
-                request.getRequestDispatcher("/WEB-INF/views/staff-billing-form.jsp").forward(request, response);
+                renderNew(request, response);
                 return;
             }
             case "/view": {
@@ -111,29 +112,35 @@ public class BillingServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         if (!requireManager(request, response)) return;
         String path = path(request);
         String staffName = ReservationOrderContext.displayName(request);
 
         if ("/generate".equals(path)) {
-            OperationResult<InvoiceRecord> result = billingService.generateInvoice(
-                    RequestUtil.clean(request, "sourceType"),
-                    RequestUtil.clean(request, "sourceReference"),
-                    RequestUtil.clean(request, "customerKey"),
-                    RequestUtil.clean(request, "customerName"),
-                    RequestUtil.clean(request, "customerEmail"),
-                    request.getParameterValues("description"),
-                    request.getParameterValues("quantity"),
-                    request.getParameterValues("unitPrice"),
-                    RequestUtil.clean(request, "promotionCode"),
-                    staffName);
+            String sourceType = RequestUtil.clean(request, "sourceType");
+            OperationResult<InvoiceRecord> result;
+            if ("EVENT_BOOKING".equals(sourceType)) {
+                String reference = RequestUtil.clean(request, "sourceReference");
+                EventBookingRecord booking = eventBookingService.booking(reference).orElse(null);
+                EventQuoteRecord acceptedQuote = booking == null ? null : eventBookingService.quotes(reference).stream()
+                        .findFirst().filter(EventQuoteRecord::isAccepted).orElse(null);
+                result = billingService.generateEventInvoice(booking, acceptedQuote,
+                        request.getParameterValues("description"), request.getParameterValues("quantity"),
+                        request.getParameterValues("unitPrice"), RequestUtil.clean(request, "promotionCode"), staffName);
+            } else {
+                result = billingService.generateInvoice(sourceType,
+                        RequestUtil.clean(request, "sourceReference"), RequestUtil.clean(request, "customerKey"),
+                        RequestUtil.clean(request, "customerName"), RequestUtil.clean(request, "customerEmail"),
+                        request.getParameterValues("description"), request.getParameterValues("quantity"),
+                        request.getParameterValues("unitPrice"), RequestUtil.clean(request, "promotionCode"), staffName);
+            }
             if (result.isSuccess()) {
                 FlashUtil.success(request, "Invoice " + result.getValue().getInvoiceNumber() + " was generated.");
                 response.sendRedirect(request.getContextPath() + "/staff/billing/view?id=" + result.getValue().getId());
             } else {
-                FlashUtil.errors(request, result.getErrors());
-                response.sendRedirect(request.getContextPath() + "/staff/billing/new");
+                request.setAttribute("errors", result.getErrors());
+                renderNew(request, response);
             }
             return;
         }
@@ -242,6 +249,54 @@ public class BillingServlet extends HttpServlet {
         if (ReservationOrderContext.isManager(request)) return true;
         response.sendRedirect(request.getContextPath() + "/manager/login?required=manager");
         return false;
+    }
+
+    private void renderNew(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String orderReference = RequestUtil.clean(request, "orderReference");
+        if (!orderReference.isEmpty()) {
+            ReservationOrderService orderService = ReservationOrderContext.service(getServletContext());
+            Optional<FoodOrderRecord> order = orderService.order(orderReference);
+            if (order.isPresent()) {
+                request.setAttribute("prefillOrder", order.get());
+                request.setAttribute("existingInvoice",
+                        billingService.existingInvoiceForSource("FOOD_ORDER", orderReference).orElse(null));
+            }
+        }
+        String eventReference = RequestUtil.clean(request, "sourceReference");
+        EventBookingRecord selectedEvent = "EVENT_BOOKING".equals(RequestUtil.clean(request, "sourceType"))
+                ? eventBookingService.booking(eventReference).filter(this::readyToInvoice).orElse(null) : null;
+        if (selectedEvent != null) {
+            request.setAttribute("selectedEventBooking", selectedEvent);
+            request.setAttribute("existingInvoice", billingService
+                    .existingInvoiceForSource("EVENT_BOOKING", selectedEvent.getReference()).orElse(null));
+        }
+        List<EventBookingRecord> completed = new ArrayList<>();
+        Set<String> invoiced = new HashSet<>();
+        for (EventBookingRecord booking : eventBookingService.allBookings("")) {
+            if (!readyToInvoice(booking)) continue;
+            completed.add(booking);
+            if (billingService.existingInvoiceForSource("EVENT_BOOKING", booking.getReference()).isPresent()) {
+                invoiced.add(booking.getReference());
+            }
+        }
+        request.setAttribute("completedEventBookings", completed);
+        request.setAttribute("invoicedEventReferences", invoiced);
+        List<PromotionRecord> promotions = billingService.allPromotions();
+        Map<Long, Integer> usageCounts = new HashMap<>();
+        for (PromotionRecord promotion : promotions) {
+            usageCounts.put(promotion.getId(), billingService.usageCount(promotion.getId()));
+        }
+        request.setAttribute("promotions", promotions);
+        request.setAttribute("promotionUsageCounts", usageCounts);
+        request.getRequestDispatcher("/WEB-INF/views/staff-billing-form.jsp").forward(request, response);
+    }
+
+    private boolean readyToInvoice(EventBookingRecord booking) {
+        if (!("QUOTED".equals(booking.getStatus()) || "CONFIRMED".equals(booking.getStatus())
+                || "COMPLETED".equals(booking.getStatus()))) return false;
+        return eventBookingService.quotes(booking.getReference()).stream()
+                .findFirst().filter(EventQuoteRecord::isAccepted).isPresent();
     }
 
     private String path(HttpServletRequest request) {

@@ -30,7 +30,11 @@ public class EventBookingService {
     }
     public OperationResult<EventBookingRecord> create(long userId,String customerName,String email,String phone,String eventType,
                                                        long packageId,long venueId,LocalDate date,LocalTime time,int guests,String notes){
-        return save(userId,"customer",null,customerName,email,phone,eventType,packageId,venueId,date,time,guests,notes,"INQUIRY",true);
+        return create(userId,customerName,email,phone,eventType,packageId,venueId,date,time,guests,notes,"");
+    }
+    public OperationResult<EventBookingRecord> create(long userId,String customerName,String email,String phone,String eventType,
+                                                       long packageId,long venueId,LocalDate date,LocalTime time,int guests,String notes,String promotionCode){
+        return save(userId,"customer",null,customerName,email,phone,eventType,packageId,venueId,date,time,guests,notes,"INQUIRY",true,promotionCode);
     }
     public OperationResult<EventBookingRecord> customerUpdate(long userId,String email,String ref,String customerName,String customerEmail,
                                                                String phone,String eventType,long packageId,long venueId,LocalDate date,LocalTime time,int guests,String notes){
@@ -42,7 +46,7 @@ public class EventBookingService {
             return OperationResult.failure("A quote has been issued. Ask the coordinator to revise requirements and issue a new version.");
         if("CONFIRMED".equals(old.getStatus())||"COMPLETED".equals(old.getStatus())||"CANCELLED".equals(old.getStatus()))
             return OperationResult.failure("This booking can no longer be edited.");
-        return save(userId,"customer",ref,customerName,customerEmail,phone,eventType,packageId,venueId,date,time,guests,notes,old.getStatus(),false);
+        return save(userId,"customer",ref,customerName,customerEmail,phone,eventType,packageId,venueId,date,time,guests,notes,old.getStatus(),false,old.getPromotionCode());
     }
     public synchronized OperationResult<EventBookingRecord> managerUpdate(String ref,String customerName,String email,String phone,String eventType,
                                                               long packageId,long venueId,LocalDate date,LocalTime time,int guests,String notes,String status){
@@ -81,7 +85,7 @@ public class EventBookingService {
                 return OperationResult.failure("Booking details differ from the accepted quote. Issue and obtain approval for a revised quote.");
         }
         OperationResult<EventBookingRecord> result=save(0,"manager",ref,customerName,email,phone,eventType,
-                packageId,venueId,date,time,guests,notes,status,false);
+                packageId,venueId,date,time,guests,notes,status,false,old.get().getPromotionCode());
         if(!result.isSuccess()||!"QUOTED".equals(status))return result;
         EventPackageRecord selectedPackage=packageRepository.findById(packageId).orElseThrow();
         EventVenueRecord selectedVenue=venues().stream().filter(v->v.getId()==venueId).findFirst().orElseThrow();
@@ -138,9 +142,10 @@ public class EventBookingService {
     }
     private OperationResult<EventBookingRecord> save(long userId,String actor,String ref,String customerName,String email,String phone,
                                                      String eventType,long packageId,long venueId,LocalDate date,LocalTime time,int guests,String notes,
-                                                     String status,boolean creating){
+                                                     String status,boolean creating,String promotionCode){
         List<String> e=new ArrayList<>();
         customerName=clean(customerName);email=clean(email);phone=clean(phone);eventType=clean(eventType);notes=clean(notes);
+        promotionCode=clean(promotionCode).toUpperCase(Locale.ROOT);
         EventBookingRecord previous=creating?null:booking(ref).orElse(null);
         if(customerName.length()<2||customerName.length()>160)e.add("Enter a valid contact name.");
         if(!email.matches("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"))e.add("Enter a valid email address.");
@@ -153,6 +158,7 @@ public class EventBookingService {
         if(time==null)e.add("Select a valid event time.");
         if(guests<1)e.add("Guest count must be greater than zero.");
         if(notes.length()>5000)e.add("Requirements cannot exceed 5000 characters.");
+        if(!promotionCode.isEmpty()&&!promotionCode.matches("[A-Z0-9_-]{1,40}"))e.add("Select a valid promotion code.");
         EventPackageRecord p=packageRepository.findById(packageId).orElse(null);
         EventVenueRecord v=venues().stream().filter(x->x.getId()==venueId).findFirst().orElse(null);
         if(p==null||(!p.isActive()&&(creating||previous==null||previous.getPackageId()!=packageId)))
@@ -174,7 +180,7 @@ public class EventBookingService {
         if(ref==null)ref="DV-E-"+UUID.randomUUID().toString().substring(0,8).toUpperCase(Locale.ROOT);
         long id=creating?bookingRepository.nextId():previous.getId();
         EventBookingRecord b=new EventBookingRecord(id,ref,customerId,packageId,venueId,customerName,email,phone,eventType,p.getName(),v.getName(),
-                date.toString(),time.toString(),guests,total,status,notes);
+                date.toString(),time.toString(),guests,total,status,notes,promotionCode);
         String previousStatus=creating?null:previous.getStatus();
         EventBookingRecord saved=creating?bookingRepository.save(b):bookingRepository.update(b);
         if(creating)bookingRepository.addStatusHistory(ref,status,"Booking created by customer.");

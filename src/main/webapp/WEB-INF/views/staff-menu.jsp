@@ -179,8 +179,8 @@
                                     <%= item.getStatusLabel() %>
                                 </span>
                             </td>
-                            <td style="text-align:right; white-space: nowrap;">
-                                <div style="display:inline-flex; gap:8px; align-items:center; justify-content:flex-end; white-space:nowrap;">
+                            <td class="menu-actions-cell" style="text-align:right; white-space: nowrap;">
+                                <div class="menu-row-actions" style="display:inline-flex; gap:8px; align-items:center; justify-content:flex-end; white-space:nowrap;">
                                     <!-- 1-Click Availability Toggle -->
                                     <form method="post" action="<%= ctx %>/staff/menu/toggle-status" style="display:inline; margin:0;">
                                         <input type="hidden" name="id" value="<%= item.getId() %>">

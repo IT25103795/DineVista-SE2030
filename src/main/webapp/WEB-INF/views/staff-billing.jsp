@@ -34,7 +34,7 @@
         <% if (request.getAttribute("errors") != null) { %><div class="alert alert-danger"><ul><% for (String error : (List<String>) request.getAttribute("errors")) { %><li><%= HtmlUtil.escape(error) %></li><% } %></ul></div><% } %>
 
         <% if (summary != null) { %>
-        <div class="operations-summary">
+        <div class="operations-summary billing-summary">
             <div><strong><%= summary.getTotalInvoicedDisplay() %></strong><span>Total invoiced</span></div>
             <div><strong><%= summary.getTotalCollectedDisplay() %></strong><span>Collected</span></div>
             <div><strong><%= summary.getTotalOutstandingDisplay() %></strong><span>Outstanding balance</span></div>

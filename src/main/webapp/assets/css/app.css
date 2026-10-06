@@ -6828,3 +6828,157 @@ html[data-theme="dark"] .data-table tbody tr:hover { background: rgba(255, 255, 
     .dashboard-header { gap: 16px; }
     .form-actions .btn { flex: 1 1 150px; }
 }
+
+/* Tables: readable columns on wide screens, complete records on narrow screens. */
+.table-wrap { max-width: 100%; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+.table-wrap.table-scrollable:focus-visible { outline-offset: -3px; }
+.table-wrap .data-table[data-columns="4"] { min-width: 560px; }
+.table-wrap .data-table[data-columns="5"] { min-width: 700px; }
+.table-wrap .data-table[data-columns="6"] { min-width: 800px; }
+.table-wrap .data-table[data-columns="7"] { min-width: 960px; }
+.table-wrap .data-table[data-columns="8"] { min-width: 1120px; }
+.table-wrap .data-table[data-columns="9"] { min-width: 1240px; }
+.data-table td { line-height: 1.45; overflow-wrap: anywhere; }
+.data-table .table-cell-value { display: contents; }
+.data-table td strong, .data-table td a { overflow-wrap: anywhere; }
+.data-table td .status, .data-table td .status-badge { overflow-wrap: normal; }
+.data-table td:has(.form-control) { min-width: 0; }
+.scrollable-dashboard-table .data-table[data-columns="6"] { min-width: 720px; }
+
+/* Five finance figures stay balanced instead of leaving a lone second-row card. */
+.billing-summary { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.billing-summary strong { font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+@media (max-width: 1280px) {
+    .menu-admin-table .menu-row-actions {
+        display: flex !important;
+        flex-wrap: wrap;
+        max-width: 260px;
+        gap: 6px !important;
+        white-space: normal !important;
+    }
+}
+@media (min-width: 621px) and (max-width: 1179px) {
+    .billing-summary { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+    .billing-summary > div { grid-column: span 2; }
+    .billing-summary > div:nth-child(n + 4) { grid-column: span 3; }
+}
+@media (max-width: 620px) {
+    .billing-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .billing-summary > div:last-child { grid-column: 1 / -1; }
+}
+
+@media (max-width: 620px) {
+    .table-wrap.table-cards { overflow: visible; border-radius: 0; }
+    .scrollable-dashboard-table.table-cards { max-height: none; }
+    .table-cards .data-table,
+    .table-cards .data-table tbody {
+        display: block;
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+    .table-cards .data-table thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+    .table-cards .data-table tbody { display: grid; gap: 12px; }
+    .table-cards .data-table tbody tr {
+        display: block;
+        min-width: 0;
+        padding: 5px 15px;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: var(--panel);
+        box-shadow: 0 4px 14px rgba(58, 37, 26, .035);
+    }
+    .table-cards .data-table tbody tr:hover { background: var(--panel); }
+    .table-cards .data-table tbody td {
+        display: grid;
+        grid-template-columns: minmax(0, 40%) minmax(0, 1fr);
+        align-items: start;
+        gap: 8px;
+        width: 100%;
+        min-width: 0;
+        padding: 10px 0 !important;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+    .table-cards .data-table tbody td:last-child { border-bottom: 0; }
+    .table-cards .data-table tbody td::before {
+        content: attr(data-label);
+        color: var(--ink-soft);
+        font-size: .69rem;
+        font-weight: 800;
+        letter-spacing: .035em;
+        line-height: 1.45;
+        text-transform: uppercase;
+        overflow-wrap: anywhere;
+    }
+    .table-cards .data-table .table-cell-value {
+        display: block;
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+    .table-cards .data-table tbody td[data-label="Actions"] {
+        display: block;
+        padding-top: 13px !important;
+    }
+    .table-cards .data-table tbody td[data-label="Actions"]::before {
+        display: block;
+        margin-bottom: 8px;
+    }
+    .table-cards .data-table tbody td[data-label="Actions"] .btn {
+        width: 100%;
+        white-space: normal;
+    }
+    .table-cards .data-table tbody td[colspan] {
+        display: block;
+        padding: 16px 0 !important;
+        text-align: left;
+    }
+    .table-cards .data-table tbody td[colspan]::before { content: none; }
+    .table-cards .data-table tbody td .form-control { width: 100%; min-width: 0 !important; }
+    .table-cards .data-table tbody td form { min-width: 0; }
+    .table-cards .data-table tbody td small { display: block; }
+    .table-cards .menu-admin-table .menu-actions-cell {
+        display: block;
+        text-align: left !important;
+        white-space: normal !important;
+    }
+    .table-cards .menu-admin-table .menu-row-actions {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
+        max-width: none;
+        gap: 8px !important;
+        white-space: normal !important;
+    }
+    .table-cards .menu-admin-table .menu-row-actions > * { min-width: 0; }
+    .table-cards .menu-admin-table .menu-row-actions .btn {
+        width: 100%;
+        min-width: 0;
+        padding-inline: 7px;
+        white-space: normal !important;
+    }
+}
+
+@media (max-width: 1080px) {
+    body.manager-interface .dashboard-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 440px) {
+    .site-header .brand-wordmark { display: none; }
+    .site-header .nav-shell { gap: 8px; }
+    .site-header .nav-actions { gap: 5px; }
+}
+
+@media (max-width: 360px) {
+    .site-header .nav-shell { width: calc(100% - 8px); gap: 3px; }
+    .site-header .nav-actions { gap: 2px; }
+    .site-header .account-pill-edit { padding-inline: 2px; }
+}

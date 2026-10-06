@@ -74,6 +74,42 @@
         menuToggle?.setAttribute('aria-expanded', 'false');
     }));
 
+    // Keep wide tables intact on desktop and give every mobile cell its column label.
+    const tableWrappers = qa('.table-wrap');
+    tableWrappers.forEach(wrapper => {
+        const table = q('table.data-table', wrapper);
+        if (!table) return;
+        const headers = qa('thead th', table);
+        if (!headers.length) return;
+        table.dataset.columns = String(headers.length);
+        wrapper.classList.add('table-cards');
+        qa('tbody tr', table).forEach(row => {
+            qa('td', row).forEach((cell, index) => {
+                if (cell.colSpan > 1) return;
+                cell.dataset.label = (headers[index]?.textContent || '').trim() || 'Actions';
+                const value = document.createElement('div');
+                value.className = 'table-cell-value';
+                while (cell.firstChild) value.appendChild(cell.firstChild);
+                cell.appendChild(value);
+            });
+        });
+    });
+    const updateTableScroll = () => {
+        tableWrappers.forEach(wrapper => {
+            const canScroll = wrapper.scrollWidth > wrapper.clientWidth + 2 && window.innerWidth > 620;
+            wrapper.classList.toggle('table-scrollable', canScroll);
+            if (canScroll) {
+                wrapper.tabIndex = 0;
+                wrapper.setAttribute('aria-label', 'Scrollable table. Use arrow keys to view more columns.');
+            } else {
+                wrapper.removeAttribute('tabindex');
+                wrapper.removeAttribute('aria-label');
+            }
+        });
+    };
+    updateTableScroll();
+    window.addEventListener('resize', updateTableScroll, {passive: true});
+
     qa('input[type="password"]').forEach(input => {
         if (input.dataset.passwordToggleReady === 'true') return;
         input.dataset.passwordToggleReady = 'true';

@@ -5,6 +5,7 @@ import com.dinevista.service.EventBookingService;
 import com.dinevista.service.ReservationOrderService;
 import com.dinevista.util.AccountContext;
 import com.dinevista.util.EventBookingContext;
+import com.dinevista.util.ManagerRequestReadState;
 import com.dinevista.util.ReservationOrderContext;
 
 import javax.servlet.ServletException;
@@ -48,6 +49,9 @@ public class DashboardServlet extends HttpServlet {
         if ("manager".equals(role)) {
             request.setAttribute("managerReservations", service.allReservations("", ""));
             request.setAttribute("managerOrders", service.allOrders("", ""));
+            ManagerRequestReadState readState = ManagerRequestReadState.get(getServletContext());
+            request.setAttribute("openedReservations", readState.openedReferences(ManagerRequestReadState.RESERVATION));
+            request.setAttribute("openedOrders", readState.openedReferences(ManagerRequestReadState.ORDER));
             request.setAttribute("activeReservationCount", service.countActiveReservations());
             request.setAttribute("activeOrderCount", service.countActiveOrders());
             request.getRequestDispatcher("/WEB-INF/views/manager-dashboard.jsp").forward(request, response);

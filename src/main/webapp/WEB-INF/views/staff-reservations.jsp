@@ -1,11 +1,13 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="java.util.List" %>
+<%@ page import="java.util.Set" %>
 <%@ page import="com.dinevista.model.TableReservationRecord" %>
 <%@ page import="com.dinevista.util.HtmlUtil" %>
 <%
     request.setAttribute("pageTitle", "Reservation Operations");
     request.setAttribute("activeNav", "staffReservations");
     List<TableReservationRecord> reservations = (List<TableReservationRecord>) request.getAttribute("staffReservations");
+    Set<String> openedReservations = (Set<String>) request.getAttribute("openedReservations");
     String statusFilter = request.getAttribute("reservationFilterStatus") == null ? "" : request.getAttribute("reservationFilterStatus").toString();
     String dateFilter = request.getAttribute("reservationFilterDate") == null ? "" : request.getAttribute("reservationFilterDate").toString();
 %>
@@ -50,7 +52,7 @@
         </div>
 
         <section class="panel operations-table-panel">
-            <div class="panel-header"><div><h3>Reservation records</h3><span class="muted small">Open a record to assign a table or update its status.</span></div></div>
+            <div class="panel-header"><div><h3>Reservation records</h3><span class="muted small">Newest requests first. Open a record to review or update it.</span></div></div>
             <div class="table-wrap">
                 <table class="data-table operations-table">
                     <thead><tr><th>Reference</th><th>Guest</th><th>Date and time</th><th>Party</th><th>Preference</th><th>Table</th><th>Status</th><th></th></tr></thead>
@@ -59,7 +61,7 @@
                         <tr><td colspan="8"><div class="empty-table-message">No reservation records match the current filters.</div></td></tr>
                     <% } else { for (TableReservationRecord reservation : reservations) { %>
                         <tr>
-                            <td><strong class="mono"><%= HtmlUtil.escape(reservation.getReference()) %></strong></td>
+                            <td><strong class="mono"><%= HtmlUtil.escape(reservation.getReference()) %></strong><% if (openedReservations != null && !openedReservations.contains(reservation.getReference())) { %><span class="new-request-badge">NEW</span><% } %></td>
                             <td><strong><%= HtmlUtil.escape(reservation.getGuestName()) %></strong><span class="table-subtext"><%= HtmlUtil.escape(reservation.getPhone()) %></span></td>
                             <td><%= reservation.getDateDisplay() %><span class="table-subtext"><%= reservation.getTimeDisplay() %></span></td>
                             <td><%= reservation.getPartySize() %></td>

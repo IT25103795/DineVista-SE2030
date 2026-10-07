@@ -1,11 +1,13 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="java.util.List" %>
+<%@ page import="java.util.Set" %>
 <%@ page import="com.dinevista.model.FoodOrderRecord" %>
 <%@ page import="com.dinevista.util.HtmlUtil" %>
 <%
     request.setAttribute("pageTitle", "Kitchen Order Operations");
     request.setAttribute("activeNav", "staffOrders");
     List<FoodOrderRecord> orders = (List<FoodOrderRecord>) request.getAttribute("staffOrders");
+    Set<String> openedOrders = (Set<String>) request.getAttribute("openedOrders");
     String statusFilter = request.getAttribute("orderFilterStatus") == null ? "" : request.getAttribute("orderFilterStatus").toString();
     String typeFilter = request.getAttribute("orderFilterType") == null ? "" : request.getAttribute("orderFilterType").toString();
 %>
@@ -49,12 +51,12 @@
         </div>
 
         <section class="panel operations-table-panel">
-            <div class="panel-header"><div><h3>Food order records</h3><span class="muted small">Open an order to update kitchen and fulfilment status.</span></div></div>
+            <div class="panel-header"><div><h3>Food order records</h3><span class="muted small">Newest requests first. Open an order to review or update it.</span></div></div>
             <div class="table-wrap"><table class="data-table operations-table"><thead><tr><th>Reference</th><th>Customer</th><th>Type</th><th>Requested for</th><th>Items</th><th>Total</th><th>Status</th><th></th></tr></thead><tbody>
             <% if (orders == null || orders.isEmpty()) { %><tr><td colspan="8"><div class="empty-table-message">No food orders match the current filters.</div></td></tr>
             <% } else { for (FoodOrderRecord order : orders) { %>
                 <tr>
-                    <td><strong class="mono"><%= HtmlUtil.escape(order.getReference()) %></strong></td>
+                    <td><strong class="mono"><%= HtmlUtil.escape(order.getReference()) %></strong><% if (openedOrders != null && !openedOrders.contains(order.getReference())) { %><span class="new-request-badge">NEW</span><% } %></td>
                     <td><strong><%= HtmlUtil.escape(order.getCustomerName()) %></strong><span class="table-subtext"><%= HtmlUtil.escape(order.getPhone()) %></span></td>
                     <td><%= HtmlUtil.escape(order.getOrderTypeDisplay()) %></td>
                     <td><%= HtmlUtil.escape(order.getRequestedForDisplay()) %></td>

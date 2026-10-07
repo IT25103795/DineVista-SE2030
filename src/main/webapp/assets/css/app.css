@@ -7181,3 +7181,97 @@ body.manager-interface .operations-overview-grid .operational-checks {
 @media (min-width: 1051px) {
     .lp-badge-stars { right: -2%; }
 }
+
+/* Keep unread request labels legible without widening the manager tables. */
+body.manager-interface .new-request-badge {
+    display: inline-flex;
+    align-items: center;
+    width: max-content;
+    margin: 5px 0 0;
+    padding: 3px 8px;
+    border-radius: 999px;
+    color: #9a350f;
+    background: #fff0e4;
+    border: 1px solid #f5be9f;
+    font-size: .65rem;
+    font-weight: 900;
+    line-height: 1.15;
+    letter-spacing: .08em;
+    white-space: nowrap;
+}
+body.manager-interface .data-table td .new-request-badge { display: flex; }
+html[data-theme="dark"] body.manager-interface .new-request-badge {
+    color: #ffd1ae;
+    background: #4d291d;
+    border-color: #91563b;
+}
+
+/* Two real moments in the home hero: dining and celebrating. */
+@media (min-width: 1101px) {
+    .lp-hero-visual { min-height: 470px; isolation: isolate; }
+    .lp-hero-plate-wrap {
+        position: absolute;
+        z-index: 3;
+        left: -4%;
+        bottom: 0;
+        width: min(33vw, 420px);
+        transform: perspective(900px) rotateX(var(--plate-rotate-x, 0deg)) rotateY(var(--plate-rotate-y, 0deg)) translate3d(calc(var(--plate-shift-x, 0px) + var(--photo-pair-shift, 0px)), var(--plate-shift-y, 0px), 0);
+        transition: transform .6s cubic-bezier(.2, .75, .2, 1);
+    }
+    .lp-hero-event-card {
+        position: absolute;
+        z-index: 2;
+        top: 4%;
+        right: -3%;
+        width: min(22vw, 270px);
+        aspect-ratio: 1.04;
+        overflow: hidden;
+        border: 4px solid rgba(242, 181, 83, .72);
+        border-radius: 34px;
+        background: #29170f;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, .64), 0 0 0 8px rgba(243, 183, 78, .1);
+        transform: translate3d(var(--event-pair-shift, 0px), 0, 0) rotate(5deg);
+        transition: transform .6s cubic-bezier(.2, .75, .2, 1), box-shadow .6s ease;
+        animation: lp-event-float 6s ease-in-out infinite;
+    }
+    .lp-hero-event-card img {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: cover;
+        object-position: 54% center;
+        transition: transform .6s ease;
+    }
+    .lp-hero-event-card span {
+        position: absolute;
+        right: 10px;
+        bottom: 10px;
+        left: 10px;
+        padding: 9px 11px;
+        border-radius: 12px;
+        color: #fff;
+        background: rgba(18, 10, 6, .83);
+        font-size: .82rem;
+        font-weight: 800;
+        text-align: center;
+        backdrop-filter: blur(8px);
+    }
+    .lp-hero-visual:hover .lp-hero-plate-wrap { --photo-pair-shift: -45px; }
+    .lp-hero-visual:hover .lp-hero-event-card {
+        --event-pair-shift: 65px;
+        transform: translate3d(var(--event-pair-shift), -8px, 0) rotate(1deg);
+        box-shadow: 0 25px 70px rgba(0, 0, 0, .68), 0 0 0 8px rgba(243, 183, 78, .14);
+    }
+    .lp-hero-visual:hover .lp-hero-event-card img { transform: scale(1.04); }
+    .lp-hero-visual .lp-hero-event-card:hover { z-index: 5; transform: translate3d(65px, -8px, 0) rotate(0) scale(1.07); }
+    .lp-hero-visual .lp-hero-plate-wrap:hover { z-index: 5; }
+}
+@keyframes lp-event-float {
+    0%, 100% { margin-top: 0; }
+    50% { margin-top: -9px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .lp-hero-event-card { animation: none !important; transition: none !important; }
+    .lp-hero-event-card img { transition: none; }
+    .lp-hero-visual:hover .lp-hero-event-card img { transform: none; }
+}

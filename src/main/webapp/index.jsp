@@ -77,6 +77,11 @@
                 </div>
             </div>
 
+            <div class="lp-hero-event-card">
+                <img src="<%= ctx %>/assets/images/hero-event-celebration.png" alt="" loading="eager">
+                <span>Celebrate together</span>
+            </div>
+
             <!-- Floating badge: live table -->
             <div class="lp-badge lp-badge-top">
                 <span class="lp-badge-dot"></span>
@@ -97,11 +102,6 @@
                 </div>
             </div>
 
-            <!-- Floating star rating badge -->
-            <div class="lp-badge lp-badge-stars">
-                <span class="lp-star-row">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
-                <span class="lp-badge-sub">Rated by guests</span>
-            </div>
         </div>
     </div>
 

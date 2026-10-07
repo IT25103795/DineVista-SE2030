@@ -1,5 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="java.util.List" %>
+<%@ page import="java.util.Set" %>
 <%@ page import="com.dinevista.model.TableReservationRecord" %>
 <%@ page import="com.dinevista.model.FoodOrderRecord" %>
 <%@ page import="com.dinevista.util.HtmlUtil" %>
@@ -8,6 +9,8 @@
     request.setAttribute("activeNav", "managerDashboard");
     List<TableReservationRecord> managerReservations = (List<TableReservationRecord>) request.getAttribute("managerReservations");
     List<FoodOrderRecord> managerOrders = (List<FoodOrderRecord>) request.getAttribute("managerOrders");
+    Set<String> openedReservations = (Set<String>) request.getAttribute("openedReservations");
+    Set<String> openedOrders = (Set<String>) request.getAttribute("openedOrders");
     long activeReservationCount = request.getAttribute("activeReservationCount") == null ? 0L : (Long) request.getAttribute("activeReservationCount");
     long activeOrderCount = request.getAttribute("activeOrderCount") == null ? 0L : (Long) request.getAttribute("activeOrderCount");
 %>
@@ -179,20 +182,20 @@
 
         <div class="dashboard-grid" style="margin-top:22px">
             <section class="panel">
-                <div class="panel-header"><h3>Upcoming reservation schedule</h3><a class="btn btn-ghost btn-sm" href="<%= ctx %>/staff/reservations">Manage all</a></div>
+                <div class="panel-header"><h3>Latest reservation requests</h3><a class="btn btn-ghost btn-sm" href="<%= ctx %>/staff/reservations">Manage all</a></div>
                 <div class="table-wrap scrollable-dashboard-table"><table class="data-table"><thead><tr><th>Reference</th><th>Date and time</th><th>Guest</th><th>Party</th><th>Table</th><th>Status</th></tr></thead><tbody>
                     <% if (managerReservations == null || managerReservations.isEmpty()) { %><tr><td colspan="6">No reservations available.</td></tr>
                     <% } else { for (TableReservationRecord item : managerReservations) { %>
-                        <tr><td><a class="table-link" href="<%= ctx %>/staff/reservations/view?reference=<%= item.getReference() %>"><%= HtmlUtil.escape(item.getReference()) %></a></td><td><%= item.getDateDisplay() %><span class="table-subtext"><%= item.getTimeDisplay() %></span></td><td><%= HtmlUtil.escape(item.getGuestName()) %></td><td><%= item.getPartySize() %></td><td><%= item.getTableCode() == null ? "Unassigned" : HtmlUtil.escape(item.getTableCode()) %></td><td><span class="status <%= item.getStatusCss() %>"><%= HtmlUtil.escape(item.getStatus()) %></span></td></tr>
+                        <tr><td><a class="table-link" href="<%= ctx %>/staff/reservations/view?reference=<%= item.getReference() %>"><%= HtmlUtil.escape(item.getReference()) %></a><% if (openedReservations != null && !openedReservations.contains(item.getReference())) { %><span class="new-request-badge">NEW</span><% } %></td><td><%= item.getDateDisplay() %><span class="table-subtext"><%= item.getTimeDisplay() %></span></td><td><%= HtmlUtil.escape(item.getGuestName()) %></td><td><%= item.getPartySize() %></td><td><%= item.getTableCode() == null ? "Unassigned" : HtmlUtil.escape(item.getTableCode()) %></td><td><span class="status <%= item.getStatusCss() %>"><%= HtmlUtil.escape(item.getStatus()) %></span></td></tr>
                     <% }} %>
                 </tbody></table></div>
             </section>
             <aside class="panel">
-                <div class="panel-header"><h3>Current kitchen queue</h3><a class="btn btn-ghost btn-sm" href="<%= ctx %>/staff/orders">Manage all</a></div>
+                <div class="panel-header"><h3>Latest food orders</h3><a class="btn btn-ghost btn-sm" href="<%= ctx %>/staff/orders">Manage all</a></div>
                 <div class="activity-list scrollable-dashboard-queue">
                     <% if (managerOrders == null || managerOrders.isEmpty()) { %><p class="muted small">No food orders available.</p>
                     <% } else { for (FoodOrderRecord order : managerOrders) { %>
-                        <a class="activity-item" href="<%= ctx %>/staff/orders/view?reference=<%= order.getReference() %>"><span class="activity-dot"></span><span><strong><%= HtmlUtil.escape(order.getReference()) %> &mdash; <%= order.getStatus() %></strong><span><%= HtmlUtil.escape(order.getCustomerName()) %> &middot; <%= order.getTotalQuantity() %> item(s)</span></span></a>
+                        <a class="activity-item" href="<%= ctx %>/staff/orders/view?reference=<%= order.getReference() %>"><span class="activity-dot"></span><span><strong><%= HtmlUtil.escape(order.getReference()) %> &mdash; <%= order.getStatus() %></strong><% if (openedOrders != null && !openedOrders.contains(order.getReference())) { %><span class="new-request-badge">NEW</span><% } %><span><%= HtmlUtil.escape(order.getCustomerName()) %> &middot; <%= order.getTotalQuantity() %> item(s)</span></span></a>
                     <% }} %>
                 </div>
             </aside>

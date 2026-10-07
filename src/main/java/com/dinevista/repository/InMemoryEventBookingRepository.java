@@ -16,7 +16,13 @@ public class InMemoryEventBookingRepository implements EventBookingRepository {
     private final AtomicLong quoteIds=new AtomicLong(0);
     private final Map<String,List<EventQuoteRecord>> quotes=new HashMap<>();
     @Override public EventBookingRecord save(EventBookingRecord b){bookings.add(0,b);return b;}
-    @Override public EventBookingRecord update(EventBookingRecord b){bookings.removeIf(x->x.getReference().equals(b.getReference()));bookings.add(0,b);return b;}
+    @Override public EventBookingRecord update(EventBookingRecord b){
+        for(int i=0;i<bookings.size();i++){
+            if(bookings.get(i).getReference().equals(b.getReference())){bookings.set(i,b);return b;}
+        }
+        bookings.add(0,b);
+        return b;
+    }
     @Override public boolean cancel(String ref,String note){
         Optional<EventBookingRecord> found=findByReference(ref); if(found.isEmpty()) return false;
         EventBookingRecord b=found.get();

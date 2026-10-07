@@ -79,7 +79,7 @@ public class JdbcEventBookingRepository implements EventBookingRepository {
     }
     @Override public List<EventBookingRecord> findAll(String search){
         String q="%"+(search==null?"":search.trim().toLowerCase())+"%";
-        String sql="SELECT eb.*,ep.package_name,ev.venue_name FROM event_booking eb LEFT JOIN event_package ep ON ep.package_id=eb.package_id LEFT JOIN event_venue ev ON ev.venue_id=eb.venue_id WHERE LOWER(eb.event_reference) LIKE ? OR LOWER(eb.contact_name) LIKE ? OR LOWER(COALESCE(ep.package_name,'')) LIKE ? OR LOWER(eb.booking_status) LIKE ? ORDER BY eb.event_date DESC,eb.event_time DESC";
+        String sql="SELECT eb.*,ep.package_name,ev.venue_name FROM event_booking eb LEFT JOIN event_package ep ON ep.package_id=eb.package_id LEFT JOIN event_venue ev ON ev.venue_id=eb.venue_id WHERE LOWER(eb.event_reference) LIKE ? OR LOWER(eb.contact_name) LIKE ? OR LOWER(COALESCE(ep.package_name,'')) LIKE ? OR LOWER(eb.booking_status) LIKE ? ORDER BY eb.created_at DESC,eb.event_booking_id DESC";
         return list(sql,q,q,q,q);
     }
     @Override public boolean hasConflict(long packageId,long venueId,LocalDate date,LocalTime time,int duration,String excluding){

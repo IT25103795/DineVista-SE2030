@@ -297,7 +297,7 @@ public class JdbcReservationOrderRepository implements ReservationOrderRepositor
 
     @Override
     public List<TableReservationRecord> findAllReservations() {
-        return loadReservations(" ORDER BY r.reservation_date, r.reservation_time", statement -> {});
+        return loadReservations(" ORDER BY r.created_at DESC, r.reservation_id DESC", statement -> {});
     }
 
     private List<TableReservationRecord> loadReservations(String suffix, SqlBinder binder) {
@@ -533,7 +533,7 @@ public class JdbcReservationOrderRepository implements ReservationOrderRepositor
 
     @Override
     public List<FoodOrderRecord> findAllOrders() {
-        return loadOrders(" ORDER BY o.created_at DESC", statement -> {});
+        return loadOrders(" ORDER BY o.created_at DESC, o.order_id DESC", statement -> {});
     }
 
     private List<FoodOrderRecord> loadOrders(String suffix, SqlBinder binder) {

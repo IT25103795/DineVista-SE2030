@@ -2,10 +2,12 @@
 <%@ page import="com.dinevista.model.EventBookingRecord" %>
 <%@ page import="com.dinevista.util.HtmlUtil" %>
 <%@ page import="java.util.List" %>
+<%@ page import="java.util.Set" %>
 <%
     request.setAttribute("pageTitle", "Event Bookings");
     request.setAttribute("activeNav", "staffEventBookings");
     List<EventBookingRecord> bs = (List<EventBookingRecord>) request.getAttribute("eventBookings");
+    Set<String> openedEvents = (Set<String>) request.getAttribute("openedEvents");
     String searchQuery = request.getParameter("search") == null ? "" : request.getParameter("search").trim();
 %>
 <%@ include file="fragments/header.jspf" %>
@@ -34,7 +36,7 @@
         <div class="panel-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;">
             <div>
                 <h3>All event bookings (<%= bs == null ? 0 : bs.size() %>)</h3>
-                <p class="muted small">Live customer event requests, consultations, and confirmed bookings.</p>
+                <p class="muted small">Newest requests first. Open a booking to review it.</p>
             </div>
             <form method="get" action="<%= ctx %>/staff/event-bookings" class="search-filter-grid" style="margin:0;">
                 <input class="form-control" name="search" placeholder="Search reference, customer, or package..." value="<%= HtmlUtil.escape(searchQuery) %>">
@@ -73,6 +75,7 @@
                             <a class="table-link" href="<%= ctx %>/staff/event-bookings/view?reference=<%= b.getReference() %>">
                                 <strong><%= HtmlUtil.escape(b.getReference()) %></strong>
                             </a>
+                            <% if (openedEvents != null && !openedEvents.contains(b.getReference())) { %><span class="new-request-badge">NEW</span><% } %>
                             <span class="table-subtext"><%= HtmlUtil.escape(b.getEventType()) %></span>
                         </td>
                         <td>

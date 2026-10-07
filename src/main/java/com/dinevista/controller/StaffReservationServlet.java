@@ -4,6 +4,7 @@ import com.dinevista.model.TableReservationRecord;
 import com.dinevista.service.OperationResult;
 import com.dinevista.service.ReservationOrderService;
 import com.dinevista.util.FlashUtil;
+import com.dinevista.util.ManagerRequestReadState;
 import com.dinevista.util.RequestUtil;
 import com.dinevista.util.ReservationOrderContext;
 
@@ -37,6 +38,8 @@ public class StaffReservationServlet extends HttpServlet {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
                 return;
             }
+            ManagerRequestReadState.get(getServletContext()).markOpened(
+                    ManagerRequestReadState.RESERVATION, reservation.get().getReference());
             request.setAttribute("reservation", reservation.get());
             request.setAttribute("restaurantTables", service.tables());
             request.setAttribute("availableTables", service.findAvailableTables(
@@ -56,6 +59,8 @@ public class StaffReservationServlet extends HttpServlet {
             request.setAttribute("reservationFilterStatus", status);
             request.setAttribute("reservationFilterDate", date);
             request.setAttribute("staffReservations", service.allReservations(status, date));
+            request.setAttribute("openedReservations", ManagerRequestReadState.get(getServletContext())
+                    .openedReferences(ManagerRequestReadState.RESERVATION));
             request.getRequestDispatcher("/WEB-INF/views/staff-reservations.jsp")
                     .forward(request, response);
             return;

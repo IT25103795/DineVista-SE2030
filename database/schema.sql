@@ -8,6 +8,7 @@ USE dinevista;
 
 SET FOREIGN_KEY_CHECKS = 0;
 
+DROP TABLE IF EXISTS manager_request_read;
 DROP TABLE IF EXISTS workflow_notification;
 DROP TABLE IF EXISTS notification;
 DROP TABLE IF EXISTS promotion_usage;
@@ -516,6 +517,14 @@ CREATE TABLE workflow_notification (
     is_read BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_workflow_notification_recipient (recipient_key, is_read, created_at)
+) ENGINE=InnoDB;
+
+-- Shared manager-portal opened state; keeps NEW badges across logins and restarts.
+CREATE TABLE manager_request_read (
+    request_type VARCHAR(20) NOT NULL,
+    request_reference VARCHAR(30) NOT NULL,
+    opened_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (request_type, request_reference)
 ) ENGINE=InnoDB;
 
 CREATE INDEX idx_reservation_date_status ON table_reservation(reservation_date, reservation_status);

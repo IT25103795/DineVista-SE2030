@@ -155,8 +155,8 @@ public class InMemoryReservationOrderRepository implements ReservationOrderRepos
     @Override
     public synchronized List<TableReservationRecord> findAllReservations() {
         return reservations.values().stream()
-                .sorted(Comparator.comparing(TableReservationRecord::getReservationDate)
-                        .thenComparing(TableReservationRecord::getReservationTime))
+                .sorted(Comparator.comparing(TableReservationRecord::getCreatedAt)
+                        .thenComparingLong(TableReservationRecord::getId).reversed())
                 .collect(Collectors.toList());
     }
 
@@ -206,7 +206,8 @@ public class InMemoryReservationOrderRepository implements ReservationOrderRepos
     @Override
     public synchronized List<FoodOrderRecord> findAllOrders() {
         return orders.values().stream()
-                .sorted(Comparator.comparing(FoodOrderRecord::getCreatedAt).reversed())
+                .sorted(Comparator.comparing(FoodOrderRecord::getCreatedAt)
+                        .thenComparingLong(FoodOrderRecord::getId).reversed())
                 .collect(Collectors.toList());
     }
 

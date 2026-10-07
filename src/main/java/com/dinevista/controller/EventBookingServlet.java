@@ -24,7 +24,10 @@ public class EventBookingServlet extends HttpServlet {
         if(isStaff){
             if("/view".equals(path)){view(req,res,true);return;}
             if("/edit".equals(path)){edit(req,res,true);return;}
-            req.setAttribute("eventBookings",service.allBookings(RequestUtil.clean(req,"search")));req.setAttribute("managerView",true);
+            req.setAttribute("eventBookings",service.allBookings(RequestUtil.clean(req,"search")));
+            req.setAttribute("openedEvents",ManagerRequestReadState.get(getServletContext())
+                    .openedReferences(ManagerRequestReadState.EVENT));
+            req.setAttribute("managerView",true);
             res.setStatus(200);req.getRequestDispatcher("/WEB-INF/views/staff-event-bookings.jsp").forward(req,res);return;
         }
         if("/view".equals(path)){view(req,res,false);return;}
@@ -148,6 +151,8 @@ public class EventBookingServlet extends HttpServlet {
         FlashUtil.expose(r);
         Optional<EventBookingRecord> x=service.booking(RequestUtil.clean(r,"reference"));if(x.isEmpty()){s.sendError(404);return;}
         if(!manager&&!owned(r,x.get())){s.sendError(404);return;}
+        if(manager)ManagerRequestReadState.get(getServletContext()).markOpened(
+                ManagerRequestReadState.EVENT,x.get().getReference());
         r.setAttribute("booking",x.get());r.setAttribute("managerView",manager);
         r.setAttribute("quotes",service.quotes(x.get().getReference()));
         r.setAttribute("eventInvoice", billingService.existingInvoiceForSource("EVENT_BOOKING", x.get().getReference()).orElse(null));

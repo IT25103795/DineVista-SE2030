@@ -25,6 +25,10 @@
     if (availableCount == null) availableCount = 0L;
     if (unavailableCount == null) unavailableCount = 0L;
     if (categoriesCount == null) categoriesCount = 0L;
+    int activeCategoryCount = 0;
+    if (categories != null) {
+        for (MenuCategoryRecord category : categories) if (category.isActive()) activeCategoryCount++;
+    }
 %>
 <%@ include file="fragments/header.jspf" %>
 
@@ -244,13 +248,26 @@
                         <h3 class="table-main-title" style="margin:0; font-size:1.32rem; font-weight:850; letter-spacing:-0.01em; display:flex; align-items:center; gap:10px;">
                             Menu Categories
                             <span class="badge badge-table-count" style="background:rgba(168, 85, 247, 0.16); color:#7c3aed; border:1px solid rgba(168, 85, 247, 0.35); padding:3px 12px; border-radius:99px; font-size:0.82rem; font-weight:800;">
-                                <%= categories == null ? 0 : categories.size() %> active
+                                <%= activeCategoryCount %> active
                             </span>
                         </h3>
                         <span class="muted small" style="margin-top:4px; display:block;">Categories group dishes on both the public menu and the staff kitchen screen.</span>
                     </div>
                 </div>
             </div>
+
+            <% if (request.getAttribute("successMessage") != null) { %>
+                <div class="alert alert-success" role="status" style="margin:16px 20px 0;">
+                    <%= HtmlUtil.escape(request.getAttribute("successMessage")) %>
+                </div>
+            <% } %>
+            <% if (request.getAttribute("errors") != null) { %>
+                <div class="alert alert-danger" role="alert" style="margin:16px 20px 0;">
+                    <ul><% for (String error : (List<String>) request.getAttribute("errors")) { %>
+                        <li><%= HtmlUtil.escape(error) %></li>
+                    <% } %></ul>
+                </div>
+            <% } %>
 
             <!-- Quick Add Category Form -->
             <div style="padding: 16px 20px; background: var(--surface-alt, rgba(0,0,0,.02)); border-bottom: 1px solid var(--line);">
@@ -274,14 +291,14 @@
             </div>
 
             <div class="table-wrap" style="overflow-x: auto;">
-                <table class="data-table operations-table" style="min-width: 760px; width: 100%;">
+                <table class="data-table operations-table" style="min-width: 850px; width: 100%;">
                     <thead>
                         <tr>
                             <th style="min-width: 120px; white-space: nowrap;">Display order</th>
                             <th style="min-width: 180px; white-space: nowrap;">Category name</th>
                             <th style="min-width: 260px;">Description</th>
                             <th style="min-width: 110px; white-space: nowrap;">Status</th>
-                            <th style="min-width: 100px; text-align:right; white-space: nowrap;">Action</th>
+                            <th style="min-width: 170px; text-align:right; white-space: nowrap;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -292,6 +309,7 @@
                             <td><%= HtmlUtil.escape(cat.getDescription() == null || cat.getDescription().isEmpty() ? "—" : cat.getDescription()) %></td>
                             <td style="white-space: nowrap;"><span class="status <%= cat.getStatusCss() %>" style="white-space: nowrap;"><%= cat.getStatusLabel() %></span></td>
                             <td style="text-align:right; white-space: nowrap;">
+                                <a class="btn btn-secondary btn-sm" href="<%= ctx %>/staff/menu/category/edit?id=<%= cat.getId() %>" style="margin-right:6px;">Edit</a>
                                 <form method="post" action="<%= ctx %>/staff/menu/category/delete" style="display:inline; margin:0;" onsubmit="return confirm('Delete category \'<%= HtmlUtil.escape(cat.getName()) %>\'? This is only allowed if it contains zero dishes.');">
                                     <input type="hidden" name="categoryId" value="<%= cat.getId() %>">
                                     <button class="btn btn-sm" style="white-space: nowrap; font-weight: 600; color:#b3261e; background:rgba(179,38,30,.06); border:1px solid rgba(179,38,30,.2);" type="submit">

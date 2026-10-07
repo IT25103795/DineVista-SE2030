@@ -72,6 +72,9 @@ public class MenuService {
             errors.add("Category description cannot exceed 255 characters.");
         }
         if (displayOrder < 0) errors.add("Display order cannot be negative.");
+        if (id < 0 || (id > 0 && repository.findCategory(id).isEmpty())) {
+            errors.add("This category is no longer available. Please return to the menu.");
+        }
 
         Optional<MenuCategoryRecord> existingByName = repository.findCategoryByName(cleanName);
         if (existingByName.isPresent() && existingByName.get().getId() != id) {

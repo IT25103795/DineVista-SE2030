@@ -47,6 +47,19 @@ public final class MenuServiceSelfTest {
         OperationResult<MenuCategoryRecord> duplicate = service.saveCategory(0, "Beverages", "Duplicate", 11, true);
         ok(!duplicate.isSuccess(), "Duplicate category name must be rejected");
 
+        OperationResult<MenuCategoryRecord> updated = service.saveCategory(
+                catId, "Beverages & Drinks", "Cold and hot drinks", 12, false);
+        ok(updated.isSuccess(), "Category details can be updated");
+        MenuCategoryRecord saved = service.category(catId).orElseThrow();
+        ok("Beverages & Drinks".equals(saved.getName())
+                        && "Cold and hot drinks".equals(saved.getDescription())
+                        && saved.getDisplayOrder() == 12 && !saved.isActive(),
+                "Category update persists all editable fields");
+        ok(!service.saveCategory(catId, "Signature", "", 12, true).isSuccess(),
+                "Renaming to another category's name is rejected");
+        ok(!service.saveCategory(999_999, "Missing", "", 1, true).isSuccess(),
+                "Editing a missing category does not create a replacement");
+
         // Delete empty category succeeds
         OperationResult<Void> deleted = service.deleteCategory(catId);
         ok(deleted.isSuccess(), "Deleting empty category succeeds");
@@ -55,6 +68,13 @@ public final class MenuServiceSelfTest {
         long signatureId = service.allCategories().stream()
                 .filter(c -> "Signature".equalsIgnoreCase(c.getName()))
                 .findFirst().orElseThrow().getId();
+        ok(service.saveCategory(signatureId, "Chef Signature", "Chef-created dishes", 1, true).isSuccess(),
+                "Category with dishes can be renamed");
+        ok(service.allItems("", signatureId, "").stream()
+                        .allMatch(item -> "Chef Signature".equals(item.getCategoryName())),
+                "Existing dishes show the new category name");
+        ok(service.saveCategory(signatureId, "Signature", "Chef-crafted DineVista dishes", 1, true).isSuccess(),
+                "Original category details can be restored");
         OperationResult<Void> blockedDelete = service.deleteCategory(signatureId);
         ok(!blockedDelete.isSuccess(), "Deleting category with active items must be blocked");
     }

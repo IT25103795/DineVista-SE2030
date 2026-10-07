@@ -32,6 +32,7 @@ import java.util.Optional;
  *   POST /staff/menu/save                Save (insert/update) a menu item
  *   POST /staff/menu/delete              Safe delete or archive an item
  *   POST /staff/menu/toggle-status       Quick 1-click availability toggle
+ *   GET  /staff/menu/category/edit?id=... Edit an existing category
  *   POST /staff/menu/category/save       Create or edit a category
  *   POST /staff/menu/category/delete     Delete an empty category
  */
@@ -75,6 +76,18 @@ public class StaffMenuServlet extends HttpServlet {
                     request.setAttribute("ingredients", InventoryContext.service(getServletContext()).allIngredients("", false));
                 }
                 request.getRequestDispatcher("/WEB-INF/views/staff-menu-form.jsp")
+                        .forward(request, response);
+                return;
+            }
+            case "/category/edit": {
+                long id = RequestUtil.longValue(request, "id", 0);
+                Optional<MenuCategoryRecord> category = service.category(id);
+                if (category.isEmpty()) {
+                    MissingManagerRecord.returnToDashboard(request, response);
+                    return;
+                }
+                request.setAttribute("category", category.get());
+                request.getRequestDispatcher("/WEB-INF/views/staff-menu-category-form.jsp")
                         .forward(request, response);
                 return;
             }
@@ -204,16 +217,28 @@ public class StaffMenuServlet extends HttpServlet {
                 long id = RequestUtil.longValue(request, "categoryId", 0);
                 String name = RequestUtil.clean(request, "categoryName");
                 String description = RequestUtil.clean(request, "categoryDescription");
-                int displayOrder = (int) RequestUtil.longValue(request, "displayOrder", 0);
+                int displayOrder = RequestUtil.integer(request, "displayOrder", -1);
                 boolean active = "1".equals(request.getParameter("active")) || "true".equalsIgnoreCase(request.getParameter("active"));
 
                 OperationResult<MenuCategoryRecord> result = service.saveCategory(id, name, description, displayOrder, active);
                 if (result.isSuccess()) {
                     FlashUtil.success(request, "Menu category '" + result.getValue().getName() + "' saved successfully.");
+                    response.sendRedirect(request.getContextPath() + "/staff/menu#categories-section");
                 } else {
+                    if (id > 0 && service.category(id).isPresent()) {
+                        request.setAttribute("errors", result.getErrors());
+                        request.setAttribute("category", service.category(id).get());
+                        request.setAttribute("categoryNameDraft", name);
+                        request.setAttribute("categoryDescriptionDraft", description);
+                        request.setAttribute("displayOrderDraft", request.getParameter("displayOrder"));
+                        request.setAttribute("activeDraft", active);
+                        request.getRequestDispatcher("/WEB-INF/views/staff-menu-category-form.jsp")
+                                .forward(request, response);
+                        return;
+                    }
                     FlashUtil.errors(request, result.getErrors());
+                    response.sendRedirect(request.getContextPath() + "/staff/menu#categories-section");
                 }
-                response.sendRedirect(request.getContextPath() + "/staff/menu");
                 return;
             }
             case "/category/delete": {

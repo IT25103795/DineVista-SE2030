@@ -103,6 +103,12 @@ public class InMemoryMenuRepository implements MenuRepository {
     @Override
     public MenuCategoryRecord saveCategory(MenuCategoryRecord category) {
         categories.put(category.getId(), category);
+        // Keep already saved dishes in sync when a category is renamed.
+        for (MenuItemAdminRecord item : items.values()) {
+            if (item.getCategoryId() == category.getId()) {
+                item.setCategoryName(category.getName());
+            }
+        }
         return category;
     }
 

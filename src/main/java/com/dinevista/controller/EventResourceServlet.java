@@ -71,7 +71,7 @@ public class EventResourceServlet extends HttpServlet {
                 return;
             case "/venues/edit": {
                 Optional<EventVenueRecord> venue = service.venue(RequestUtil.longValue(request, "id", 0));
-                if (venue.isEmpty()) { response.sendError(HttpServletResponse.SC_NOT_FOUND); return; }
+                if (venue.isEmpty()) { MissingManagerRecord.returnToDashboard(request, response); return; }
                 request.setAttribute("venue", venue.get());
                 request.getRequestDispatcher("/WEB-INF/views/staff-venue-form.jsp")
                         .forward(request, response);
@@ -80,7 +80,7 @@ public class EventResourceServlet extends HttpServlet {
             case "/venues/view": {
                 long id = RequestUtil.longValue(request, "id", 0);
                 Optional<EventVenueRecord> venue = service.venue(id);
-                if (venue.isEmpty()) { response.sendError(HttpServletResponse.SC_NOT_FOUND); return; }
+                if (venue.isEmpty()) { MissingManagerRecord.returnToDashboard(request, response); return; }
                 request.setAttribute("venue", venue.get());
                 request.setAttribute("venueBookings", service.venueBookings(id));
                 request.getRequestDispatcher("/WEB-INF/views/staff-venue-detail.jsp")
@@ -93,7 +93,7 @@ public class EventResourceServlet extends HttpServlet {
                 return;
             case "/resources/edit": {
                 Optional<EventResourceRecord> resource = service.resource(RequestUtil.longValue(request, "id", 0));
-                if (resource.isEmpty()) { response.sendError(HttpServletResponse.SC_NOT_FOUND); return; }
+                if (resource.isEmpty()) { MissingManagerRecord.returnToDashboard(request, response); return; }
                 request.setAttribute("resource", resource.get());
                 request.getRequestDispatcher("/WEB-INF/views/staff-resource-form.jsp")
                         .forward(request, response);
@@ -102,7 +102,7 @@ public class EventResourceServlet extends HttpServlet {
             case "/resources/view": {
                 long id = RequestUtil.longValue(request, "id", 0);
                 Optional<EventResourceRecord> resource = service.resource(id);
-                if (resource.isEmpty()) { response.sendError(HttpServletResponse.SC_NOT_FOUND); return; }
+                if (resource.isEmpty()) { MissingManagerRecord.returnToDashboard(request, response); return; }
                 request.setAttribute("resource", resource.get());
                 request.setAttribute("resourceBookings", service.resourceBookings(id));
                 request.getRequestDispatcher("/WEB-INF/views/staff-resource-detail.jsp")

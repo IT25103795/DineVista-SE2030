@@ -35,7 +35,7 @@ public class StaffOrderServlet extends HttpServlet {
             String reference = RequestUtil.clean(request, "reference");
             Optional<FoodOrderRecord> order = service.order(reference);
             if (order.isEmpty()) {
-                response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                MissingManagerRecord.returnToDashboard(request, response);
                 return;
             }
             ManagerRequestReadState.get(getServletContext()).markOpened(

@@ -20,6 +20,10 @@
         <div class="dashboard-header">
             <div><span class="eyebrow">Operations centre</span><h1>DineVista restaurant overview</h1><p>Monitor table reservations, food-order demand, kitchen status, and operational priorities.</p></div>
         </div>
+        <% List<String> dashboardErrors = (List<String>) request.getAttribute("errors");
+           if (dashboardErrors != null) { for (String message : dashboardErrors) { %>
+            <div class="alert alert-danger" role="status"><%= HtmlUtil.escape(message) %></div>
+        <% }} %>
         <div class="kpi-grid">
             <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span><span class="trend">Live operations</span></div><strong><%= activeReservationCount %></strong><span>Active reservations</span></article>
             <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4h2l2 10h10l2-7H7"/></svg></span><span class="trend">Kitchen queue</span></div><strong><%= activeOrderCount %></strong><span>Active food orders</span></article>

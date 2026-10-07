@@ -35,7 +35,7 @@ public class StaffReservationServlet extends HttpServlet {
             String reference = RequestUtil.clean(request, "reference");
             Optional<TableReservationRecord> reservation = service.reservation(reference);
             if (reservation.isEmpty()) {
-                response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                MissingManagerRecord.returnToDashboard(request, response);
                 return;
             }
             ManagerRequestReadState.get(getServletContext()).markOpened(

@@ -23,8 +23,8 @@ public class EventPackageServlet extends HttpServlet {
         String path=path(req);
         if(path.isEmpty()){renderList(req,res);return;}
         if("/new".equals(path)){req.setAttribute("packageFormMode","create");forwardForm(req,res);return;}
-        if("/edit".equals(path)){Optional<EventPackageRecord> p=service.find(id(req));if(p.isEmpty()){res.sendError(404);return;}req.setAttribute("eventPackage",p.get());req.setAttribute("packageFormMode","edit");forwardForm(req,res);return;}
-        if("/view".equals(path)){Optional<EventPackageRecord> p=service.find(id(req));if(p.isEmpty()){res.sendError(404);return;}req.setAttribute("eventPackage",p.get());req.getRequestDispatcher("/WEB-INF/views/staff-event-package-detail.jsp").forward(req,res);return;}
+        if("/edit".equals(path)){Optional<EventPackageRecord> p=service.find(id(req));if(p.isEmpty()){MissingManagerRecord.returnToDashboard(req,res);return;}req.setAttribute("eventPackage",p.get());req.setAttribute("packageFormMode","edit");forwardForm(req,res);return;}
+        if("/view".equals(path)){Optional<EventPackageRecord> p=service.find(id(req));if(p.isEmpty()){MissingManagerRecord.returnToDashboard(req,res);return;}req.setAttribute("eventPackage",p.get());req.getRequestDispatcher("/WEB-INF/views/staff-event-package-detail.jsp").forward(req,res);return;}
         res.sendError(404);
     }
     @Override protected void doPost(HttpServletRequest req,HttpServletResponse res)throws ServletException,IOException{

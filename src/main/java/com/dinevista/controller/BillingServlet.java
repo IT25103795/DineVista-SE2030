@@ -74,7 +74,7 @@ public class BillingServlet extends HttpServlet {
             case "/view": {
                 long id = RequestUtil.longValue(request, "id", 0);
                 Optional<InvoiceRecord> invoice = billingService.invoice(id);
-                if (invoice.isEmpty()) { response.sendError(HttpServletResponse.SC_NOT_FOUND); return; }
+                if (invoice.isEmpty()) { MissingManagerRecord.returnToDashboard(request, response); return; }
                 request.setAttribute("invoice", invoice.get());
                 request.setAttribute("payments", billingService.paymentsFor(id));
                 request.getRequestDispatcher("/WEB-INF/views/staff-billing-detail.jsp").forward(request, response);
@@ -90,7 +90,7 @@ public class BillingServlet extends HttpServlet {
                 return;
             case "/promotions/edit": {
                 Optional<PromotionRecord> promotion = billingService.promotion(RequestUtil.longValue(request, "id", 0));
-                if (promotion.isEmpty()) { response.sendError(HttpServletResponse.SC_NOT_FOUND); return; }
+                if (promotion.isEmpty()) { MissingManagerRecord.returnToDashboard(request, response); return; }
                 request.setAttribute("promotion", promotion.get());
                 request.setAttribute("usageCount", billingService.usageCount(promotion.get().getId()));
                 request.getRequestDispatcher("/WEB-INF/views/staff-billing-promotion-form.jsp").forward(request, response);

@@ -63,7 +63,7 @@ public class StaffMenuServlet extends HttpServlet {
                 long id = RequestUtil.longValue(request, "id", 0);
                 Optional<MenuItemAdminRecord> item = service.item(id);
                 if (item.isEmpty()) {
-                    response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                    MissingManagerRecord.returnToDashboard(request, response);
                     return;
                 }
                 List<MenuCategoryRecord> categories = service.allCategories();

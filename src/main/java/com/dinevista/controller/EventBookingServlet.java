@@ -105,7 +105,8 @@ public class EventBookingServlet extends HttpServlet {
     private void simulatePayment(HttpServletRequest r,HttpServletResponse s)throws IOException{
         String ref=RequestUtil.clean(r,"reference");
         EventBookingRecord booking=service.booking(ref).orElse(null);
-        if(booking==null||!service.owns(userId(r),email(r),booking)){s.sendError(404);return;}
+        if(booking==null){MissingCustomerRecord.returnToDashboard(r,s);return;}
+        if(!service.owns(userId(r),email(r),booking)){s.sendError(404);return;}
         EventQuoteRecord latest=service.quotes(ref).stream().findFirst().orElse(null);
         InvoiceRecord invoice=billingService.existingInvoiceForSource("EVENT_BOOKING",ref).orElse(null);
         if(latest==null||!latest.isAccepted()||invoice==null||invoice.isCancelled()
@@ -149,7 +150,8 @@ public class EventBookingServlet extends HttpServlet {
     }
     private void view(HttpServletRequest r,HttpServletResponse s,boolean manager)throws ServletException,IOException{
         FlashUtil.expose(r);
-        Optional<EventBookingRecord> x=service.booking(RequestUtil.clean(r,"reference"));if(x.isEmpty()){s.sendError(404);return;}
+        Optional<EventBookingRecord> x=service.booking(RequestUtil.clean(r,"reference"));
+        if(x.isEmpty()){if(manager)MissingManagerRecord.returnToDashboard(r,s);else MissingCustomerRecord.returnToDashboard(r,s);return;}
         if(!manager&&!owned(r,x.get())){s.sendError(404);return;}
         if(manager)ManagerRequestReadState.get(getServletContext()).markOpened(
                 ManagerRequestReadState.EVENT,x.get().getReference());
@@ -165,7 +167,8 @@ public class EventBookingServlet extends HttpServlet {
         r.getRequestDispatcher(manager?"/WEB-INF/views/staff-event-booking-detail.jsp":"/WEB-INF/views/event-booking-detail.jsp").forward(r,s);
     }
     private void edit(HttpServletRequest r,HttpServletResponse s,boolean manager)throws ServletException,IOException{
-        Optional<EventBookingRecord> x=service.booking(RequestUtil.clean(r,"reference"));if(x.isEmpty()){s.sendError(404);return;}
+        Optional<EventBookingRecord> x=service.booking(RequestUtil.clean(r,"reference"));
+        if(x.isEmpty()){if(manager)MissingManagerRecord.returnToDashboard(r,s);else MissingCustomerRecord.returnToDashboard(r,s);return;}
         if(!manager&&!owned(r,x.get())){s.sendError(404);return;}
         r.setAttribute("booking",x.get());r.setAttribute("managerView",manager);r.setAttribute("packages",service.activePackages(""));r.setAttribute("venues",service.venues());
         r.getRequestDispatcher(manager?"/WEB-INF/views/staff-event-booking-form.jsp":"/WEB-INF/views/event-booking-form.jsp").forward(r,s);

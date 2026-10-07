@@ -58,7 +58,7 @@ public class StaffSchedulingServlet extends HttpServlet {
             case "/view": {
                 long id = RequestUtil.longValue(request, "id", 0);
                 Optional<StaffMemberRecord> staff = service.staff(id);
-                if (staff.isEmpty()) { response.sendError(HttpServletResponse.SC_NOT_FOUND); return; }
+                if (staff.isEmpty()) { MissingManagerRecord.returnToDashboard(request, response); return; }
                 request.setAttribute("staffMember", staff.get());
                 request.setAttribute("schedules", service.schedulesForStaff(id));
                 request.setAttribute("assignments", service.assignmentsForStaff(id));
@@ -70,7 +70,7 @@ public class StaffSchedulingServlet extends HttpServlet {
                 Object accountId = request.getSession().getAttribute("userId");
                 if (!(accountId instanceof Number)) { response.sendError(HttpServletResponse.SC_FORBIDDEN); return; }
                 Optional<StaffMemberRecord> staff = service.staffForUser(((Number) accountId).longValue());
-                if (staff.isEmpty()) { response.sendError(HttpServletResponse.SC_NOT_FOUND); return; }
+                if (staff.isEmpty()) { MissingManagerRecord.returnToDashboard(request, response); return; }
                 long id = staff.get().getId();
                 request.setAttribute("staffMember", staff.get());
                 request.setAttribute("schedules", service.schedulesForStaff(id));

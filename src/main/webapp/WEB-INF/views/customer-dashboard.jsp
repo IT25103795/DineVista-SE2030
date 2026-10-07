@@ -26,6 +26,11 @@
             <a class="btn btn-secondary" href="<%= ctx %>/logout">Sign out</a>
         </div>
 
+        <% List<String> dashboardErrors = (List<String>) request.getAttribute("errors");
+           if (dashboardErrors != null) { for (String message : dashboardErrors) { %>
+            <div class="alert alert-danger" role="status"><%= HtmlUtil.escape(message) %></div>
+        <% }} %>
+
         <div class="kpi-grid">
             <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span><span class="trend">My visits</span></div><strong><%= reservationCount %></strong><span>Table reservations</span></article>
             <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4h2l2 10h10l2-7H7"/></svg></span><span class="trend">My favourites</span></div><strong><%= orderCount %></strong><span>Food orders</span></article>

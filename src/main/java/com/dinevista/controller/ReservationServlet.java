@@ -166,7 +166,15 @@ public class ReservationServlet extends HttpServlet {
         String reference = RequestUtil.clean(request, "reference");
         String customerKey = ReservationOrderContext.customerKey(request);
         Optional<TableReservationRecord> record = service.reservation(reference);
-        if (record.isEmpty() || !record.get().getCustomerKey().equals(customerKey)) {
+        if (record.isEmpty()) {
+            if (ReservationOrderContext.isManager(request)) {
+                MissingManagerRecord.returnToDashboard(request, response);
+            } else {
+                MissingCustomerRecord.returnToDashboard(request, response);
+            }
+            return;
+        }
+        if (!record.get().getCustomerKey().equals(customerKey)) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
@@ -180,7 +188,15 @@ public class ReservationServlet extends HttpServlet {
         String customerKey = ReservationOrderContext.customerKey(request);
         String reference = RequestUtil.clean(request, "reference");
         Optional<TableReservationRecord> existing = service.reservation(reference);
-        if (existing.isEmpty() || !existing.get().getCustomerKey().equals(customerKey)) {
+        if (existing.isEmpty()) {
+            if (ReservationOrderContext.isManager(request)) {
+                MissingManagerRecord.returnToDashboard(request, response);
+            } else {
+                MissingCustomerRecord.returnToDashboard(request, response);
+            }
+            return;
+        }
+        if (!existing.get().getCustomerKey().equals(customerKey)) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
@@ -248,8 +264,12 @@ public class ReservationServlet extends HttpServlet {
         boolean manager = ReservationOrderContext.isManager(request);
         String customerKey = ReservationOrderContext.customerKey(request);
 
-        if (record.isEmpty()
-                || (!manager && !record.get().getCustomerKey().equals(customerKey))) {
+        if (record.isEmpty()) {
+            if (manager) MissingManagerRecord.returnToDashboard(request, response);
+            else MissingCustomerRecord.returnToDashboard(request, response);
+            return;
+        }
+        if (!manager && !record.get().getCustomerKey().equals(customerKey)) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }

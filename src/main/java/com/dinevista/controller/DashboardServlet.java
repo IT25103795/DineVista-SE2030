@@ -5,6 +5,7 @@ import com.dinevista.service.EventBookingService;
 import com.dinevista.service.ReservationOrderService;
 import com.dinevista.util.AccountContext;
 import com.dinevista.util.EventBookingContext;
+import com.dinevista.util.FlashUtil;
 import com.dinevista.util.ManagerRequestReadState;
 import com.dinevista.util.ReservationOrderContext;
 
@@ -47,6 +48,7 @@ public class DashboardServlet extends HttpServlet {
 
         Object role = session.getAttribute("demoRole");
         if ("manager".equals(role)) {
+            FlashUtil.expose(request);
             request.setAttribute("managerReservations", service.allReservations("", ""));
             request.setAttribute("managerOrders", service.allOrders("", ""));
             ManagerRequestReadState readState = ManagerRequestReadState.get(getServletContext());
@@ -56,6 +58,7 @@ public class DashboardServlet extends HttpServlet {
             request.setAttribute("activeOrderCount", service.countActiveOrders());
             request.getRequestDispatcher("/WEB-INF/views/manager-dashboard.jsp").forward(request, response);
         } else if ("customer".equals(role)) {
+            FlashUtil.expose(request);
             String customerKey = ReservationOrderContext.customerKey(request);
             request.setAttribute("customerReservations", service.reservationsForCustomer(customerKey));
             request.setAttribute("customerOrders", service.ordersForCustomer(customerKey));

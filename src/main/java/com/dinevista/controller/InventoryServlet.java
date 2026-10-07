@@ -52,7 +52,7 @@ public class InventoryServlet extends HttpServlet {
             case "/edit": {
                 Optional<IngredientRecord> ingredient = service.ingredient(
                         RequestUtil.longValue(request, "id", 0));
-                if (ingredient.isEmpty()) { response.sendError(HttpServletResponse.SC_NOT_FOUND); return; }
+                if (ingredient.isEmpty()) { MissingManagerRecord.returnToDashboard(request, response); return; }
                 request.setAttribute("ingredient", ingredient.get());
                 request.getRequestDispatcher("/WEB-INF/views/staff-inventory-form.jsp")
                         .forward(request, response);
@@ -61,7 +61,7 @@ public class InventoryServlet extends HttpServlet {
             case "/view": {
                 long id = RequestUtil.longValue(request, "id", 0);
                 Optional<IngredientRecord> ingredient = service.ingredient(id);
-                if (ingredient.isEmpty()) { response.sendError(HttpServletResponse.SC_NOT_FOUND); return; }
+                if (ingredient.isEmpty()) { MissingManagerRecord.returnToDashboard(request, response); return; }
                 request.setAttribute("ingredient", ingredient.get());
                 request.setAttribute("stockHistory", service.historyFor(id));
                 request.getRequestDispatcher("/WEB-INF/views/staff-inventory-detail.jsp")

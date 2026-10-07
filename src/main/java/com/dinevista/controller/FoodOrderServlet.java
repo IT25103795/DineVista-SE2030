@@ -306,8 +306,12 @@ public class FoodOrderServlet extends HttpServlet {
         boolean manager = ReservationOrderContext.isManager(request);
         String customerKey = ReservationOrderContext.customerKey(request);
 
-        if (record.isEmpty()
-                || (!manager && !record.get().getCustomerKey().equals(customerKey))) {
+        if (record.isEmpty()) {
+            if (manager) MissingManagerRecord.returnToDashboard(request, response);
+            else MissingCustomerRecord.returnToDashboard(request, response);
+            return;
+        }
+        if (!manager && !record.get().getCustomerKey().equals(customerKey)) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }

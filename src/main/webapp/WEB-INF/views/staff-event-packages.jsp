@@ -47,8 +47,9 @@
             </form>
         </div>
 
+        <p class="package-table-scroll-hint">Scroll sideways to see all package columns and actions.</p>
         <div class="table-wrap">
-            <table class="data-table">
+            <table class="data-table event-packages-table">
                 <thead>
                     <tr>
                         <th>Package</th>
@@ -84,12 +85,12 @@
                         <td><%= p.getMinimumGuests() %> &ndash; <%= p.getMaximumGuests() %> guests</td>
                         <td><%= p.getDurationMinutes() / 60 %>h <%= p.getDurationMinutes() % 60 > 0 ? (p.getDurationMinutes() % 60) + "m" : "" %></td>
                         <td>
-                            <span class="status <%= p.isActive() ? "status-confirmed" : "status-cancelled" %>">
+                            <span class="status <%= p.isActive() ? "confirmed" : "cancelled" %>">
                                 <%= p.isActive() ? "ACTIVE" : "INACTIVE" %>
                             </span>
                         </td>
                         <td>
-                            <div style="display:flex;gap:6px;">
+                            <div class="package-row-actions">
                                 <a class="btn btn-ghost btn-sm" href="<%= ctx %>/staff/event-packages/view?id=<%= p.getId() %>">View</a>
                                 <a class="btn btn-secondary btn-sm" href="<%= ctx %>/staff/event-packages/edit?id=<%= p.getId() %>">Edit</a>
                             </div>

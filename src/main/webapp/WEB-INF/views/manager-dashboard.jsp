@@ -24,7 +24,7 @@
             <article class="kpi-card"><div class="kpi-top"><span class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg></span><span class="trend">Daily management</span></div><strong>9</strong><span>Areas to manage</span></article>
         </div>
 
-        <div class="dashboard-grid">
+        <div class="dashboard-grid operations-overview-grid">
             <section class="panel">
                 <div class="panel-header"><div><h3>Restaurant operations</h3><span class="muted small">Open the complete management workspaces.</span></div></div>
                 <div class="operations-launch-grid">

@@ -91,9 +91,9 @@
                         <td><strong>LKR <%= String.format("%,.2f", b.getTotalAmount()) %></strong></td>
                         <td>
                             <%
-                                String statusClass = "status-pending";
-                                if ("CONFIRMED".equalsIgnoreCase(b.getStatus()) || "COMPLETED".equalsIgnoreCase(b.getStatus())) statusClass = "status-confirmed";
-                                else if ("CANCELLED".equalsIgnoreCase(b.getStatus())) statusClass = "status-cancelled";
+                                String statusClass = "pending";
+                                if ("CONFIRMED".equalsIgnoreCase(b.getStatus()) || "COMPLETED".equalsIgnoreCase(b.getStatus())) statusClass = "confirmed";
+                                else if ("CANCELLED".equalsIgnoreCase(b.getStatus())) statusClass = "cancelled";
                             %>
                             <span class="status <%= statusClass %>"><%= HtmlUtil.escape(b.getStatus()) %></span>
                         </td>

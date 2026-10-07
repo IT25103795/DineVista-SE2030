@@ -7081,6 +7081,23 @@ body.manager-interface .panel-header .search-filter-grid {
     width: min(100%, 500px);
 }
 body.manager-interface .panel-header .search-filter-grid .form-control { flex: 1 1 250px; min-width: 0; }
+
+/* Project-owned form feedback replaces browser validation bubbles. */
+form .dv-invalid,
+form .dv-invalid:focus {
+    border-color: #bd4234 !important;
+    box-shadow: 0 0 0 3px rgba(189, 66, 52, .13) !important;
+}
+form .dv-field-error {
+    display: block;
+    width: 100%;
+    color: #a63227;
+    font-size: .81rem;
+    font-weight: 650;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+html[data-theme="dark"] form .dv-field-error { color: #ffb7ab; }
 body.manager-interface .panel-header .search-filter-grid .btn { flex: 0 0 auto; }
 body.manager-interface .form-card { min-width: 0; }
 body.manager-interface .form-card .form-grid { gap: 18px 22px; }

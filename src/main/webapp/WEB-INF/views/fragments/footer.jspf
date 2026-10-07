@@ -104,6 +104,6 @@
     </a>
 </nav>
 <% } %>
-<script src="<%= ctx %>/assets/js/app.js?v=20261007-hero-v1"></script>
+<script src="<%= ctx %>/assets/js/app.js?v=20261007-validation-v1"></script>
 </body>
 </html>

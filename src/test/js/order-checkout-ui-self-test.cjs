@@ -44,8 +44,12 @@ verify(js.includes("selected === 'DINE_IN' && !dineInReservation?.value"),
         'dine-in requires a selected seated reservation');
 verify(js.includes("selected === 'PRE_ORDER' && !preOrderReservation?.value"),
         'pre-order requires a selected confirmed reservation');
-verify(js.includes('checkout.checkValidity()') && js.includes('checkout.reportValidity()'),
-        'customer and fulfilment fields are visibly validated');
+verify(js.includes('validateForm(checkout)') && js.includes('showFieldError(field, message)')
+        && !js.includes('checkout.reportValidity()'),
+        'customer and fulfilment fields use DineVista messages rather than browser popups');
+verify(js.includes('form.noValidate = true') && js.includes("document.addEventListener('submit'")
+        && !js.includes('reportValidity()'),
+        'all forms suppress native validation bubbles and run project-owned rules');
 verify(js.includes("checkout.dataset.submitting = 'true'"),
         'double submission is blocked');
 verify(js.includes('orderSubmit.disabled = true'),

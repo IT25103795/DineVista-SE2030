@@ -4,6 +4,136 @@
     const q = (selector, scope = document) => scope.querySelector(selector);
     const qa = (selector, scope = document) => Array.from(scope.querySelectorAll(selector));
 
+    // DineVista form validation: use our own messages, not browser validation bubbles.
+    // Java services repeat the important rules so direct requests remain protected.
+    const fieldLabel = field => {
+        const label = field.labels?.[0]?.textContent || field.getAttribute('aria-label')
+            || field.getAttribute('placeholder') || field.name || 'this field';
+        return label.replace(/\s*\*\s*/g, '').trim().replace(/\s+/g, ' ');
+    };
+    const fieldError = field => {
+        if (field.disabled || field.readOnly || field.type === 'hidden') return '';
+        const label = fieldLabel(field);
+        const value = field.value?.trim() || '';
+        if (field.required) {
+            if (field.type === 'checkbox' && !field.checked) return `Select ${label}.`;
+            if (field.type === 'radio') {
+                const group = qa('input[type="radio"]', field.form || document)
+                    .filter(input => input.name === field.name && !input.disabled);
+                if (!group.some(input => input.checked)) return `Select ${label}.`;
+            } else if (field.type === 'file' ? !field.files?.length : !value) {
+                return `Enter ${label}.`;
+            }
+        }
+        if (!value || field.type === 'checkbox' || field.type === 'radio' || field.type === 'file') return '';
+        if (field.type === 'email' && !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(value))
+            return 'Enter a valid email address, such as name@example.com.';
+        if (/phone/i.test(field.name) && !/^(?:\+94|0)7\d{8}$/.test(value))
+            return 'Enter a valid Sri Lankan mobile number, such as 0771234567.';
+        if (field.name === 'confirmPassword') {
+            const password = q('[name="password"], [name="newPassword"]', field.form || document);
+            if (password && value !== password.value) return 'Passwords do not match.';
+        }
+        if (field.type === 'number') {
+            const number = Number(value);
+            if (!Number.isFinite(number)) return `${label} must be a valid number.`;
+            if (field.min !== '' && number < Number(field.min)) return `${label} must be at least ${field.min}.`;
+            if (field.max !== '' && number > Number(field.max)) return `${label} must not exceed ${field.max}.`;
+            if (field.step && field.step !== 'any') {
+                const step = Number(field.step);
+                const base = field.min === '' ? 0 : Number(field.min);
+                if (step > 0 && Math.abs((number - base) / step - Math.round((number - base) / step)) > 1e-7)
+                    return `${label} must increase in steps of ${field.step}.`;
+            }
+        }
+        if (field.type === 'date' && (!/^\d{4}-\d{2}-\d{2}$/.test(value)
+                || Number.isNaN(Date.parse(`${value}T00:00:00Z`))
+                || new Date(`${value}T00:00:00Z`).toISOString().slice(0, 10) !== value))
+            return `Select a valid ${label.toLowerCase()}.`;
+        if (field.type === 'time' && !/^([01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/.test(value))
+            return `Select a valid ${label.toLowerCase()}.`;
+        if (field.type === 'datetime-local' && (!/^\d{4}-\d{2}-\d{2}T([01]\d|2[0-3]):[0-5]\d$/.test(value)
+                || Number.isNaN(Date.parse(value))))
+            return `Select a valid ${label.toLowerCase()}.`;
+        if (['date', 'time', 'datetime-local'].includes(field.type)) {
+            if (field.min && value < field.min) return `${label} must be ${field.min} or later.`;
+            if (field.max && value > field.max) return `${label} must be ${field.max} or earlier.`;
+        }
+        if (field.minLength > 0 && value.length < field.minLength)
+            return `${label} must contain at least ${field.minLength} characters.`;
+        if (field.maxLength >= 0 && value.length > field.maxLength)
+            return `${label} must not exceed ${field.maxLength} characters.`;
+        if (field.pattern) {
+            try {
+                if (!new RegExp(`^(?:${field.pattern})$`).test(value))
+                    return field.name === 'phone' ? 'Enter a valid Sri Lankan mobile number, such as 0771234567.'
+                        : `Enter a valid ${label.toLowerCase()}.`;
+            } catch (_) { /* The server still validates any misconfigured form rule. */ }
+        }
+        return '';
+    };
+    const clearFieldError = field => {
+        field._dvErrorElement?.remove();
+        field._dvErrorElement = null;
+        field.classList.remove('dv-invalid');
+        field.removeAttribute('aria-invalid');
+        if (field._dvOriginalDescription === undefined) return;
+        if (field._dvOriginalDescription) field.setAttribute('aria-describedby', field._dvOriginalDescription);
+        else field.removeAttribute('aria-describedby');
+        delete field._dvOriginalDescription;
+    };
+    const showFieldError = (field, message) => {
+        if (!field._dvErrorElement) {
+            const error = document.createElement('span');
+            error.className = 'dv-field-error';
+            error.id = `dv-field-error-${Math.random().toString(36).slice(2)}`;
+            error.setAttribute('role', 'alert');
+            const anchor = field.closest('.password-field') || field;
+            anchor.insertAdjacentElement('afterend', error);
+            field._dvOriginalDescription = field.getAttribute('aria-describedby') || '';
+            field.setAttribute('aria-describedby', [field._dvOriginalDescription, error.id].filter(Boolean).join(' '));
+            field._dvErrorElement = error;
+        }
+        field._dvErrorElement.textContent = message;
+        field.classList.add('dv-invalid');
+        field.setAttribute('aria-invalid', 'true');
+    };
+    const validateFields = fields => {
+        let firstInvalid = null;
+        fields.forEach(field => {
+            const message = fieldError(field);
+            if (message) {
+                showFieldError(field, message);
+                if (!firstInvalid) firstInvalid = field;
+            } else clearFieldError(field);
+        });
+        if (firstInvalid) {
+            firstInvalid.dispatchEvent(new CustomEvent('dinevista:invalid-field', { bubbles: true }));
+            firstInvalid.focus({ preventScroll: true });
+            firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        return !firstInvalid;
+    };
+    const validateForm = form => validateFields(qa('input, select, textarea', form));
+    qa('form').forEach(form => { form.noValidate = true; });
+    document.addEventListener('submit', event => {
+        const form = event.target;
+        if (!(form instanceof HTMLFormElement) || event.submitter?.formNoValidate) return;
+        form.noValidate = true;
+        if (!validateForm(form)) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+    }, true);
+    document.addEventListener('input', event => {
+        const field = event.target;
+        if (field._dvErrorElement && !fieldError(field)) clearFieldError(field);
+    });
+    document.addEventListener('change', event => {
+        const field = event.target;
+        if (field._dvErrorElement && !fieldError(field)) clearFieldError(field);
+    });
+
     const homeHero = q('.lp-hero');
     if (homeHero) {
         const heroVisual = q('.lp-hero-visual', homeHero);
@@ -465,11 +595,7 @@
 
         const validateStep = index => {
             const fields = qa('input, select, textarea', panels[index]).filter(field => !field.disabled);
-            const invalid = fields.find(field => !field.checkValidity());
-            if (!invalid) return true;
-            invalid.reportValidity();
-            invalid.focus();
-            return false;
+            return validateFields(fields);
         };
 
         const updateStepReview = () => {
@@ -507,6 +633,10 @@
         };
 
         reservationStepper.classList.add('stepper-ready');
+        reservationStepper.addEventListener('dinevista:invalid-field', event => {
+            const panelIndex = panels.findIndex(panel => panel.contains(event.target));
+            if (panelIndex >= 0 && panelIndex !== currentStep) showStep(panelIndex);
+        });
         showStep(0);
 
         qa('[data-step-next]', reservationStepper).forEach(button => button.addEventListener('click', () => {
@@ -613,7 +743,7 @@
         if (selected === 'TAKEAWAY' && !takeawayTime?.value) {
             messages.push('Select a takeaway collection time.');
         }
-        if (!checkout.checkValidity()) {
+        if (!validateForm(checkout)) {
             messages.push('Complete the highlighted customer and fulfilment fields correctly.');
         }
 
@@ -621,7 +751,6 @@
         if (uniqueMessages.length) {
             event.preventDefault();
             showOrderFeedback(uniqueMessages);
-            checkout.reportValidity();
             return;
         }
 

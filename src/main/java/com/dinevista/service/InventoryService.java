@@ -57,13 +57,20 @@ public class InventoryService {
         String cleanName = name == null ? "" : name.trim();
         String cleanUnit = unit == null ? "" : unit.trim();
 
+        // Validate on the server too; browser maxlength and number-step can be bypassed.
         if (cleanName.isEmpty()) errors.add("Ingredient name is required.");
+        if (cleanName.length() > 140) errors.add("Ingredient name cannot exceed 140 characters.");
         if (cleanUnit.isEmpty()) errors.add("Unit of measurement is required.");
+        if (cleanUnit.length() > 30) errors.add("Unit of measurement cannot exceed 30 characters.");
+        if (supplierName != null && supplierName.trim().length() > 160)
+            errors.add("Supplier name cannot exceed 160 characters.");
 
         BigDecimal reorderLevel = parseNonNegative(reorderLevelRaw, "Reorder level", errors);
+        checkDecimal(reorderLevel, 12, 3, "Reorder level", errors);
         BigDecimal unitCost = null;
         if (unitCostRaw != null && !unitCostRaw.trim().isEmpty()) {
             unitCost = parseNonNegative(unitCostRaw, "Unit cost", errors);
+            checkDecimal(unitCost, 10, 2, "Unit cost", errors);
         }
 
         Optional<IngredientRecord> existingByName = repository.findIngredientByName(cleanName);
@@ -109,7 +116,11 @@ public class InventoryService {
             errors.add("Select a valid stock transaction type.");
         }
 
+        // A forged request must not write an over-precise or oversized stock movement.
         BigDecimal quantity = parsePositive(quantityRaw, "Quantity", errors);
+        checkDecimal(quantity, 12, 3, "Quantity", errors);
+        if (note != null && note.trim().length() > 255)
+            errors.add("Note cannot exceed 255 characters.");
         if (!errors.isEmpty()) return OperationResult.failure(errors);
 
         BigDecimal signedQuantity;
@@ -139,6 +150,8 @@ public class InventoryService {
             return OperationResult.failure(
                     "This transaction would take " + ingredient.getName() + " below zero stock.");
         }
+        checkDecimal(newLevel, 12, 3, "Resulting stock level", errors);
+        if (!errors.isEmpty()) return OperationResult.failure(errors);
 
         long transactionId = repository.nextTransactionId();
         StockTransactionRecord transaction = new StockTransactionRecord(transactionId, ingredientId,
@@ -195,5 +208,13 @@ public class InventoryService {
             errors.add(label + " must be a valid number.");
             return BigDecimal.ZERO;
         }
+    }
+
+    private static void checkDecimal(BigDecimal value, int precision, int scale,
+                                     String label, List<String> errors) {
+        if (value == null) return;
+        BigDecimal normalized = value.stripTrailingZeros();
+        if (normalized.scale() > scale || normalized.precision() - normalized.scale() > precision - scale)
+            errors.add(label + " must have at most " + scale + " decimal places and fit the allowed range.");
     }
 }

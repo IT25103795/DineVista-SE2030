@@ -4,7 +4,6 @@ import com.dinevista.model.EventPackageRecord;
 import com.dinevista.repository.EventPackageRepository;
 import java.math.BigDecimal;
 import java.util.*;
-import java.util.regex.Pattern;
 
 public class EventPackageService {
     public static final List<String> CATEGORIES=Collections.unmodifiableList(Arrays.asList("WEDDING","CORPORATE","BIRTHDAY","ANNIVERSARY","PRIVATE","CUSTOM"));
@@ -34,10 +33,14 @@ public class EventPackageService {
     private List<String> validate(String name,String category,String description,BigDecimal price,int min,int max,int duration,String inclusions){
         List<String> e=new ArrayList<>();
         String n=clean(name),c=clean(category),d=clean(description),inc=clean(inclusions);
+        // Server-side checks match the package form even when its HTML limits are skipped.
         if(n.length()<2||n.length()>140)e.add("Package name must contain 2 to 140 characters.");
         if(!CATEGORIES.contains(c))e.add("Select a valid event category.");
         if(d.length()>800)e.add("Description cannot exceed 800 characters.");
         if(price==null||price.compareTo(BigDecimal.ZERO)<=0)e.add("Price per guest must be greater than zero.");
+        else if(price.stripTrailingZeros().scale()>2
+                ||price.stripTrailingZeros().precision()-price.stripTrailingZeros().scale()>8)
+            e.add("Price per guest must have at most two decimal places and fit the allowed range.");
         if(min<1)e.add("Minimum guests must be at least 1.");
         if(max<min)e.add("Maximum guests must be greater than or equal to minimum guests.");
         if(max>2000)e.add("Maximum guests cannot exceed 2000.");

@@ -152,6 +152,13 @@ public class BillingService {
         String cleanReference = sourceReference == null ? "" : sourceReference.trim();
         String cleanCustomerName = (customerName == null || customerName.trim().isEmpty())
                 ? "Walk-in customer" : customerName.trim();
+        // Check form limits here too; invoices may be submitted without browser validation.
+        if (cleanReference.length() > 30) errors.add("Source reference cannot exceed 30 characters.");
+        if (cleanCustomerName.length() > 160) errors.add("Customer name cannot exceed 160 characters.");
+        String cleanEmail = customerEmail == null ? "" : customerEmail.trim();
+        if (cleanEmail.length() > 160 || (!cleanEmail.isEmpty()
+                && !cleanEmail.matches("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$")))
+            errors.add("Enter a valid customer email address.");
 
         if (!cleanReference.isEmpty()
                 && repository.findInvoiceBySource(cleanSourceType, cleanReference).isPresent()) {
@@ -164,8 +171,14 @@ public class BillingService {
         for (int i = 0; i < rows; i++) {
             String description = descriptions[i] == null ? "" : descriptions[i].trim();
             if (description.isEmpty()) continue;
+            if (description.length() > 255) {
+                errors.add("Billable line description cannot exceed 255 characters.");
+                continue;
+            }
             BigDecimal quantity = parsePositive(value(quantities, i, "1"), "Quantity for \"" + description + "\"", errors);
             BigDecimal unitPrice = parseNonNegative(value(unitPrices, i, "0"), "Unit price for \"" + description + "\"", errors);
+            checkDecimal(quantity, 10, 2, "Quantity for \"" + description + "\"", errors);
+            checkDecimal(unitPrice, 12, 2, "Unit price for \"" + description + "\"", errors);
             items.add(new InvoiceItemRecord(repository.nextInvoiceItemId(), description, quantity, unitPrice));
         }
         if (items.isEmpty()) errors.add("Add at least one billable line before generating an invoice.");
@@ -175,6 +188,8 @@ public class BillingService {
                 .map(InvoiceItemRecord::getLineTotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
                 .setScale(2, RoundingMode.HALF_UP);
+        checkDecimal(subtotal, 14, 2, "Invoice subtotal", errors);
+        if (!errors.isEmpty()) return OperationResult.failure(errors);
         BigDecimal taxAmount = subtotal.multiply(TAX_RATE).setScale(2, RoundingMode.HALF_UP);
 
         BigDecimal discountAmount = BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
@@ -204,6 +219,8 @@ public class BillingService {
 
         BigDecimal totalAmount = subtotal.add(taxAmount).subtract(discountAmount).setScale(2, RoundingMode.HALF_UP);
         if (totalAmount.compareTo(BigDecimal.ZERO) < 0) totalAmount = BigDecimal.ZERO.setScale(2);
+        checkDecimal(totalAmount, 14, 2, "Invoice total", errors);
+        if (!errors.isEmpty()) return OperationResult.failure(errors);
 
         long invoiceId = repository.nextInvoiceId();
         InvoiceRecord invoice = new InvoiceRecord(
@@ -300,6 +317,7 @@ public class BillingService {
         if (!PAYMENT_METHODS.contains(cleanMethod)) errors.add("Select a valid payment method.");
 
         BigDecimal amount = parsePositive(amountRaw, "Payment amount", errors);
+        checkDecimal(amount, 14, 2, "Payment amount", errors);
         BigDecimal balance = invoice.getBalance();
         if (errors.isEmpty() && amount.compareTo(balance) > 0) {
             errors.add("Payment of LKR " + String.format("%,.2f", amount)
@@ -307,6 +325,8 @@ public class BillingService {
         }
 
         String reference = referenceRaw == null ? "" : referenceRaw.trim();
+        if (reference.length() > 40) errors.add("Payment reference cannot exceed 40 characters.");
+        if (note != null && note.trim().length() > 255) errors.add("Payment note cannot exceed 255 characters.");
         if (reference.isEmpty()) {
             reference = repository.nextPaymentReference();
         } else if (repository.findPaymentByReference(reference).isPresent()) {
@@ -335,6 +355,8 @@ public class BillingService {
         if (reason == null || reason.trim().isEmpty()) {
             return OperationResult.failure("A reason is required to void or refund a payment.");
         }
+        if (reason.trim().length() > 255)
+            return OperationResult.failure("Refund reason cannot exceed 255 characters.");
         Optional<PaymentRecord> paymentOpt = repository.findPayment(paymentId);
         if (paymentOpt.isEmpty()) return OperationResult.failure("Payment could not be found.");
         PaymentRecord payment = paymentOpt.get();
@@ -384,16 +406,20 @@ public class BillingService {
         String cleanType = DISCOUNT_TYPES.contains(discountType) ? discountType : null;
 
         if (cleanCode.isEmpty()) errors.add("Promotion code is required.");
+        if (!cleanCode.matches("[A-Z0-9_-]{1,40}")) errors.add("Promotion code must use up to 40 letters, numbers, hyphens or underscores.");
         if (cleanName.isEmpty()) errors.add("Promotion name is required.");
+        if (cleanName.length() > 160) errors.add("Promotion name cannot exceed 160 characters.");
         if (cleanType == null) errors.add("Select a valid discount type.");
 
         BigDecimal discountValue = parsePositive(discountValueRaw, "Discount value", errors);
+        checkDecimal(discountValue, 10, 2, "Discount value", errors);
         if ("PERCENTAGE".equals(cleanType) && discountValue.compareTo(new BigDecimal("100")) > 0) {
             errors.add("A percentage discount cannot exceed 100.");
         }
         BigDecimal minimumSpend = parseNonNegative(
                 minimumSpendRaw == null || minimumSpendRaw.trim().isEmpty() ? "0" : minimumSpendRaw,
                 "Minimum spend", errors);
+        checkDecimal(minimumSpend, 12, 2, "Minimum spend", errors);
 
         LocalDate startDate = parseDate(startDateRaw, "Start date", errors);
         LocalDate endDate = parseDate(endDateRaw, "End date", errors);
@@ -537,5 +563,13 @@ public class BillingService {
             errors.add(label + " must be a valid date.");
             return null;
         }
+    }
+
+    private static void checkDecimal(BigDecimal value, int precision, int scale,
+                                     String label, List<String> errors) {
+        if (value == null) return;
+        BigDecimal normalized = value.stripTrailingZeros();
+        if (normalized.scale() > scale || normalized.precision() - normalized.scale() > precision - scale)
+            errors.add(label + " must have at most " + scale + " decimal places and fit the allowed range.");
     }
 }

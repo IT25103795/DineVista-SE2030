@@ -32,6 +32,12 @@ public class AccountService {
         if (normalizedEmail.isEmpty() || password == null || password.isEmpty()) {
             return OperationResult.failure("Enter your email and password.");
         }
+        // A crafted POST bypasses the browser's type and maxlength attributes.
+        // Keep the same generic login response so account existence is not exposed.
+        if (normalizedEmail.length() > 160 || !EMAIL.matcher(normalizedEmail).matches()
+                || password.length() > 128) {
+            return OperationResult.failure("Invalid email or password for this portal.");
+        }
         Optional<UserAccountRecord> account = repository.findByEmailAndRole(normalizedEmail, requiredRole);
         String storedHash = account.map(UserAccountRecord::getPasswordHash).orElse(DUMMY_PASSWORD_HASH);
         boolean passwordMatches = PasswordUtil.verify(password, storedHash);
@@ -113,6 +119,7 @@ public class AccountService {
     private List<String> validate(String firstName, String lastName, String email, String phone,
                                   String password, String confirmPassword) {
         List<String> errors = new ArrayList<>();
+        // Registration rules run here on the server, not only in the HTML form.
         validateName("First name", firstName, errors);
         validateName("Last name", lastName, errors);
         String normalizedEmail = normalizeEmail(email);

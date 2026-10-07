@@ -62,7 +62,10 @@ public class EventOperationsService {
                                                          String baseFeeRaw, String description, String status) {
         List<String> errors = new ArrayList<>();
         String cleanName = clean(name);
+        // Server-side limits are required because form attributes are only a UI aid.
         if (cleanName.isEmpty()) errors.add("Venue name is required.");
+        if (cleanName.length() > 160) errors.add("Venue name cannot exceed 160 characters.");
+        if (clean(description).length() > 500) errors.add("Description cannot exceed 500 characters.");
 
         String cleanType = clean(venueType).toUpperCase();
         if (!VENUE_TYPES.contains(cleanType)) errors.add("Select a valid venue type.");
@@ -73,6 +76,7 @@ public class EventOperationsService {
 
         int capacity = parsePositiveInt(capacityRaw, "Capacity", errors);
         BigDecimal baseFee = parseNonNegativeDecimal(baseFeeRaw, "Base fee", errors);
+        checkMoney(baseFee, 12, "Base fee", errors);
 
         Optional<EventVenueRecord> existingByName = repository.findVenueByName(cleanName);
         if (existingByName.isPresent() && existingByName.get().getId() != id) {
@@ -120,6 +124,8 @@ public class EventOperationsService {
 
         String cleanLabel = clean(eventLabel);
         if (cleanLabel.isEmpty()) errors.add("Enter an event name or reference for this booking.");
+        if (cleanLabel.length() > 180) errors.add("Event name cannot exceed 180 characters.");
+        if (clean(notes).length() > 500) errors.add("Notes cannot exceed 500 characters.");
         if (!venue.isBookable()) errors.add("This venue is not currently available for booking.");
 
         LocalDate eventDate = parseDate(eventDateRaw, errors);
@@ -195,6 +201,7 @@ public class EventOperationsService {
         List<String> errors = new ArrayList<>();
         String cleanName = clean(name);
         if (cleanName.isEmpty()) errors.add("Resource name is required.");
+        if (cleanName.length() > 160) errors.add("Resource name cannot exceed 160 characters.");
 
         String cleanCategory = clean(category).toUpperCase();
         if (!RESOURCE_CATEGORIES.contains(cleanCategory)) errors.add("Select a valid resource category.");
@@ -211,6 +218,7 @@ public class EventOperationsService {
         BigDecimal unitCost = null;
         if (unitCostRaw != null && !unitCostRaw.trim().isEmpty()) {
             unitCost = parseNonNegativeDecimal(unitCostRaw, "Unit cost", errors);
+            checkMoney(unitCost, 10, "Unit cost", errors);
         }
 
         Optional<EventResourceRecord> existingByName = repository.findResourceByName(cleanName);
@@ -259,6 +267,8 @@ public class EventOperationsService {
 
         String cleanLabel = clean(eventLabel);
         if (cleanLabel.isEmpty()) errors.add("Enter an event name or reference for this booking.");
+        if (cleanLabel.length() > 180) errors.add("Event name cannot exceed 180 characters.");
+        if (clean(notes).length() > 500) errors.add("Notes cannot exceed 500 characters.");
         if (!"AVAILABLE".equals(resource.getStatus())) {
             errors.add("This resource is not currently available for booking.");
         }
@@ -350,6 +360,7 @@ public class EventOperationsService {
 
         String cleanType = clean(shiftType).toUpperCase();
         if (!SHIFT_TYPES.contains(cleanType)) errors.add("Select a valid shift type.");
+        if (clean(notes).length() > 255) errors.add("Notes cannot exceed 255 characters.");
         if ("UNAVAILABLE".equals(staff.getAvailabilityStatus())) {
             errors.add(staff.getFullName() + " is currently marked unavailable for scheduling.");
         }
@@ -412,8 +423,11 @@ public class EventOperationsService {
 
         String cleanLabel = clean(eventLabel);
         if (cleanLabel.isEmpty()) errors.add("Enter an event name or reference for this assignment.");
+        if (cleanLabel.length() > 180) errors.add("Event name cannot exceed 180 characters.");
         String cleanRole = clean(role);
         if (cleanRole.isEmpty()) errors.add("Enter the role this staff member will perform.");
+        if (cleanRole.length() > 100) errors.add("Assignment role cannot exceed 100 characters.");
+        if (clean(notes).length() > 500) errors.add("Notes cannot exceed 500 characters.");
         if ("UNAVAILABLE".equals(staff.getAvailabilityStatus())) {
             errors.add(staff.getFullName() + " is currently marked unavailable for scheduling.");
         }
@@ -515,5 +529,12 @@ public class EventOperationsService {
             errors.add(label + " must be a valid number.");
             return BigDecimal.ZERO;
         }
+    }
+
+    private static void checkMoney(BigDecimal value, int precision, String label, List<String> errors) {
+        if (value == null) return;
+        BigDecimal normalized = value.stripTrailingZeros();
+        if (normalized.scale() > 2 || normalized.precision() - normalized.scale() > precision - 2)
+            errors.add(label + " must have at most two decimal places and fit the allowed range.");
     }
 }

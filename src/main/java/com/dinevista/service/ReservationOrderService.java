@@ -168,6 +168,7 @@ public class ReservationOrderService {
             LocalDate date, LocalTime time, int partySize, String seatingArea) {
         List<String> errors = new ArrayList<>();
         String area = normalize(seatingArea);
+        // Server-side date, time, party-size and seating rules also cover direct POSTs.
         if (date == null) errors.add("Select a valid reservation date.");
         if (time == null) errors.add("Select a valid reservation time.");
         if (partySize < 1 || partySize > 20) {
@@ -519,6 +520,7 @@ public class ReservationOrderService {
         List<String> errors = new ArrayList<>();
         String type = normalize(orderType);
 
+        // Checkout contact, order type and note limits do not depend on browser validation.
         if (clean(customerName).length() < 2) errors.add("Enter the customer name.");
         if (clean(customerName).length() > 160) errors.add("Customer name cannot exceed 160 characters.");
         if (!validEmail(email)) errors.add("Enter a valid email address.");

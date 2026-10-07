@@ -7,7 +7,6 @@ import com.dinevista.model.MenuRecipeIngredientRecord;
 import com.dinevista.repository.MenuRepository;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -63,15 +62,16 @@ public class MenuService {
         String cleanName = name == null ? "" : name.trim();
         String cleanDesc = description == null ? "" : description.trim();
 
+        // Server-side rules mirror the form, so a direct POST cannot bypass its limits.
         if (cleanName.isEmpty()) {
             errors.add("Category name is required.");
         } else if (cleanName.length() > 100) {
             errors.add("Category name cannot exceed 100 characters.");
         }
-
         if (cleanDesc.length() > 255) {
             errors.add("Category description cannot exceed 255 characters.");
         }
+        if (displayOrder < 0) errors.add("Display order cannot be negative.");
 
         Optional<MenuCategoryRecord> existingByName = repository.findCategoryByName(cleanName);
         if (existingByName.isPresent() && existingByName.get().getId() != id) {
@@ -171,6 +171,8 @@ public class MenuService {
         String cleanName = name == null ? "" : name.trim();
         String cleanDesc = description == null ? "" : description.trim();
         String cleanImage = imagePath == null || imagePath.trim().isEmpty() ? "dish-signature.svg" : imagePath.trim();
+        // Do not rely on the form's maxlength, min, max or number-step attributes.
+        if (cleanDesc.length() > 600) errors.add("Description cannot exceed 600 characters.");
 
         if (cleanName.isEmpty()) {
             errors.add("Menu item name is required.");
@@ -192,8 +194,9 @@ public class MenuService {
                 price = new BigDecimal(priceRaw.trim());
                 if (price.compareTo(BigDecimal.ZERO) <= 0) {
                     errors.add("Price must be greater than zero.");
-                } else if (price.scale() > 2) {
-                    price = price.setScale(2, RoundingMode.HALF_UP);
+                } else if (price.stripTrailingZeros().scale() > 2
+                        || price.stripTrailingZeros().precision() - price.stripTrailingZeros().scale() > 8) {
+                    errors.add("Price must have at most two decimal places and fit the allowed range.");
                 }
             } catch (NumberFormatException ex) {
                 errors.add("Price must be a valid positive number.");
@@ -204,8 +207,8 @@ public class MenuService {
         if (prepMinutesRaw != null && !prepMinutesRaw.trim().isEmpty()) {
             try {
                 prepMinutes = Integer.parseInt(prepMinutesRaw.trim());
-                if (prepMinutes < 0) {
-                    errors.add("Preparation time cannot be negative.");
+                if (prepMinutes < 1 || prepMinutes > 180) {
+                    errors.add("Preparation time must be between 1 and 180 minutes.");
                 }
             } catch (NumberFormatException ex) {
                 errors.add("Preparation time must be a valid whole number of minutes.");

@@ -133,6 +133,7 @@ public class EventBookingService {
         if(!owns(userId,email,b))return OperationResult.failure("You are not allowed to cancel this booking.");
         if("CANCELLED".equals(b.getStatus())||"COMPLETED".equals(b.getStatus()))return OperationResult.failure("This booking can no longer be cancelled.");
         if(reason==null||reason.trim().length()<5)return OperationResult.failure("Enter a short cancellation reason.");
+        if(reason.trim().length()>500)return OperationResult.failure("Cancellation reason cannot exceed 500 characters.");
         if(!bookingRepository.cancel(ref,reason.trim()))return OperationResult.failure("The booking could not be cancelled.");
         return booking(ref).map(OperationResult::success).orElse(OperationResult.failure("Booking was cancelled but could not be reloaded."));
     }
@@ -147,8 +148,9 @@ public class EventBookingService {
         customerName=clean(customerName);email=clean(email);phone=clean(phone);eventType=clean(eventType);notes=clean(notes);
         promotionCode=clean(promotionCode).toUpperCase(Locale.ROOT);
         EventBookingRecord previous=creating?null:booking(ref).orElse(null);
+        // These rules protect direct requests as well as normal browser submissions.
         if(customerName.length()<2||customerName.length()>160)e.add("Enter a valid contact name.");
-        if(!email.matches("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"))e.add("Enter a valid email address.");
+        if(email.length()>160||!email.matches("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"))e.add("Enter a valid email address.");
         if(!phone.matches("^(?:\\+94|0)7\\d{8}$"))e.add("Enter a valid Sri Lankan mobile number.");
         if(eventType.isEmpty()||eventType.length()>100)e.add("Enter a valid event type.");
         if(date==null)e.add("Select a valid event date.");

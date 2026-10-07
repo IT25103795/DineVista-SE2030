@@ -6046,12 +6046,27 @@ html[data-theme="dark"] body.manager-interface .dashboard-header .eyebrow {
     padding: 0;
     overflow: hidden;
     background-color: #0d0805;
-    background-image: url("../images/hero-bg.jpg");
-    background-size: cover;
-    background-position: center 30%;
-    background-repeat: no-repeat;
     display: flex;
     align-items: center;
+}
+
+/* A gently drifting photo gives the home page depth without a video download. */
+.lp-hero-backdrop {
+    position: absolute;
+    inset: -5%;
+    pointer-events: none;
+    transform: translate3d(var(--hero-bg-x, 0px), var(--hero-bg-y, 0px), 0);
+    transition: transform .9s cubic-bezier(.2, .7, .2, 1);
+}
+.lp-hero-backdrop-image {
+    position: absolute;
+    inset: 0;
+    background: url("../images/hero-bg.jpg") center 30% / cover no-repeat;
+    animation: lp-hero-cinema 24s ease-in-out infinite alternate;
+}
+@keyframes lp-hero-cinema {
+    from { transform: scale(1); }
+    to { transform: scale(1.075) translate3d(-1%, .6%, 0); }
 }
 
 /* Layer 1 — deep cinematic dark overlay so text stays readable */
@@ -6292,6 +6307,8 @@ html[data-theme="dark"] body.manager-interface .dashboard-header .eyebrow {
     display: flex;
     align-items: center;
     justify-content: center;
+    transform: perspective(900px) rotateX(var(--plate-rotate-x, 0deg)) rotateY(var(--plate-rotate-y, 0deg)) translate3d(var(--plate-shift-x, 0px), var(--plate-shift-y, 0px), 0);
+    transition: transform .55s cubic-bezier(.2, .75, .2, 1);
 }
 
 .lp-hero-plate-ring {
@@ -6371,12 +6388,25 @@ html[data-theme="dark"] body.manager-interface .dashboard-header .eyebrow {
     object-position: center center;
     display: block;
     filter: none;
-    transition: transform 6s ease;
+    transition: transform .7s cubic-bezier(.2, .75, .2, 1), filter .7s ease;
 }
 
-.lp-hero-plate-center:hover .lp-hero-real-img {
-    transform: scale(1.05);
+.lp-hero-visual:hover .lp-hero-real-img {
+    transform: scale(1.085);
+    filter: saturate(1.12) brightness(1.045);
 }
+
+.lp-hero-plate-center::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(120deg, transparent 38%, rgba(255, 236, 190, .17) 50%, transparent 62%);
+    transform: translateX(-130%);
+    transition: transform 1s ease;
+    pointer-events: none;
+}
+.lp-hero-visual:hover .lp-hero-plate-center::after { transform: translateX(130%); }
 
 /* ── Floating badges ── */
 .lp-badge {
@@ -6520,6 +6550,16 @@ html[data-theme="dark"] body.manager-interface .dashboard-header .eyebrow {
     .lp-metric { padding: 0 16px; }
     .lp-hero-metrics { flex-wrap: wrap; gap: 16px; }
     .lp-metric-sep { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .lp-hero-backdrop, .lp-hero-plate-wrap, .lp-hero-real-img, .lp-hero-plate-center::after { transition: none; }
+    .lp-hero-backdrop, .lp-hero-plate-wrap { transform: none; }
+    .lp-hero-backdrop-image, .lp-hero .lp-orb, .lp-hero .lp-hero-plate-ring,
+    .lp-hero .lp-hero-plate-center, .lp-hero .lp-badge, .lp-hero .lp-pill-dot,
+    .lp-hero .lp-serif-em, .lp-hero .lp-scroll-line { animation: none; }
+    .lp-hero-visual:hover .lp-hero-real-img { transform: none; filter: none; }
+    .lp-hero-visual:hover .lp-hero-plate-center::after { transform: translateX(-130%); }
 }
 
 /* ═══════════════════════════════════════════════════════════

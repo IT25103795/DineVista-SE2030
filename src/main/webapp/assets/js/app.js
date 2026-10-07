@@ -4,6 +4,54 @@
     const q = (selector, scope = document) => scope.querySelector(selector);
     const qa = (selector, scope = document) => Array.from(scope.querySelectorAll(selector));
 
+    const homeHero = q('.lp-hero');
+    if (homeHero) {
+        const heroVisual = q('.lp-hero-visual', homeHero);
+        const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+        let heroFrame = 0;
+        let plateFrame = 0;
+        const canMove = () => finePointer.matches && !reducedMotion.matches;
+
+        homeHero.addEventListener('pointermove', event => {
+            if (!canMove() || event.pointerType === 'touch') return;
+            cancelAnimationFrame(heroFrame);
+            heroFrame = requestAnimationFrame(() => {
+                const rect = homeHero.getBoundingClientRect();
+                const x = (event.clientX - rect.left) / rect.width - .5;
+                const y = (event.clientY - rect.top) / rect.height - .5;
+                homeHero.style.setProperty('--hero-bg-x', `${(-x * 20).toFixed(1)}px`);
+                homeHero.style.setProperty('--hero-bg-y', `${(-y * 16).toFixed(1)}px`);
+            });
+        });
+        homeHero.addEventListener('pointerleave', () => {
+            cancelAnimationFrame(heroFrame);
+            homeHero.style.removeProperty('--hero-bg-x');
+            homeHero.style.removeProperty('--hero-bg-y');
+        });
+
+        if (heroVisual) {
+            heroVisual.addEventListener('pointermove', event => {
+                if (!canMove() || event.pointerType === 'touch') return;
+                cancelAnimationFrame(plateFrame);
+                plateFrame = requestAnimationFrame(() => {
+                    const rect = heroVisual.getBoundingClientRect();
+                    const x = (event.clientX - rect.left) / rect.width - .5;
+                    const y = (event.clientY - rect.top) / rect.height - .5;
+                    heroVisual.style.setProperty('--plate-rotate-x', `${(-y * 9).toFixed(2)}deg`);
+                    heroVisual.style.setProperty('--plate-rotate-y', `${(x * 9).toFixed(2)}deg`);
+                    heroVisual.style.setProperty('--plate-shift-x', `${(x * 12).toFixed(1)}px`);
+                    heroVisual.style.setProperty('--plate-shift-y', `${(y * 12).toFixed(1)}px`);
+                });
+            });
+            heroVisual.addEventListener('pointerleave', () => {
+                cancelAnimationFrame(plateFrame);
+                ['--plate-rotate-x', '--plate-rotate-y', '--plate-shift-x', '--plate-shift-y']
+                    .forEach(name => heroVisual.style.removeProperty(name));
+            });
+        }
+    }
+
     const THEME_STORAGE_KEY = 'dinevista-theme';
     const root = document.documentElement;
     const themeToggle = q('[data-theme-toggle]');

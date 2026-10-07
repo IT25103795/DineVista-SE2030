@@ -4,6 +4,8 @@
 
 <!-- HERO — CINEMATIC DARK -->
 <section class="lp-hero">
+    <!-- Photo moves independently of the dark overlay, keeping the copy readable. -->
+    <div class="lp-hero-backdrop" aria-hidden="true"><div class="lp-hero-backdrop-image"></div></div>
     <!-- Decorative noise grain overlay -->
     <div class="lp-hero-grain" aria-hidden="true"></div>
     <!-- Ambient light splashes -->

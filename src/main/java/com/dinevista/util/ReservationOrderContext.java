@@ -20,6 +20,8 @@ public final class ReservationOrderContext {
 
     private ReservationOrderContext() {}
 
+    //Singleton pattern is used here to ensure that only one instance of ReservationOrderService is created and shared across the application.
+    // The service method checks if an instance already exists in the ServletContext; if not, it creates a new one and stores it for future use.
     public static ReservationOrderService service(ServletContext context) {
         synchronized (context) {
             ReservationOrderService service = (ReservationOrderService) context.getAttribute(SERVICE_KEY);
